@@ -3,14 +3,45 @@ import { UploadForm } from '@/components/UploadForm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
 
+const Logo = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="48"
+    height="48"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="text-primary shrink-0"
+  >
+    {/* Oval Head */}
+    <ellipse cx="12" cy="12" rx="9" ry="11" />
+    
+    {/* Circle Glasses */}
+    <circle cx="8.5" cy="12" r="2.5" />
+    <circle cx="15.5" cy="12" r="2.5" />
+    <line x1="11" y1="12" x2="13" y2="12" />
+
+    {/* Single Music Note */}
+    <path d="M12 10.5a2 2 0 1 0 -4 0v3.5h4" />
+    <path d="M12 8a2 2 0 1 1 4 0v3.5h-4" />
+  </svg>
+);
+
+
 export default function Home() {
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
       <div className="grid md:grid-cols-2 gap-12 items-center">
         <div className="space-y-6">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tighter font-headline">
-            Collaborative Audio Feedback, Simplified.
-          </h1>
+          <div className="flex items-center gap-4">
+            <Logo />
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tighter font-headline">
+              Collaborative Audio Feedback, Simplified.
+            </h1>
+          </div>
           <p className="text-lg text-muted-foreground">
             AudioMarker is the easiest way for audio engineers and their clients to share and discuss feedback on audio tracks. Upload your mix, share a link, and get timestamped comments right on the waveform.
           </p>
