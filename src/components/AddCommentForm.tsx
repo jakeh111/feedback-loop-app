@@ -102,7 +102,7 @@ export function AddCommentForm({ onAddComment, audioRef }: AddCommentFormProps) 
             rows={3}
           />
           
-          <div className="flex justify-between items-center gap-2">
+          <div className="flex flex-wrap justify-start items-center gap-2">
              <Button type="button" variant="ghost" onClick={handleToggleRangeSelection} size="sm">
                 <GitCommitHorizontal className="mr-2 h-4 w-4" />
                 {isRangeSelection ? 'Comment on Timestamp' : 'Comment on Range'}
