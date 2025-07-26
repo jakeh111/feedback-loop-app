@@ -2,12 +2,12 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { Header } from '@/components/Header';
-import { Poppins } from 'next/font/google';
+import { Intel_One_Mono } from 'next/font/google';
 
-const poppins = Poppins({
+const intelOneMono = Intel_One_Mono({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-poppins',
+  variable: '--font-intel-one-mono',
   weight: ['400', '500', '700']
 });
 
@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${poppins.variable} dark`}>
+    <html lang="en" className={`${intelOneMono.variable} dark`}>
       <head>
       </head>
       <body className="font-body antialiased">
