@@ -108,7 +108,7 @@ export function AddCommentForm({ onAddComment, audioRef }: AddCommentFormProps) 
                 {isRangeSelection ? 'Comment on Timestamp' : 'Comment on Range'}
             </Button>
             <Button type="button" variant="ghost" onClick={() => setShowYoutube(!showYoutube)} size="sm">
-                <Link className="mr-2 h-4 w-4" />
+                <Youtube className="mr-2 h-4 w-4" />
                 {showYoutube ? 'Remove Reference' : 'Add YouTube Reference'}
             </Button>
           </div>
