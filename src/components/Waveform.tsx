@@ -29,11 +29,11 @@ export function Waveform({ data, currentTime, duration, onSeek, isPlaying }: Wav
       className="relative h-24 bg-muted rounded-md cursor-pointer"
       onClick={handleWaveformClick}
     >
-      <div className="absolute top-0 left-0 w-full h-full flex items-end gap-px overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full flex items-center gap-px overflow-hidden">
         {data.map((val, i) => (
           <div
             key={i}
-            className="w-full bg-secondary"
+            className="w-full bg-secondary rounded-sm"
             style={{ height: `${val}%` }}
           />
         ))}
@@ -42,11 +42,11 @@ export function Waveform({ data, currentTime, duration, onSeek, isPlaying }: Wav
         className="absolute top-0 left-0 h-full bg-primary/30"
         style={{ width: `${progress}%`}}
       >
-        <div className="absolute top-0 left-0 w-full h-full flex items-end gap-px overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full flex items-center gap-px overflow-hidden">
             {data.map((val, i) => (
               <div
                 key={i}
-                className="w-full bg-primary"
+                className="w-full bg-primary rounded-sm"
                 style={{ height: `${val}%` }}
               />
             ))}
