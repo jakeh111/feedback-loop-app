@@ -5,6 +5,8 @@ export type Comment = {
   timestamp: number;
   endTimestamp?: number;
   avatarUrl: string;
+  youtubeUrl?: string;
+  youtubeTimestamp?: number;
 };
 
 export type Track = {

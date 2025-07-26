@@ -25,7 +25,7 @@ export function TrackPageClient({ track }: { track: Track }) {
     }
   }, [searchParams]);
 
-  const handleAddComment = (text: string, startTime: number, endTime?: number) => {
+  const handleAddComment = (text: string, startTime: number, endTime?: number, youtubeUrl?: string, youtubeTimestamp?: number) => {
     const newComment: Comment = {
       id: new Date().toISOString(),
       author: authorName,
@@ -33,6 +33,8 @@ export function TrackPageClient({ track }: { track: Track }) {
       timestamp: startTime,
       endTimestamp: endTime,
       avatarUrl: `https://placehold.co/40x40.png?text=${authorName.charAt(0)}`,
+      youtubeUrl,
+      youtubeTimestamp
     };
     setComments(prev => [...prev, newComment]);
   };

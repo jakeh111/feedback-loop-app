@@ -4,10 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent } from './ui/card';
-import { Clock, Check, X, GitCommitHorizontal } from 'lucide-react';
+import { Clock, Check, X, GitCommitHorizontal, Youtube, Link } from 'lucide-react';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Separator } from './ui/separator';
 
 interface AddCommentFormProps {
-  onAddComment: (text: string, startTime: number, endTime?: number) => void;
+  onAddComment: (text: string, startTime: number, endTime?: number, youtubeUrl?: string, youtubeTimestamp?: number) => void;
   audioRef: React.RefObject<HTMLAudioElement>;
 }
 
@@ -17,11 +20,23 @@ export function AddCommentForm({ onAddComment, audioRef }: AddCommentFormProps) 
   const [startTime, setStartTime] = useState<number | null>(null);
   const [endTime, setEndTime] = useState<number | null>(null);
 
+  const [showYoutube, setShowYoutube] = useState(false);
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [youtubeTime, setYoutubeTime] = useState('');
+
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
+
+  const parseYoutubeTime = (timeStr: string): number => {
+    const parts = timeStr.split(':').map(Number);
+    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+      return parts[0] * 60 + parts[1];
+    }
+    return 0;
+  }
 
   const handleSetStartTime = () => {
     if (audioRef.current) {
@@ -50,17 +65,27 @@ export function AddCommentForm({ onAddComment, audioRef }: AddCommentFormProps) 
     setStartTime(null);
     setEndTime(null);
   };
+  
+  const resetForm = () => {
+    setText('');
+    handleCancelRange();
+    setShowYoutube(false);
+    setYoutubeUrl('');
+    setYoutubeTime('');
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (text.trim() && audioRef.current) {
+      const finalYoutubeTimestamp = showYoutube ? parseYoutubeTime(youtubeTime) : undefined;
+      const finalYoutubeUrl = showYoutube ? youtubeUrl : undefined;
+
       if (isRangeSelection && startTime !== null && endTime !== null) {
-        onAddComment(text, startTime, endTime);
+        onAddComment(text, startTime, endTime, finalYoutubeUrl, finalYoutubeTimestamp);
       } else {
-        onAddComment(text, audioRef.current.currentTime);
+        onAddComment(text, audioRef.current.currentTime, undefined, finalYoutubeUrl, finalYoutubeTimestamp);
       }
-      setText('');
-      handleCancelRange();
+      resetForm();
     }
   };
 
@@ -71,16 +96,20 @@ export function AddCommentForm({ onAddComment, audioRef }: AddCommentFormProps) 
       <CardContent className="p-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           <Textarea
-            placeholder={isRangeSelection ? "Describe the feedback for the selected range..." : "Leave a comment at the current timestamp..."}
+            placeholder="Leave a comment..."
             value={text}
             onChange={(e) => setText(e.target.value)}
-            rows={4}
+            rows={3}
           />
           
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center gap-2">
              <Button type="button" variant="ghost" onClick={handleToggleRangeSelection} size="sm">
                 <GitCommitHorizontal className="mr-2 h-4 w-4" />
                 {isRangeSelection ? 'Comment on Timestamp' : 'Comment on Range'}
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setShowYoutube(!showYoutube)} size="sm">
+                <Link className="mr-2 h-4 w-4" />
+                {showYoutube ? 'Remove Reference' : 'Add YouTube Reference'}
             </Button>
           </div>
 
@@ -102,12 +131,23 @@ export function AddCommentForm({ onAddComment, audioRef }: AddCommentFormProps) 
                   </>
                 ) : 'No range selected'}
               </div>
-              <Button type="button" variant="ghost" size="sm" onClick={handleCancelRange} className="w-full text-destructive">
-                <X className="mr-2 h-4 w-4" />
-                Cancel Range
-              </Button>
             </div>
           )}
+
+          {showYoutube && (
+            <div className="p-3 bg-muted/50 rounded-lg space-y-3">
+                 <div className="text-sm font-medium">YouTube Reference:</div>
+                 <div className="space-y-2">
+                    <Label htmlFor="youtube-url">YouTube URL</Label>
+                    <Input id="youtube-url" placeholder="https://www.youtube.com/watch?v=..." value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} />
+                 </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="youtube-time">Timestamp (MM:SS)</Label>
+                    <Input id="youtube-time" placeholder="01:23" value={youtubeTime} onChange={(e) => setYoutubeTime(e.target.value)} />
+                 </div>
+            </div>
+          )}
+
 
           <Button type="submit" disabled={!canSubmit} className="w-full">
             Post Comment
