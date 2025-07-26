@@ -1,11 +1,18 @@
+'use client';
+
 import Link from "next/link";
-import { LogIn, UserPlus, Heart, Menu } from "lucide-react";
+import { LogIn, UserPlus, Heart, Menu, Sun, Moon } from "lucide-react";
 import { Button } from "./ui/button";
-import { ThemeToggle } from "./ThemeProvider";
+import { ThemeToggle, useTheme } from "./ThemeProvider";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "./ui/sheet";
 
 
 export function Header() {
+  const { theme, setTheme } = useTheme();
+  const toggleTheme = () => {
+      setTheme(theme === 'sunset' ? 'indigo' : 'sunset');
+  }
+
   return (
     <header className="border-b bg-card">
       <div className="container mx-auto px-4">
@@ -42,7 +49,6 @@ export function Header() {
 
           {/* Mobile Menu */}
           <div className="md:hidden flex items-center">
-             <ThemeToggle />
             <Sheet>
                 <SheetTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -81,6 +87,10 @@ export function Header() {
                                 </Link>
                             </Button>
                         </SheetClose>
+                        <Button variant="ghost" className="justify-start" onClick={toggleTheme}>
+                            {theme === 'sunset' ? <Moon /> : <Sun />}
+                            <span>Toggle Theme</span>
+                        </Button>
                     </div>
                 </SheetContent>
             </Sheet>
