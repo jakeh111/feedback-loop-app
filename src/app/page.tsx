@@ -14,20 +14,24 @@ export default function Home() {
             </h1>
           </div>
           <p className="text-lg text-muted-foreground">
-            AudioMarker is the easiest way for audio engineers and their clients to share and discuss feedback on audio tracks. Upload your mix, share a link, and get timestamped comments right on the waveform.
+            Stop juggling email chains and confusing notes. AudioMarker provides one central place for precise, contextual feedback on your audio files. Upload your mix, share a private link, and get frame-accurate comments directly on the waveform.
           </p>
           <ul className="space-y-3">
             <li className="flex items-center gap-3">
               <CheckCircle className="text-primary" />
-              <span>Shareable links for easy collaboration.</span>
+              <span>Timestamped comments on specific points or time ranges.</span>
             </li>
             <li className="flex items-center gap-3">
               <CheckCircle className="text-primary" />
-              <span>Interactive waveform with timestamped comments.</span>
+              <span>Add YouTube links as references for musical ideas.</span>
             </li>
             <li className="flex items-center gap-3">
               <CheckCircle className="text-primary" />
-              <span>AI-powered feedback summary.</span>
+              <span>AI-powered summaries to quickly digest feedback.</span>
+            </li>
+             <li className="flex items-center gap-3">
+              <CheckCircle className="text-primary" />
+              <span>Shareable private links for easy collaboration.</span>
             </li>
           </ul>
         </div>
@@ -46,26 +50,26 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8 text-left">
             <Card>
               <CardHeader>
-                <CardTitle>1. Upload</CardTitle>
+                <CardTitle>1. Upload Your Audio</CardTitle>
               </CardHeader>
               <CardContent>
-                <p>Drag and drop your MP3 file or click to select it. Your collaborative workspace is created instantly.</p>
+                <p>Drag and drop your MP3 file. Your private, collaborative workspace is created instantly.</p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle>2. Share</CardTitle>
+                <CardTitle>2. Share the Link</CardTitle>
               </CardHeader>
               <CardContent>
-                <p>Grab the unique, private link and share it with your clients or collaborators.</p>
+                <p>Grab the unique link and send it to your clients or team. No sign-up required for them to leave comments.</p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle>3. Comment</CardTitle>
+                <CardTitle>3. Get Precise Feedback</CardTitle>
               </CardHeader>
               <CardContent>
-                <p>Listen to the track and leave comments at precise timestamps. Discuss changes and ideas in context.</p>
+                <p>Collaborators can add comments to a specific timestamp, highlight a time range, or even reference a YouTube video.</p>
               </CardContent>
             </Card>
           </div>
