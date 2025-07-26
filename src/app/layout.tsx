@@ -23,10 +23,10 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <div className="flex flex-col min-h-screen">
           <Header />
-          <main className="flex-grow">
+          <main className="flex-grow bg-background">
             {children}
           </main>
-          <footer className="w-full py-4">
+          <footer className="w-full py-4 bg-background">
             <div className="container mx-auto text-center">
               <div className="bg-muted text-muted-foreground h-16 flex items-center justify-center rounded-lg">
                 <p>Google Ad Placeholder</p>
