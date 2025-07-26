@@ -16,17 +16,18 @@ const Logo = () => (
     strokeLinejoin="round"
     className="text-primary shrink-0"
   >
-    {/* Oval Head */}
-    <ellipse cx="12" cy="12" rx="10" ry="11" />
-    
-    {/* Circle Glasses */}
-    <circle cx="9" cy="12" r="2" />
-    <circle cx="15" cy="12" r="2" />
-    <line x1="11" y1="12" x2="13" y2="12" />
-
-    {/* Single Music Note */}
-    <path d="M12 10.5a1.5 1.5 0 1 0 -3 0v3h3" />
-    <path d="M12 8a1.5 1.5 0 1 1 3 0v3h-3" />
+    <path d="M17 10.5a2.5 2.5 0 0 0 -5 0" />
+    <path d="M12 8v6" />
+    <path d="M14.5 12.5a2.5 2.5 0 0 1 -5 0" />
+    <path d="M9.5 8a2.5 2.5 0 0 0 0 5" />
+    <path d="M7 15.5a2.5 2.5 0 0 0 5 0" />
+    <path d="M12 18v-6" />
+    <path d="M9.5 12.5a2.5 2.5 0 0 1 5 0" />
+    <path d="M14.5 18a2.5 2.5 0 0 0 0-5" />
+    <path d="M20 6.5a4.5 4.5 0 0 0 -9 0" />
+    <path d="M11 6.5v9" />
+    <path d="M15.5 11a4.5 4.5 0 0 1 -9 0" />
+    <path d="M6.5 2a4.5 4.5 0 0 0 0 9" />
   </svg>
 );
 
