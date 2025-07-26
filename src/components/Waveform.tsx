@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef } from 'react';
+import type { Comment } from '@/lib/types';
 
 interface WaveformProps {
   data: number[];
@@ -8,9 +9,10 @@ interface WaveformProps {
   duration: number;
   onSeek: (time: number) => void;
   isPlaying: boolean;
+  comments?: Comment[];
 }
 
-export function Waveform({ data, currentTime, duration, onSeek, isPlaying }: WaveformProps) {
+export function Waveform({ data, currentTime, duration, onSeek, isPlaying, comments = [] }: WaveformProps) {
   const waveformRef = useRef<HTMLDivElement>(null);
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -26,10 +28,11 @@ export function Waveform({ data, currentTime, duration, onSeek, isPlaying }: Wav
   return (
     <div
       ref={waveformRef}
-      className="relative h-24 bg-muted rounded-md cursor-pointer"
+      className="relative h-28 bg-muted rounded-md cursor-pointer group"
       onClick={handleWaveformClick}
     >
-      <div className="absolute top-0 left-0 w-full h-full flex items-center gap-px overflow-hidden">
+      {/* Waveform background */}
+      <div className="absolute top-1/2 -translate-y-1/2 w-full h-full flex items-center gap-px overflow-hidden">
         {data.map((val, i) => (
           <div
             key={i}
@@ -38,8 +41,32 @@ export function Waveform({ data, currentTime, duration, onSeek, isPlaying }: Wav
           />
         ))}
       </div>
+
+      {/* Comment ranges */}
+      {comments.map((comment) => {
+        if (!comment.endTimestamp) return null;
+        const startPercent = (comment.timestamp / duration) * 100;
+        const endPercent = (comment.endTimestamp / duration) * 100;
+        const widthPercent = endPercent - startPercent;
+
+        return (
+          <div
+            key={comment.id}
+            className="absolute top-0 h-full bg-accent/20 hover:bg-accent/40 transition-colors"
+            style={{
+              left: `${startPercent}%`,
+              width: `${widthPercent}%`,
+            }}
+          >
+            <div className="absolute top-0 left-0 w-px h-full bg-accent/50" />
+            <div className="absolute top-0 right-0 w-px h-full bg-accent/50" />
+          </div>
+        );
+      })}
+
+      {/* Progress fill */}
       <div 
-        className="absolute top-0 left-0 h-full bg-primary/30"
+        className="absolute top-1/2 -translate-y-1/2 h-full bg-primary/30"
         style={{ width: `${progress}%`}}
       >
         <div className="absolute top-0 left-0 w-full h-full flex items-center gap-px overflow-hidden">
@@ -52,6 +79,8 @@ export function Waveform({ data, currentTime, duration, onSeek, isPlaying }: Wav
             ))}
         </div>
       </div>
+       
+       {/* Playhead */}
        <div 
         className="absolute top-0 h-full w-0.5 bg-accent"
         style={{ left: `${progress}%` }}

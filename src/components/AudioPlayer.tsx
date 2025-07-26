@@ -33,14 +33,21 @@ export const AudioPlayer = forwardRef<HTMLAudioElement, AudioPlayerProps>(({ tra
 
     const setAudioTime = () => setCurrentTime(audio.currentTime);
 
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+
     audio.addEventListener('loadeddata', setAudioData);
     audio.addEventListener('timeupdate', setAudioTime);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
 
     audio.volume = isMuted ? 0 : volume;
 
     return () => {
       audio.removeEventListener('loadeddata', setAudioData);
       audio.removeEventListener('timeupdate', setAudioTime);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
     }
   }, [volume, isMuted]);
 
@@ -52,7 +59,6 @@ export const AudioPlayer = forwardRef<HTMLAudioElement, AudioPlayerProps>(({ tra
       } else {
         audio.play();
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
@@ -60,6 +66,7 @@ export const AudioPlayer = forwardRef<HTMLAudioElement, AudioPlayerProps>(({ tra
     if (internalAudioRef.current) {
         internalAudioRef.current.currentTime = time;
         setCurrentTime(time);
+        onSeek(time);
     }
   };
   
@@ -101,6 +108,7 @@ export const AudioPlayer = forwardRef<HTMLAudioElement, AudioPlayerProps>(({ tra
         duration={duration}
         onSeek={handleSeek}
         isPlaying={isPlaying}
+        comments={track.comments}
       />
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm font-mono text-muted-foreground w-28">

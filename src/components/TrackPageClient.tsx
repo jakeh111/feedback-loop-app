@@ -25,17 +25,16 @@ export function TrackPageClient({ track }: { track: Track }) {
     }
   }, [searchParams]);
 
-  const handleAddComment = (text: string) => {
-    if (audioRef.current) {
-      const newComment: Comment = {
-        id: new Date().toISOString(),
-        author: authorName,
-        text,
-        timestamp: Math.floor(audioRef.current.currentTime),
-        avatarUrl: `https://placehold.co/40x40.png?text=${authorName.charAt(0)}`,
-      };
-      setComments(prev => [...prev, newComment]);
-    }
+  const handleAddComment = (text: string, startTime: number, endTime?: number) => {
+    const newComment: Comment = {
+      id: new Date().toISOString(),
+      author: authorName,
+      text,
+      timestamp: startTime,
+      endTimestamp: endTime,
+      avatarUrl: `https://placehold.co/40x40.png?text=${authorName.charAt(0)}`,
+    };
+    setComments(prev => [...prev, newComment]);
   };
 
   const handleSeekTo = useCallback((time: number) => {
@@ -77,7 +76,7 @@ export function TrackPageClient({ track }: { track: Track }) {
         </div>
         <div>
             <h2 className="text-2xl font-bold font-headline mb-4">Leave Feedback</h2>
-            <AddCommentForm onAddComment={handleAddComment} />
+            <AddCommentForm onAddComment={handleAddComment} audioRef={audioRef} />
         </div>
       </div>
     </div>

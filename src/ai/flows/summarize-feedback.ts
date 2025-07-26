@@ -14,6 +14,7 @@ import {z} from 'genkit';
 const SummarizeFeedbackInputSchema = z.array(z.object({
   text: z.string(),
   timestamp: z.number(),
+  endTimestamp: z.number().optional(),
 })).describe('An array of comments with their timestamps.');
 export type SummarizeFeedbackInput = z.infer<typeof SummarizeFeedbackInputSchema>;
 
@@ -30,11 +31,11 @@ const prompt = ai.definePrompt({
   name: 'summarizeFeedbackPrompt',
   input: {schema: SummarizeFeedbackInputSchema},
   output: {schema: SummarizeFeedbackOutputSchema},
-  prompt: `You are an audio engineering assistant. You are given a set of comments about a particular audio track, along with the timestamp that the comment refers to. Your job is to summarize the feedback, and identify the main concerns and areas for improvement.
+  prompt: `You are an audio engineering assistant. You are given a set of comments about a particular audio track, along with the timestamp or time range that the comment refers to. Your job is to summarize the feedback, and identify the main concerns and areas for improvement.
 
 Comments:
 {{#each this}}
-- Timestamp: {{timestamp}}, Comment: {{text}}
+- Time: {{timestamp}}{{#if endTimestamp}}-{{endTimestamp}}{{/if}}, Comment: {{text}}
 {{/each}}`,
 });
 

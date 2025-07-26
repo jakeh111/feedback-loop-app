@@ -27,7 +27,7 @@ export function SummarizeButton({ comments }: SummarizeButtonProps) {
   const handleSummarize = () => {
     startTransition(async () => {
       setError(null);
-      const commentData = comments.map(c => ({ text: c.text, timestamp: c.timestamp }));
+      const commentData = comments.map(c => ({ text: c.text, timestamp: c.timestamp, endTimestamp: c.endTimestamp }));
       const result = await getSummary(commentData);
       if (result.summary) {
         setSummary(result.summary);

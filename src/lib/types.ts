@@ -3,6 +3,7 @@ export type Comment = {
   author: string;
   text: string;
   timestamp: number;
+  endTimestamp?: number;
   avatarUrl: string;
 };
 

@@ -4,7 +4,7 @@ import type { Comment } from "@/lib/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "./ui/button";
-import { Clock } from "lucide-react";
+import { Clock, Range } from "lucide-react";
 
 interface CommentListProps {
   comments: Comment[];
@@ -14,6 +14,7 @@ interface CommentListProps {
 export function CommentList({ comments, onSeekTo }: CommentListProps) {
     
   const formatTime = (time: number) => {
+    if (isNaN(time)) return '0:00';
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -41,8 +42,9 @@ export function CommentList({ comments, onSeekTo }: CommentListProps) {
               <p className="font-semibold">{comment.author}</p>
             </div>
             <Button variant="ghost" size="sm" onClick={() => onSeekTo(comment.timestamp)} className="text-accent hover:text-accent font-mono">
-                <Clock className="mr-2 h-4 w-4" />
+                {comment.endTimestamp ? <Range className="mr-2 h-4 w-4" /> : <Clock className="mr-2 h-4 w-4" />}
                 {formatTime(comment.timestamp)}
+                {comment.endTimestamp && ` - ${formatTime(comment.endTimestamp)}`}
             </Button>
           </CardHeader>
           <CardContent className="p-4">
