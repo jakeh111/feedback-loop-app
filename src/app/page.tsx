@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import { UploadForm } from '@/components/UploadForm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,7 +15,6 @@ export default function Home() {
           playsInline
           className="absolute z-0 w-auto min-w-full min-h-full max-w-none"
         >
-          {/* In a real app, you'd replace this with a URL to your video file */}
           <source src="https://storage.googleapis.com/static.a-and-a.com/assets/waveforms.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
@@ -29,7 +29,7 @@ export default function Home() {
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6 bg-background/80 p-6 rounded-lg">
             <p className="text-lg text-muted-foreground">
-              Stop juggling email chains and confusing notes. AudioMarker provides one central place for precise, contextual feedback on your audio files. Upload your mix, share a private link, and get frame-accurate comments directly on the waveform.
+              Stop juggling email chains and confusing notes. FeedbackLoop provides one central place for precise, contextual feedback on your audio files. Upload your mix, share a private link, and get frame-accurate comments directly on the waveform.
             </p>
             <ul className="space-y-3">
               <li className="flex items-center gap-3">
