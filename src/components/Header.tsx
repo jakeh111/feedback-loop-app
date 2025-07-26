@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LogIn, UserPlus, Heart } from "lucide-react";
 import { Button } from "./ui/button";
+import { ThemeToggle } from "./ThemeProvider";
 
 export function Header() {
   return (
@@ -11,6 +12,7 @@ export function Header() {
             <span className="font-bold text-lg font-headline">FeedbackLoop</span>
           </Link>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Button variant="ghost" asChild>
               <Link href="/login">
                 <LogIn />

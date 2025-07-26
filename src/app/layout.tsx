@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { Header } from '@/components/Header';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
   title: 'FeedbackLoop',
@@ -14,27 +15,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Intel+One+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-grow bg-background">
-            {children}
-          </main>
-          <footer className="w-full py-4 bg-background">
-            <div className="container mx-auto text-center">
-              <div className="bg-muted text-muted-foreground h-16 flex items-center justify-center rounded-lg">
-                <p>Google Ad Placeholder</p>
+        <ThemeProvider>
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow bg-background">
+              {children}
+            </main>
+            <footer className="w-full py-4 bg-background">
+              <div className="container mx-auto text-center">
+                <div className="bg-muted text-muted-foreground h-16 flex items-center justify-center rounded-lg">
+                  <p>Google Ad Placeholder</p>
+                </div>
               </div>
-            </div>
-          </footer>
-        </div>
-        <Toaster />
+            </footer>
+          </div>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
