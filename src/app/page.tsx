@@ -6,28 +6,23 @@ import { CheckCircle } from 'lucide-react';
 const Logo = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="64"
-    height="64"
-    viewBox="0 0 24 24"
+    width="80"
+    height="80"
+    viewBox="0 0 100 100"
     fill="none"
     stroke="currentColor"
-    strokeWidth="1.25"
+    strokeWidth="2.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     className="text-primary shrink-0"
   >
-    <path d="M17 10.5a2.5 2.5 0 0 0 -5 0" />
-    <path d="M12 8v6" />
-    <path d="M14.5 12.5a2.5 2.5 0 0 1 -5 0" />
-    <path d="M9.5 8a2.5 2.5 0 0 0 0 5" />
-    <path d="M7 15.5a2.5 2.5 0 0 0 5 0" />
-    <path d="M12 18v-6" />
-    <path d="M9.5 12.5a2.5 2.5 0 0 1 5 0" />
-    <path d="M14.5 18a2.5 2.5 0 0 0 0-5" />
-    <path d="M20 6.5a4.5 4.5 0 0 0 -9 0" />
-    <path d="M11 6.5v9" />
-    <path d="M15.5 11a4.5 4.5 0 0 1 -9 0" />
-    <path d="M6.5 2a4.5 4.5 0 0 0 0 9" />
+    <path d="M72.5,85 C95,65 95,35 72.5,15 C50,-5 30,-5 27.5,15 C25,35 25,65 47.5,85 C70,105 72.5,85 72.5,85Z" />
+    <path d="M35,30 C40,20 60,20 65,30" />
+    <circle cx="40" cy="50" r="8" />
+    <circle cx="60" cy="50" r="8" />
+    <path d="M48,50 h4" />
+    <path d="M40,70 a5,5 0 1,0 0,-0.01" />
+    <path d="M60,70 v-5 h-20" />
   </svg>
 );
 
