@@ -21,13 +21,16 @@ const getTrackData = async (id: string): Promise<Track> => {
 
   return {
     id,
-    title: "Sunset Groove",
-    artist: "The Cool Cats",
+    title: "Cosmic Drift (Mix v2)",
+    artist: "Stellar Beatz",
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
     waveform,
     comments: [
-      { id: "1", author: "Alice", text: "Love the intro, but maybe the kick could be a bit punchier?", timestamp: 10, avatarUrl: "https://placehold.co/40x40.png" },
-      { id: "2", author: "Bob", text: "The synth melody starting here is fantastic!", timestamp: 45, avatarUrl: "https://placehold.co/40x40.png" },
+      { id: "1", author: "Alice", text: "Love the intro, but maybe the kick could be a bit punchier?", timestamp: 10, avatarUrl: "https://placehold.co/40x40.png?text=A" },
+      { id: "2", author: "Bob", text: "The synth melody starting here is fantastic!", timestamp: 45, avatarUrl: "https://placehold.co/40x40.png?text=B" },
+      { id: "3", author: "Carlos", text: "The reverb on the snare feels a little too long in this section. Maybe shorten the decay?", timestamp: 22, avatarUrl: "https://placehold.co/40x40.png?text=C" },
+      { id: "4", author: "Diana", text: "This drop is epic! The bass really comes through nicely.", timestamp: 85, avatarUrl: "https://placehold.co/40x40.png?text=D" },
+      { id: "5", author: "Alice", text: "Following up on my earlier comment, I tried a little EQ boost around 60Hz on the kick and it sounds great.", timestamp: 12, avatarUrl: "https://placehold.co/40x40.png?text=A" },
     ],
   };
 };
