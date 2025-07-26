@@ -3,37 +3,12 @@ import { UploadForm } from '@/components/UploadForm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
 
-const Logo = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="80"
-    height="80"
-    viewBox="0 0 100 100"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="text-primary shrink-0"
-  >
-    <path d="M72.5,85 C95,65 95,35 72.5,15 C50,-5 30,-5 27.5,15 C25,35 25,65 47.5,85 C70,105 72.5,85 72.5,85Z" />
-    <path d="M35,30 C40,20 60,20 65,30" />
-    <circle cx="40" cy="50" r="8" />
-    <circle cx="60" cy="50" r="8" />
-    <path d="M48,50 h4" />
-    <path d="M40,70 a5,5 0 1,0 0,-0.01" />
-    <path d="M60,70 v-5 h-20" />
-  </svg>
-);
-
-
 export default function Home() {
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
       <div className="grid md:grid-cols-2 gap-12 items-center">
         <div className="space-y-6">
           <div className="flex items-center gap-4">
-            <Logo />
             <h1 className="text-4xl md:text-5xl font-bold tracking-tighter font-headline">
               Collaborative Audio Feedback, Simplified.
             </h1>
