@@ -4,7 +4,7 @@ import type { Comment } from "@/lib/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "./ui/button";
-import { Clock, Range } from "lucide-react";
+import { Clock, GitCommitHorizontal } from "lucide-react";
 
 interface CommentListProps {
   comments: Comment[];
@@ -42,7 +42,7 @@ export function CommentList({ comments, onSeekTo }: CommentListProps) {
               <p className="font-semibold">{comment.author}</p>
             </div>
             <Button variant="ghost" size="sm" onClick={() => onSeekTo(comment.timestamp)} className="text-accent hover:text-accent font-mono">
-                {comment.endTimestamp ? <Range className="mr-2 h-4 w-4" /> : <Clock className="mr-2 h-4 w-4" />}
+                {comment.endTimestamp ? <GitCommitHorizontal className="mr-2 h-4 w-4" /> : <Clock className="mr-2 h-4 w-4" />}
                 {formatTime(comment.timestamp)}
                 {comment.endTimestamp && ` - ${formatTime(comment.endTimestamp)}`}
             </Button>

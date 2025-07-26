@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent } from './ui/card';
-import { Clock, Check, X, Range } from 'lucide-react';
+import { Clock, Check, X, GitCommitHorizontal } from 'lucide-react';
 
 interface AddCommentFormProps {
   onAddComment: (text: string, startTime: number, endTime?: number) => void;
@@ -79,7 +79,7 @@ export function AddCommentForm({ onAddComment, audioRef }: AddCommentFormProps) 
           
           <div className="flex justify-between items-center">
              <Button type="button" variant="ghost" onClick={handleToggleRangeSelection} size="sm">
-                <Range className="mr-2 h-4 w-4" />
+                <GitCommitHorizontal className="mr-2 h-4 w-4" />
                 {isRangeSelection ? 'Comment on Timestamp' : 'Comment on Range'}
             </Button>
           </div>
