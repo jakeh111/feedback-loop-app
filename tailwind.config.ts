@@ -10,9 +10,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['var(--font-intel-one-mono)'],
-        headline: ['var(--font-intel-one-mono)'],
-        sans: ['var(--font-intel-one-mono)'],
+        body: ['"Intel One Mono"', 'monospace'],
+        headline: ['"Intel One Mono"', 'monospace'],
+        sans: ['"Intel One Mono"', 'monospace'],
         code: ['monospace'],
       },
       colors: {
