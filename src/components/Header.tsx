@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { LogIn, UserPlus, Heart } from "lucide-react";
+import { LogIn, UserPlus, Heart, Menu } from "lucide-react";
 import { Button } from "./ui/button";
 import { ThemeToggle } from "./ThemeProvider";
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from "./ui/sheet";
+
 
 export function Header() {
   return (
@@ -11,7 +13,9 @@ export function Header() {
           <Link href="/" className="flex items-center gap-2">
             <span className="font-bold text-lg font-headline">FeedbackLoop</span>
           </Link>
-          <div className="flex items-center gap-2">
+          
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center gap-2">
             <Button variant="ghost" asChild>
               <Link href="/login">
                 <LogIn />
@@ -34,6 +38,52 @@ export function Header() {
               </Link>
             </Button>
             <ThemeToggle />
+          </div>
+
+          {/* Mobile Menu */}
+          <div className="md:hidden flex items-center">
+             <ThemeToggle />
+            <Sheet>
+                <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <Menu />
+                        <span className="sr-only">Open menu</span>
+                    </Button>
+                </SheetTrigger>
+                <SheetContent>
+                    <div className="flex flex-col gap-4 py-8">
+                        <SheetClose asChild>
+                            <Button variant="ghost" className="justify-start" asChild>
+                                <Link href="/login">
+                                    <LogIn />
+                                    Login
+                                </Link>
+                            </Button>
+                        </SheetClose>
+                        <SheetClose asChild>
+                             <Button className="justify-start" asChild>
+                                <Link href="/signup">
+                                    <UserPlus/>
+                                    Sign Up
+                                </Link>
+                            </Button>
+                        </SheetClose>
+                        <SheetClose asChild>
+                            <Button variant="outline" className="justify-start" asChild>
+                                <Link href="/dashboard">Dashboard</Link>
+                            </Button>
+                        </SheetClose>
+                        <SheetClose asChild>
+                             <Button className="justify-start" asChild>
+                                <Link href="#">
+                                    <Heart className="mr-2 h-4 w-4" />
+                                    Donate
+                                </Link>
+                            </Button>
+                        </SheetClose>
+                    </div>
+                </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
