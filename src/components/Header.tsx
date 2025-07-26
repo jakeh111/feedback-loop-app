@@ -29,14 +29,14 @@ export function Header() {
                 Login
               </Link>
             </Button>
+            <Button asChild variant="outline">
+              <Link href="/dashboard">Dashboard</Link>
+            </Button>
             <Button asChild>
               <Link href="/signup">
                 <UserPlus/>
                 Sign Up
               </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/dashboard">Dashboard</Link>
             </Button>
             <Button asChild>
               <Link href="#">
@@ -67,16 +67,16 @@ export function Header() {
                             </Button>
                         </SheetClose>
                         <SheetClose asChild>
+                            <Button variant="outline" className="justify-start" asChild>
+                                <Link href="/dashboard">Dashboard</Link>
+                            </Button>
+                        </SheetClose>
+                        <SheetClose asChild>
                              <Button className="justify-start" asChild>
                                 <Link href="/signup">
                                     <UserPlus/>
                                     Sign Up
                                 </Link>
-                            </Button>
-                        </SheetClose>
-                        <SheetClose asChild>
-                            <Button variant="outline" className="justify-start" asChild>
-                                <Link href="/dashboard">Dashboard</Link>
                             </Button>
                         </SheetClose>
                         <SheetClose asChild>
