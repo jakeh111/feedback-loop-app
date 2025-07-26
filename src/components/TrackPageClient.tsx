@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import type { Track, Comment } from '@/lib/types';
 import { AudioPlayer } from '@/components/AudioPlayer';
 import { CommentList } from '@/components/CommentList';
@@ -14,15 +15,24 @@ export function TrackPageClient({ track }: { track: Track }) {
   const [comments, setComments] = useState<Comment[]>(track.comments);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const [authorName, setAuthorName] = useState("Guest");
+
+  useEffect(() => {
+    const author = searchParams.get('author');
+    if (author) {
+      setAuthorName(author);
+    }
+  }, [searchParams]);
 
   const handleAddComment = (text: string) => {
     if (audioRef.current) {
       const newComment: Comment = {
         id: new Date().toISOString(),
-        author: "You",
+        author: authorName,
         text,
         timestamp: Math.floor(audioRef.current.currentTime),
-        avatarUrl: `https://placehold.co/40x40.png`,
+        avatarUrl: `https://placehold.co/40x40.png?text=${authorName.charAt(0)}`,
       };
       setComments(prev => [...prev, newComment]);
     }
