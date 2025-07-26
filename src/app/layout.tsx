@@ -26,6 +26,13 @@ export default function RootLayout({
           <main className="flex-grow">
             {children}
           </main>
+          <footer className="w-full py-4">
+            <div className="container mx-auto text-center">
+              <div className="bg-muted text-muted-foreground h-16 flex items-center justify-center rounded-lg">
+                <p>Google Ad Placeholder</p>
+              </div>
+            </div>
+          </footer>
         </div>
         <Toaster />
       </body>
