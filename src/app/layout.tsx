@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { Header } from '@/components/Header';
 
 export const metadata: Metadata = {
-  title: 'AudioMarker',
+  title: 'FeedbackLoop',
   description: 'Collaborative audio feedback for engineers and clients.',
 };
 

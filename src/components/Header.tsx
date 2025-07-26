@@ -9,7 +9,7 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2">
             <Music className="h-6 w-6 text-primary" />
-            <span className="font-bold text-lg font-headline">AudioMarker</span>
+            <span className="font-bold text-lg font-headline">FeedbackLoop</span>
           </Link>
           <div className="flex items-center gap-2">
             <Button variant="ghost" asChild>
