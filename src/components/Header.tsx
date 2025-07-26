@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogIn, UserPlus } from "lucide-react";
+import { LogIn, UserPlus, Heart } from "lucide-react";
 import { Button } from "./ui/button";
 
 export function Header() {
@@ -25,6 +25,12 @@ export function Header() {
             </Button>
             <Button asChild variant="outline">
               <Link href="/dashboard">Dashboard</Link>
+            </Button>
+            <Button asChild>
+              <Link href="#">
+                <Heart className="mr-2 h-4 w-4" />
+                Donate
+              </Link>
             </Button>
           </div>
         </div>
