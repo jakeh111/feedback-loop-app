@@ -7,19 +7,8 @@ import { CheckCircle } from 'lucide-react';
 export default function Home() {
   return (
     <>
-      <div className="relative h-[50vh] flex items-center justify-center overflow-hidden">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute z-0 w-auto min-w-full min-h-full max-w-none"
-        >
-          <source src="https://storage.googleapis.com/static.a-and-a.com/assets/waveforms.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-        <div className="absolute inset-0 bg-background/80 z-10" />
-        <div className="relative z-20 text-center px-4">
+      <div className="relative h-[50vh] flex items-center justify-center bg-muted">
+        <div className="relative z-10 text-center px-4">
            <h1 className="text-4xl md:text-6xl font-bold tracking-tighter font-headline text-transparent bg-clip-text bg-gradient-to-r from-primary via-white to-primary">
               Collaborative Audio Feedback, Simplified.
             </h1>
