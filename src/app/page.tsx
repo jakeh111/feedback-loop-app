@@ -8,6 +8,7 @@ export default function Home() {
   return (
     <>
       <div className="relative h-[50vh] flex items-center justify-center bg-muted">
+        <div className="absolute inset-0 bg-background/80 z-10"></div>
         <div className="relative z-10 text-center px-4">
            <h1 className="text-4xl md:text-6xl font-bold tracking-tighter font-headline text-transparent bg-clip-text bg-gradient-to-r from-primary via-white to-primary">
               Collaborative Audio Feedback, Simplified.
