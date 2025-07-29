@@ -4,16 +4,24 @@ import { UploadForm } from '@/components/UploadForm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
 
+const heroImages = [
+  { src: "https://placehold.co/1200x400.png", hint: "audio visualization" },
+  { src: "https://placehold.co/1200x400.png", hint: "music production" },
+  { src: "https://placehold.co/1200x400.png", hint: "sound waves" },
+];
+
 export default function Home() {
+  const randomImage = heroImages[Math.floor(Math.random() * heroImages.length)];
+
   return (
     <>
       <div className="relative h-[25vh] flex items-center justify-center overflow-hidden">
         <Image
-          src="https://placehold.co/1200x400.png"
+          src={randomImage.src}
           alt="Abstract audio visualization"
           fill
           className="object-cover"
-          data-ai-hint="audio visualization"
+          data-ai-hint={randomImage.hint}
         />
         <div className="absolute inset-0 bg-background/80 z-10"></div>
         <div className="relative z-20 text-center px-4">
