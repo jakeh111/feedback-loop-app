@@ -16,7 +16,7 @@ export default function Home() {
         </div>
       </div>
       <div className="container mx-auto px-4 py-12 md:py-20 -mt-24 relative z-20">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="grid md:grid-cols-2 gap-12 items-start">
           <div className="space-y-6 bg-background/80 p-6 rounded-lg">
             <p className="text-lg text-muted-foreground">
               Stop juggling email chains and confusing notes. FeedbackLoop provides one central place for precise, contextual feedback on your audio files. Upload your mix, share a private link, and get frame-accurate comments directly on the waveform.
