@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { CheckCircle } from 'lucide-react';
 
 const heroImages = [
+  { src: "https://firebasestorage.googleapis.com/v0/b/audiomarker.firebasestorage.app/o/claudia-ramirez-jK47-bR5VnU-unsplash.jpg?alt=media&token=ca1d6125-e267-4316-9895-b809b867772a", hint: "music production" },
   { src: "https://placehold.co/1200x400.png", hint: "audio visualization" },
-  { src: "https://placehold.co/1200x400.png", hint: "music production" },
   { src: "https://placehold.co/1200x400.png", hint: "sound waves" },
 ];
 
