@@ -7,11 +7,7 @@ import { CheckCircle } from 'lucide-react';
 export default function Home() {
   return (
     <>
-      <div className="relative h-[50vh] flex items-center justify-center bg-muted overflow-hidden">
-        <video autoPlay loop muted playsInline className="absolute z-0 w-auto min-w-full min-h-full max-w-none">
-          <source src="https://storage.googleapis.com/static.a-and-a.com/assets/waveforms.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
+      <div className="relative h-[35vh] flex items-center justify-center bg-muted overflow-hidden">
         <div className="absolute inset-0 bg-background/80 z-10"></div>
         <div className="relative z-20 text-center px-4">
            <h1 className="text-4xl md:text-6xl font-bold tracking-tighter font-headline text-transparent bg-clip-text bg-gradient-to-r from-primary via-white to-primary">
@@ -22,7 +18,11 @@ export default function Home() {
       <div className="container mx-auto px-4 py-12 md:py-20 -mt-24 relative z-20">
         <div className="grid md:grid-cols-2 gap-12 items-start">
           <Card className="h-full">
-            <CardContent className="p-6">
+            <CardHeader>
+              <CardTitle>Precise, Collaborative Feedback</CardTitle>
+              <CardDescription>One central place for contextual audio feedback.</CardDescription>
+            </CardHeader>
+            <CardContent>
               <p className="text-lg text-muted-foreground">
                 Stop juggling email chains and confusing notes. FeedbackLoop provides one central place for precise, contextual feedback on your audio files. Upload your mix, share a private link, and get frame-accurate comments directly on the waveform.
               </p>
