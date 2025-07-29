@@ -39,9 +39,9 @@ export function Header() {
               </Link>
             </Button>
             <Button asChild>
-              <Link href="https://www.buymeacoffee.com/your-username" target="_blank">
+              <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank">
                 <Beer className="mr-2 h-4 w-4" />
-                Buy Me a Coffee
+                Buy Me a Beer
               </Link>
             </Button>
             <ThemeToggle />
@@ -81,9 +81,9 @@ export function Header() {
                         </SheetClose>
                         <SheetClose asChild>
                              <Button className="justify-start" asChild>
-                                <Link href="https://www.buymeacoffee.com/your-username" target="_blank">
+                                <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank">
                                     <Beer className="mr-2 h-4 w-4" />
-                                    Buy Me a Coffee
+                                    Buy Me a Beer
                                 </Link>
                             </Button>
                         </SheetClose>
