@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { LogIn, UserPlus, Heart, Menu, Sun, Moon } from "lucide-react";
+import { LogIn, UserPlus, Heart, Menu, Sun, Moon, Beer } from "lucide-react";
 import { Button } from "./ui/button";
 import { ThemeToggle, useTheme } from "./ThemeProvider";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "./ui/sheet";
@@ -39,9 +39,9 @@ export function Header() {
               </Link>
             </Button>
             <Button asChild>
-              <Link href="#">
-                <Heart className="mr-2 h-4 w-4" />
-                Donate
+              <Link href="https://www.buymeacoffee.com/your-username" target="_blank">
+                <Beer className="mr-2 h-4 w-4" />
+                Buy Me a Coffee
               </Link>
             </Button>
             <ThemeToggle />
@@ -81,9 +81,9 @@ export function Header() {
                         </SheetClose>
                         <SheetClose asChild>
                              <Button className="justify-start" asChild>
-                                <Link href="#">
-                                    <Heart className="mr-2 h-4 w-4" />
-                                    Donate
+                                <Link href="https://www.buymeacoffee.com/your-username" target="_blank">
+                                    <Beer className="mr-2 h-4 w-4" />
+                                    Buy Me a Coffee
                                 </Link>
                             </Button>
                         </SheetClose>
