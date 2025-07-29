@@ -17,7 +17,7 @@ export default function Home() {
       </div>
       <div className="container mx-auto px-4 py-12 md:py-20 -mt-24 relative z-20">
         <div className="grid md:grid-cols-2 gap-12 items-start">
-          <Card>
+          <Card className="h-full">
             <CardContent className="p-6">
               <p className="text-lg text-muted-foreground">
                 Stop juggling email chains and confusing notes. FeedbackLoop provides one central place for precise, contextual feedback on your audio files. Upload your mix, share a private link, and get frame-accurate comments directly on the waveform.
@@ -42,7 +42,7 @@ export default function Home() {
               </ul>
             </CardContent>
           </Card>
-          <Card className="shadow-2xl">
+          <Card className="shadow-2xl h-full">
             <CardHeader>
               <CardTitle>Get Started</CardTitle>
               <CardDescription>Upload an MP3 to create your feedback session.</CardDescription>
