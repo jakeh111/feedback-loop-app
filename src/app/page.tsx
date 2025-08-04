@@ -69,12 +69,12 @@ export default function Home() {
               </ul>
             </CardContent>
           </Card>
-          <Card className="shadow-2xl h-full">
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>Get Started</CardTitle>
               <CardDescription>Upload an MP3 or WAV to create your feedback session.</CardDescription>
             </CardHeader>
-            <CardContent className="p-0">
+            <CardContent>
               <div className="p-6 pt-0">
                 <UploadForm />
               </div>
