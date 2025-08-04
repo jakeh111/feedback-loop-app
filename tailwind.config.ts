@@ -10,7 +10,7 @@ export default {
   theme: {
     extend: {
       dropShadow: {
-        'custom-md': '0 4px 6px rgba(0, 0, 0, 0.2)',
+        'custom-md': '0 4px 6px hsl(var(--primary) / 0.4)',
       },
       fontFamily: {
         body: ['"Intel One Mono"', 'monospace'],
