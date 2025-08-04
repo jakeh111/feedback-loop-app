@@ -87,7 +87,7 @@ export default function Home() {
                   <CardTitle>1. Upload Your Audio</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p>Drag and drop your MP3 file. Your private, collaborative workspace is created instantly.</p>
+                  <p>Drag and drop your MP3 or WAV file. Your private, collaborative workspace is created instantly.</p>
                 </CardContent>
               </Card>
               <Card className="drop-shadow-custom-md">
