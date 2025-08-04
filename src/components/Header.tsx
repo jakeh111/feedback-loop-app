@@ -1,12 +1,18 @@
 'use client';
 
 import Link from "next/link";
-import { LogIn, UserPlus, Beer, Menu } from "lucide-react";
+import { LogIn, UserPlus, Beer, Menu, Sun, Moon } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "./ui/sheet";
+import { useTheme } from "./ThemeProvider";
 
 
 export function Header() {
+  const { theme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    setTheme(theme === 'indigo' ? 'sunset' : 'indigo');
+  }
 
   return (
     <header className="border-b bg-card">
@@ -18,6 +24,10 @@ export function Header() {
           
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-2">
+            <Button variant="ghost" onClick={toggleTheme} size="icon">
+              {theme === 'indigo' ? <Sun /> : <Moon />}
+              <span className="sr-only">Toggle theme</span>
+            </Button>
             <Button variant="ghost" asChild>
               <Link href="/login">
                 <LogIn />
@@ -52,6 +62,12 @@ export function Header() {
                 </SheetTrigger>
                 <SheetContent>
                     <div className="flex flex-col gap-4 py-8">
+                        <SheetClose asChild>
+                           <Button variant="ghost" className="justify-start" onClick={toggleTheme}>
+                             {theme === 'indigo' ? <Sun className="mr-2" /> : <Moon className="mr-2" />}
+                              Toggle Theme
+                           </Button>
+                        </SheetClose>
                         <SheetClose asChild>
                             <Button variant="ghost" className="justify-start" asChild>
                                 <Link href="/login">

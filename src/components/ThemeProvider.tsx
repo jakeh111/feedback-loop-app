@@ -28,12 +28,12 @@ export function ThemeProvider({
   storageKey = "feedbackloop-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(defaultTheme);
-
-  useEffect(() => {
-    const storedTheme = (localStorage.getItem(storageKey) as Theme) || defaultTheme;
-    setTheme(storedTheme);
-  }, [storageKey, defaultTheme]);
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem(storageKey) as Theme) || defaultTheme
+    }
+    return defaultTheme
+  });
 
   useEffect(() => {
     const root = window.document.documentElement;
