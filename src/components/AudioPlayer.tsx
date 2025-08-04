@@ -100,7 +100,7 @@ export const AudioPlayer = forwardRef<HTMLAudioElement, AudioPlayerProps>(({ tra
   }
 
   return (
-    <div className="bg-card p-4 rounded-lg shadow-md border">
+    <div className="bg-card p-4 rounded-lg border drop-shadow-md">
       <audio ref={internalAudioRef} src={track.audioUrl} preload="metadata" />
       <Waveform
         data={track.waveform}

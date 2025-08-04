@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label"
 export default function SignupPage() {
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] py-12">
-      <Card className="mx-auto max-w-sm w-full">
+      <Card className="mx-auto max-w-sm w-full drop-shadow-md">
         <CardHeader>
           <CardTitle className="text-xl">Sign Up</CardTitle>
           <CardDescription>

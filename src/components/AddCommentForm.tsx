@@ -92,7 +92,7 @@ export function AddCommentForm({ onAddComment, audioRef }: AddCommentFormProps) 
   const canSubmit = text.trim() && (!isRangeSelection || (startTime !== null && endTime !== null));
 
   return (
-    <Card>
+    <Card className="drop-shadow-md">
       <CardContent className="p-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           <Textarea
