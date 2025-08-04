@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -46,7 +47,7 @@ export function Header() {
             <Sheet>
                 <SheetTrigger asChild>
                     <Button variant="ghost" size="icon">
-                        <Menu />
+                        <Menu className="h-6 w-6" />
                         <span className="sr-only">Open menu</span>
                     </Button>
                 </SheetTrigger>
