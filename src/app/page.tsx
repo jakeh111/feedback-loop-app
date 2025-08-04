@@ -74,17 +74,15 @@ export default function Home() {
               <CardTitle>Get Started</CardTitle>
               <CardDescription>Upload an MP3 or WAV to create your feedback session.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="p-6 pt-0">
-                <UploadForm />
-              </div>
+            <CardContent className="px-6 pb-6">
+              <UploadForm />
             </CardContent>
           </Card>
         </div>
          <div className="mt-20 text-center">
             <h2 className="text-3xl font-bold tracking-tighter font-headline mb-4">How It Works</h2>
             <div className="grid md:grid-cols-3 gap-8 text-left">
-              <Card>
+              <Card className="shadow-lg">
                 <CardHeader>
                   <CardTitle>1. Upload Your Audio</CardTitle>
                 </CardHeader>
@@ -92,7 +90,7 @@ export default function Home() {
                   <p>Drag and drop your MP3 file. Your private, collaborative workspace is created instantly.</p>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="shadow-lg">
                 <CardHeader>
                   <CardTitle>2. Share the Link</CardTitle>
                 </CardHeader>
@@ -100,7 +98,7 @@ export default function Home() {
                   <p>Grab the unique link and send it to your clients or team. No sign-up required for them to leave comments.</p>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="shadow-lg">
                 <CardHeader>
                   <CardTitle>3. Get Precise Feedback</CardTitle>
                 </CardHeader>
