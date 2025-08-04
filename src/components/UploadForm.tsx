@@ -15,14 +15,15 @@ export function UploadForm() {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.type === 'audio/mpeg') {
+    const acceptedTypes = ['audio/mpeg', 'audio/wav', 'audio/wave'];
+    if (file && acceptedTypes.includes(file.type)) {
       setSelectedFile(file);
     } else {
       setSelectedFile(null);
       toast({
         variant: "destructive",
         title: "Invalid File Type",
-        description: "Please select an MP3 file.",
+        description: "Please select an MP3 or WAV file.",
       });
     }
   };
@@ -33,7 +34,7 @@ export function UploadForm() {
        toast({
         variant: "destructive",
         title: "No file selected",
-        description: "Please select an MP3 file to upload.",
+        description: "Please select an MP3 or WAV file to upload.",
       });
       return;
     }
@@ -42,10 +43,11 @@ export function UploadForm() {
     
     // Simulate upload process
     setTimeout(() => {
+      // In a real app, this ID would come from the database after storing the track.
       const trackId = Math.random().toString(36).substring(2, 15);
       toast({
         title: "Upload Successful",
-        description: "Your track is ready for feedback.",
+        description: "Your track is being processed and will be available shortly.",
       });
       router.push(`/track/${trackId}`);
     }, 1500);
@@ -60,9 +62,9 @@ export function UploadForm() {
                 <p className="mb-2 text-sm text-muted-foreground">
                   <span className="font-semibold">Click to upload</span> or drag and drop
                 </p>
-                <p className="text-xs text-muted-foreground">MP3 (MAX. 80MB)</p>
+                <p className="text-xs text-muted-foreground">MP3 or WAV (MAX. 80MB)</p>
             </div>
-            <Input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} accept=".mp3,audio/mpeg" />
+            <Input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} accept=".mp3,.wav,audio/mpeg,audio/wav,audio/wave" />
         </label>
       </div>
 
