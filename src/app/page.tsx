@@ -69,7 +69,7 @@ export default function Home() {
               </ul>
             </CardContent>
           </Card>
-          <Card className="h-full">
+          <Card className="h-fit">
             <CardHeader>
               <CardTitle>Get Started</CardTitle>
               <CardDescription>Upload an MP3 or WAV to create your feedback session.</CardDescription>
