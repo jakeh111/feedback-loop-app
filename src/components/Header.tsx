@@ -1,17 +1,12 @@
 'use client';
 
 import Link from "next/link";
-import { LogIn, UserPlus, Heart, Menu, Sun, Moon, Beer } from "lucide-react";
+import { LogIn, UserPlus, Beer, Menu } from "lucide-react";
 import { Button } from "./ui/button";
-import { ThemeToggle, useTheme } from "./ThemeProvider";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "./ui/sheet";
 
 
 export function Header() {
-  const { theme, setTheme } = useTheme();
-  const toggleTheme = () => {
-      setTheme(theme === 'sunset' ? 'indigo' : 'sunset');
-  }
 
   return (
     <header className="border-b bg-card">
@@ -44,7 +39,6 @@ export function Header() {
                 Buy Me a Beer
               </Link>
             </Button>
-            <ThemeToggle />
           </div>
 
           {/* Mobile Menu */}
@@ -87,10 +81,6 @@ export function Header() {
                                 </Link>
                             </Button>
                         </SheetClose>
-                        <Button variant="ghost" className="justify-start" onClick={toggleTheme}>
-                            {theme === 'sunset' ? <Moon /> : <Sun />}
-                            <span>Toggle Theme</span>
-                        </Button>
                     </div>
                 </SheetContent>
             </Sheet>
