@@ -74,7 +74,7 @@ export default function Home() {
               <CardTitle>Get Started</CardTitle>
               <CardDescription>Upload an MP3 or WAV to create your feedback session.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               <UploadForm />
             </CardContent>
           </Card>
