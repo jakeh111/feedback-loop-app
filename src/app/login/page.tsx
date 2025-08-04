@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label"
 export default function LoginPage() {
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] py-12">
-      <Card className="mx-auto max-w-sm w-full drop-shadow-md">
+      <Card className="mx-auto max-w-sm w-full drop-shadow-custom-md">
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>

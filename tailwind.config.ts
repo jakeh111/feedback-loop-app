@@ -9,6 +9,9 @@ export default {
   ],
   theme: {
     extend: {
+      dropShadow: {
+        'custom-md': '0 4px 6px rgba(0, 0, 0, 0.2)',
+      },
       fontFamily: {
         body: ['"Intel One Mono"', 'monospace'],
         headline: ['"Intel One Mono"', 'monospace'],

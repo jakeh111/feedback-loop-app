@@ -45,7 +45,7 @@ export function CommentList({ comments, onSeekTo }: CommentListProps) {
   return (
     <div className="space-y-4">
       {[...comments].sort((a,b) => a.timestamp - b.timestamp).map((comment) => (
-        <Card key={comment.id} className="overflow-hidden drop-shadow-md">
+        <Card key={comment.id} className="overflow-hidden drop-shadow-custom-md">
           <CardHeader className="flex flex-row items-center gap-4 p-4 bg-muted/50">
             <Avatar>
               <AvatarImage src={comment.avatarUrl} alt={comment.author} />

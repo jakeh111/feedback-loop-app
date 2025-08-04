@@ -20,7 +20,7 @@ export default async function DashboardPage() {
         </Button>
       </div>
 
-      <Card className="drop-shadow-md">
+      <Card className="drop-shadow-custom-md">
         <CardHeader>
           <CardTitle>My Tracks</CardTitle>
           <CardDescription>A list of your uploaded tracks for feedback.</CardDescription>

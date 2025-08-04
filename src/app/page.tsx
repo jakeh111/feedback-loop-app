@@ -40,7 +40,7 @@ export default function Home() {
       </div>
       <div className="container mx-auto px-4 py-12 md:py-20 -mt-24 relative z-20">
         <div className="grid md:grid-cols-2 gap-12 items-start">
-          <Card className="h-full drop-shadow-md">
+          <Card className="h-full drop-shadow-custom-md">
             <CardHeader>
               <CardTitle>Precise, Collaborative Feedback</CardTitle>
               <CardDescription>One central place for contextual audio feedback.</CardDescription>
@@ -69,7 +69,7 @@ export default function Home() {
               </ul>
             </CardContent>
           </Card>
-          <Card className="h-fit drop-shadow-md">
+          <Card className="h-fit drop-shadow-custom-md">
             <CardHeader>
               <CardTitle>Get Started</CardTitle>
               <CardDescription>Upload an MP3 or WAV to create your feedback session.</CardDescription>
@@ -82,7 +82,7 @@ export default function Home() {
          <div className="mt-20 text-center">
             <h2 className="text-3xl font-bold tracking-tighter font-headline mb-4">How It Works</h2>
             <div className="grid md:grid-cols-3 gap-8 text-left">
-              <Card className="drop-shadow-md">
+              <Card className="drop-shadow-custom-md">
                 <CardHeader>
                   <CardTitle>1. Upload Your Audio</CardTitle>
                 </CardHeader>
@@ -90,7 +90,7 @@ export default function Home() {
                   <p>Drag and drop your MP3 file. Your private, collaborative workspace is created instantly.</p>
                 </CardContent>
               </Card>
-              <Card className="drop-shadow-md">
+              <Card className="drop-shadow-custom-md">
                 <CardHeader>
                   <CardTitle>2. Share the Link</CardTitle>
                 </CardHeader>
@@ -98,7 +98,7 @@ export default function Home() {
                   <p>Grab the unique link and send it to your clients or team. No sign-up required for them to leave comments.</p>
                 </CardContent>
               </Card>
-              <Card className="drop-shadow-md">
+              <Card className="drop-shadow-custom-md">
                 <CardHeader>
                   <CardTitle>3. Get Precise Feedback</CardTitle>
                 </CardHeader>
