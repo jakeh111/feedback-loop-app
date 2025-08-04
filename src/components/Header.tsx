@@ -47,8 +47,8 @@ export function Header() {
           <div className="md:hidden flex items-center">
             <Sheet>
                 <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                        <Menu className="h-16 w-16" />
+                    <Button variant="ghost" size="icon" className="w-auto h-auto p-2">
+                        <Menu className="h-10 w-10" strokeWidth={2.5} />
                         <span className="sr-only">Open menu</span>
                     </Button>
                 </SheetTrigger>
