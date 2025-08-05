@@ -1,9 +1,10 @@
 
 'use client';
 
-import { Beer, Mail, MailOpen, Instagram } from "lucide-react";
+import { Beer, Mail, MailOpen, Instagram, MessageSquare } from "lucide-react";
 import { Button } from "./ui/button";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
+import Link from "next/link";
 
 export function Footer() {
   return (
@@ -17,46 +18,54 @@ export function Footer() {
                             This is a placeholder for your about section. You can describe your project, your mission, or anything else you'd like to share with your visitors.
                         </p>
                     </div>
-                    <div className="flex justify-start md:justify-end items-center gap-2">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button asChild variant="ghost" size="icon">
-                                <a href="mailto:sidedoormedia.email@gmail.com" aria-label="Email" className="group">
-                                    <Mail className="block group-hover:hidden" />
-                                    <MailOpen className="hidden group-hover:block" />
-                                </a>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Email</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                             <Button asChild variant="ghost" size="icon">
-                                <a href="#" aria-label="Instagram" className="group">
-                                    <Instagram className="transition-transform group-hover:rotate-12" />
-                                </a>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Instagram</p>
-                          </TooltipContent>
-                        </Tooltip>
-                         <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button asChild variant="ghost" size="icon">
-                                <a href="https://buymeacoffee.com/sidedoormedia" target="_blank" aria-label="Buy Me a Beer" className="group">
-                                  <Beer className="transition-transform group-hover:-rotate-12" />
-                                </a>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Buy Me a Beer | Support</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                    <div className="flex flex-col items-start md:items-end gap-4">
+                      <div className="flex justify-start md:justify-end items-center gap-2">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button asChild variant="ghost" size="icon">
+                                  <a href="mailto:sidedoormedia.email@gmail.com" aria-label="Email" className="group">
+                                      <Mail className="block group-hover:hidden" />
+                                      <MailOpen className="hidden group-hover:block" />
+                                  </a>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Email</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                               <Button asChild variant="ghost" size="icon">
+                                  <a href="#" aria-label="Instagram" className="group">
+                                      <Instagram className="transition-transform group-hover:rotate-12" />
+                                  </a>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Instagram</p>
+                            </TooltipContent>
+                          </Tooltip>
+                           <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button asChild variant="ghost" size="icon">
+                                  <a href="https://buymeacoffee.com/sidedoormedia" target="_blank" aria-label="Buy Me a Beer" className="group">
+                                    <Beer className="transition-transform group-hover:-rotate-12" />
+                                  </a>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Buy Me a Beer | Support</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                       <Button asChild variant="outline" size="sm">
+                          <Link href="/feedback">
+                            <MessageSquare className="mr-2 h-4 w-4"/>
+                            Feedback
+                          </Link>
+                       </Button>
                     </div>
                 </div>
                  <div className="border-t border-border mt-6 pt-4 text-center text-xs text-muted-foreground">
