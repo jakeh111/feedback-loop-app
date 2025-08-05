@@ -36,17 +36,8 @@ export function Footer() {
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button asChild variant="ghost" size="icon">
-                                <Link href="#" aria-label="Instagram" className="group relative">
-                                    <Instagram />
-                                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <div className="absolute top-0 left-0 w-[2px] h-[6px] bg-foreground -rotate-45 translate-x-[-4px] translate-y-[-2px]"></div>
-                                        <div className="absolute top-1/2 left-0 w-[2px] h-[6px] bg-foreground -translate-y-1/2 translate-x-[-6px]"></div>
-                                        <div className="absolute bottom-0 left-0 w-[2px] h-[6px] bg-foreground rotate-45 translate-x-[-4px] translate-y-[2px]"></div>
-
-                                        <div className="absolute top-0 right-0 w-[2px] h-[6px] bg-foreground rotate-45 translate-x-[4px] translate-y-[-2px]"></div>
-                                        <div className="absolute top-1/2 right-0 w-[2px] h-[6px] bg-foreground -translate-y-1/2 translate-x-[6px]"></div>
-                                        <div className="absolute bottom-0 right-0 w-[2px] h-[6px] bg-foreground -rotate-45 translate-x-[4px] translate-y-[2px]"></div>
-                                    </div>
+                                <Link href="#" aria-label="Instagram" className="group">
+                                    <Instagram className="transition-transform group-hover:rotate-12" />
                                 </Link>
                             </Button>
                           </TooltipTrigger>
@@ -58,7 +49,7 @@ export function Footer() {
                           <TooltipTrigger asChild>
                             <Button asChild variant="ghost" size="icon">
                                 <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" aria-label="Buy Me a Beer" className="group">
-                                  <Beer className="transition-transform group-hover:rotate-12" />
+                                  <Beer className="transition-transform group-hover:-rotate-12" />
                                 </Link>
                             </Button>
                           </TooltipTrigger>
