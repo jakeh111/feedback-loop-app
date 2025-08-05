@@ -54,7 +54,7 @@ export function Footer() {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Buy Me a Beer</p>
+                            <p>Buy Me a Beer | Support</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
