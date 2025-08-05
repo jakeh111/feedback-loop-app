@@ -32,7 +32,7 @@ export function Footer() {
                             </div>
                         </div>
                          <Button asChild>
-                            <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" className="group gap-0">
+                            <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" className="group">
                               <Beer className="transition-transform group-hover:-rotate-12" />
                               <span className="max-w-0 overflow-hidden transition-all duration-300 ease-in-out group-hover:max-w-[150px] group-hover:ml-2">
                                 Buy Me a Beer
