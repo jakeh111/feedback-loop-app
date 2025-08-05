@@ -21,10 +21,10 @@ export function Footer() {
                         <Button asChild>
                             <Link href="#" className="group">
                                 <LinkIcon />
-                                <span className="max-w-[55px] group-hover:max-w-0 overflow-hidden transition-all duration-300 ease-in-out">
+                                <span className="max-w-[60px] group-hover:max-w-0 overflow-hidden transition-all duration-300 ease-in-out">
                                   Socials
                                 </span>
-                                <span className="max-w-0 group-hover:max-w-xs overflow-hidden transition-all duration-300 ease-in-out">
+                                <span className="max-w-0 group-hover:max-w-[150px] overflow-hidden transition-all duration-300 ease-in-out">
                                   Email | Insta | Website
                                 </span>
                             </Link>
@@ -32,7 +32,7 @@ export function Footer() {
                          <Button asChild>
                             <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" className="group">
                               <Beer className="transition-transform group-hover:-rotate-12" />
-                              <span className="max-w-0 overflow-hidden transition-all duration-300 ease-in-out group-hover:max-w-xs group-hover:ml-2">
+                              <span className="max-w-0 overflow-hidden transition-all duration-300 ease-in-out group-hover:max-w-[150px] group-hover:ml-2">
                                 Buy Me a Beer
                               </span>
                             </Link>
