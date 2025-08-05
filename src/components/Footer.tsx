@@ -24,13 +24,13 @@ export function Footer() {
                                 <div className="max-w-[60px] group-hover:max-w-0 overflow-hidden transition-all duration-300 ease-in-out ml-2">
                                   Socials
                                 </div>
-                                <div className="max-w-0 group-hover:max-w-[150px] overflow-hidden transition-all duration-300 ease-in-out ml-2 whitespace-nowrap">
+                                <div className="max-w-0 group-hover:max-w-[200px] overflow-hidden transition-all duration-300 ease-in-out ml-2 whitespace-nowrap">
                                   Email | Insta | Website
                                 </div>
                             </Link>
                         </Button>
                          <Button asChild>
-                            <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" className="group">
+                            <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" className="group gap-0">
                               <Beer className="transition-transform group-hover:-rotate-12" />
                               <span className="max-w-0 overflow-hidden transition-all duration-300 ease-in-out group-hover:max-w-[150px] group-hover:ml-2">
                                 Buy Me a Beer
