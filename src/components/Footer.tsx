@@ -2,7 +2,7 @@
 'use client';
 
 import Link from "next/link";
-import { Beer, Mail, Instagram, Link as LinkIcon } from "lucide-react";
+import { Beer, Mail, Instagram } from "lucide-react";
 import { Button } from "./ui/button";
 
 export function Footer() {
@@ -31,7 +31,7 @@ export function Footer() {
                             </Button>
                              <Button asChild variant="ghost" size="icon">
                                 <Link href="#" aria-label="Website">
-                                    <LinkIcon />
+                                    <span className="font-bold text-xs">www</span>
                                 </Link>
                             </Button>
                         </div>
