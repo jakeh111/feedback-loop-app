@@ -36,9 +36,9 @@ export function Footer() {
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button asChild variant="ghost" size="icon">
-                                <Link href="#" aria-label="Instagram" className="group">
+                                <a href="#" aria-label="Instagram" className="group">
                                     <Instagram className="transition-transform group-hover:rotate-12" />
-                                </Link>
+                                </a>
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
@@ -48,9 +48,9 @@ export function Footer() {
                          <Tooltip>
                           <TooltipTrigger asChild>
                             <Button asChild variant="ghost" size="icon">
-                                <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" aria-label="Buy Me a Beer" className="group">
+                                <a href="https://buymeacoffee.com/sidedoormedia" target="_blank" aria-label="Buy Me a Beer" className="group">
                                   <Beer className="transition-transform group-hover:-rotate-12" />
-                                </Link>
+                                </a>
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
