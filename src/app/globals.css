@@ -51,39 +51,6 @@
 
 @layer components {
   .card {
-    @apply relative bg-card text-card-foreground drop-shadow-lg;
-    padding-left: 2rem; /* Make space for the spiral */
-  }
-
-  /* The punch holes */
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0.5rem;
-    left: 0.75rem;
-    bottom: 0.5rem;
-    width: 0.25rem;
-    background-image: radial-gradient(circle at center, hsl(var(--background)) 0.125rem, transparent 0.125rem);
-    background-size: 100% 1rem; /* Spacing of the holes */
-    background-repeat: y;
-    z-index: 2;
-  }
-
-  /* The spiral wire */
-  .card::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0.75rem;
-    bottom: 0;
-    width: 0.25rem;
-    background-image: repeating-linear-gradient(
-      135deg,
-      #c0c0c0,
-      #c0c0c0 2px,
-      #a9a9a9 2px,
-      #a9a9a9 4px
-    );
-    z-index: 1;
+    @apply relative bg-card text-card-foreground drop-shadow-custom-md border-l-4 border-primary;
   }
 }
