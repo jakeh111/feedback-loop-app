@@ -31,7 +31,7 @@ export default function Home() {
           data-ai-hint={randomImage.hint}
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/60 z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10"></div>
         <div className="relative z-20 text-center px-4">
            <h1 className="text-4xl md:text-6xl font-bold tracking-tighter font-headline text-transparent bg-clip-text bg-gradient-to-r from-primary via-white to-primary">
               Collaborative Audio Feedback, Simplified.
