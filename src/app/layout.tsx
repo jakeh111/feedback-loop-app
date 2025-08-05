@@ -24,9 +24,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
           <div className="flex flex-col min-h-screen">
-            <div className="bg-card">
-              <Header />
-            </div>
+            <Header />
             <main className="flex-grow bg-background">
               {children}
             </main>
