@@ -17,30 +17,20 @@ export function Footer() {
                             This is a placeholder for your about section. You can describe your project, your mission, or anything else you'd like to share with your visitors.
                         </p>
                     </div>
-                    <div className="flex flex-col items-start md:items-end gap-2">
-                        <div className="flex items-center gap-2">
-                            <Button asChild variant="ghost" size="icon">
-                                <a href="mailto:sidedoormedia.email@gmail.com" aria-label="Email">
-                                    <Mail />
-                                </a>
-                            </Button>
-                            <Button asChild variant="ghost" size="icon">
-                                <Link href="#" aria-label="Instagram">
-                                    <Instagram />
-                                </Link>
-                            </Button>
-                             <Button asChild variant="ghost" size="icon">
-                                <Link href="#" aria-label="Website">
-                                    <span className="font-bold text-xs">www</span>
-                                </Link>
-                            </Button>
-                        </div>
-                         <Button asChild>
-                            <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" className="group">
-                              <Beer className="transition-transform group-hover:-rotate-12" />
-                              <span className="max-w-0 overflow-hidden transition-all duration-300 ease-in-out group-hover:max-w-[150px] group-hover:ml-2">
-                                Buy Me a Beer
-                              </span>
+                    <div className="flex justify-start md:justify-end items-center gap-2">
+                        <Button asChild variant="ghost" size="icon">
+                            <a href="mailto:sidedoormedia.email@gmail.com" aria-label="Email">
+                                <Mail />
+                            </a>
+                        </Button>
+                        <Button asChild variant="ghost" size="icon">
+                            <Link href="#" aria-label="Instagram">
+                                <Instagram />
+                            </Link>
+                        </Button>
+                         <Button asChild variant="ghost" size="icon">
+                            <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" aria-label="Buy Me a Beer">
+                              <Beer />
                             </Link>
                         </Button>
                     </div>
