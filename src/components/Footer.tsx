@@ -19,7 +19,7 @@ export function Footer() {
                     </div>
                     <div className="flex flex-col gap-2 items-start md:items-end">
                         <Button asChild>
-                            <Link href="#" className="group">
+                            <Link href="#" className="group gap-0">
                                 <LinkIcon />
                                 <div className="max-w-[60px] group-hover:max-w-0 overflow-hidden transition-all duration-300 ease-in-out ml-2">
                                   Socials
