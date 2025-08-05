@@ -2,7 +2,7 @@
 'use client';
 
 import Link from "next/link";
-import { Beer } from "lucide-react";
+import { Beer, Link as LinkIcon } from "lucide-react";
 import { Button } from "./ui/button";
 
 export function Footer() {
@@ -17,13 +17,21 @@ export function Footer() {
                             This is a placeholder for your about section. You can describe your project, your mission, or anything else you'd like to share with your visitors.
                         </p>
                     </div>
-                    <div className="flex flex-col gap-4 items-start md:items-end">
+                    <div className="flex flex-col gap-2 items-start md:items-end">
                          <Button asChild>
                             <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" className="group gap-0">
                               <Beer className="transition-transform group-hover:-rotate-12" />
                               <span className="max-w-0 overflow-hidden transition-all duration-300 ease-in-out group-hover:max-w-xs group-hover:ml-2">
                                 Buy Me a Beer
                               </span>
+                            </Link>
+                        </Button>
+                        <Button asChild>
+                            <Link href="#" className="group gap-0">
+                                <LinkIcon />
+                                <span className="max-w-0 overflow-hidden transition-all duration-300 ease-in-out group-hover:max-w-xs group-hover:ml-2">
+                                  Email | Insta | Website
+                                </span>
                             </Link>
                         </Button>
                     </div>
