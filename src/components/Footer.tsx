@@ -18,17 +18,19 @@ export function Footer() {
                         </p>
                     </div>
                     <div className="flex flex-col gap-2 items-start md:items-end">
-                        <Button asChild>
-                            <Link href="#" className="group gap-0">
-                                <LinkIcon className="transition-transform group-hover:rotate-12" />
-                                <div className="max-w-[60px] group-hover:max-w-0 overflow-hidden transition-all duration-300 ease-in-out group-hover:ml-2">
-                                  Socials
+                        <div className="group relative">
+                            <Button asChild>
+                                <div className="flex items-center gap-2">
+                                    <LinkIcon className="transition-transform group-hover:rotate-12" />
+                                    <span>Socials</span>
                                 </div>
-                                <div className="max-w-0 group-hover:max-w-[200px] overflow-hidden transition-all duration-300 ease-in-out ml-2 whitespace-nowrap">
-                                  Email | Insta | Website
-                                </div>
-                            </Link>
-                        </Button>
+                            </Button>
+                            <div className="absolute bottom-full right-0 mb-2 w-max p-2 rounded-md bg-secondary text-secondary-foreground text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
+                                <a href="mailto:sidedoormedia.email@gmail.com" className="hover:underline">Email</a> | 
+                                <a href="#" target="_blank" rel="noopener noreferrer" className="hover:underline"> Insta</a> | 
+                                <a href="#" target="_blank" rel="noopener noreferrer" className="hover:underline"> Website</a>
+                            </div>
+                        </div>
                          <Button asChild>
                             <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" className="group gap-0">
                               <Beer className="transition-transform group-hover:-rotate-12" />
