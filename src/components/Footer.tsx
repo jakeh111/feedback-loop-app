@@ -21,16 +21,16 @@ export function Footer() {
                         <Button asChild>
                             <Link href="#" className="group">
                                 <LinkIcon />
-                                <span className="max-w-[60px] group-hover:max-w-0 overflow-hidden transition-all duration-300 ease-in-out ml-2">
+                                <div className="max-w-[60px] group-hover:max-w-0 overflow-hidden transition-all duration-300 ease-in-out ml-2">
                                   Socials
-                                </span>
-                                <span className="max-w-0 group-hover:max-w-[150px] overflow-hidden transition-all duration-300 ease-in-out ml-2">
+                                </div>
+                                <div className="max-w-0 group-hover:max-w-[150px] overflow-hidden transition-all duration-300 ease-in-out ml-2 whitespace-nowrap">
                                   Email | Insta | Website
-                                </span>
+                                </div>
                             </Link>
                         </Button>
                          <Button asChild>
-                            <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" className="group">
+                            <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" className="group gap-0">
                               <Beer className="transition-transform group-hover:-rotate-12" />
                               <span className="max-w-0 overflow-hidden transition-all duration-300 ease-in-out group-hover:max-w-[150px] group-hover:ml-2">
                                 Buy Me a Beer
