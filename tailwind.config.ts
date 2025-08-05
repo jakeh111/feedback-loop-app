@@ -11,6 +11,7 @@ export default {
     extend: {
       dropShadow: {
         'custom-md': '0 4px 6px hsl(var(--primary) / 0.4)',
+        'lg': '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
       },
       fontFamily: {
         body: ['"Intel One Mono"', 'monospace'],
