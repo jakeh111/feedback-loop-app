@@ -46,7 +46,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Intel+One+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-          <div className="flex flex-col min-h-screen">
+          <div className="relative flex flex-col min-h-screen">
             <Header />
             <main className="flex-grow">
               {children}

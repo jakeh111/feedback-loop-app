@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose } from "./ui/sheet";
 export function Header() {
 
   return (
-    <header className="absolute top-0 left-0 w-full z-30 pt-4">
+    <header className="w-full z-30 pt-4">
       <div className="container mx-auto">
         <div className="flex items-center justify-between h-16 bg-card border rounded-lg p-4">
           <Link href="/" className="flex items-center gap-2">

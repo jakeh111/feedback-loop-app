@@ -23,7 +23,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="relative h-[40vh] flex items-center justify-center overflow-hidden">
+      <div className="relative h-[40vh] -mt-20 flex items-center justify-center overflow-hidden">
         <Image
           src={randomImage.src}
           alt="Abstract audio visualization"
