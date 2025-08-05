@@ -2,8 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { Header } from '@/components/Header';
-import { Instagram, Youtube, Mail } from 'lucide-react';
-import Link from 'next/link';
+import { Footer } from '@/components/Footer';
 
 export const metadata: Metadata = {
   title: 'FeedbackLoop',
@@ -24,10 +23,11 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
           <div className="flex flex-col min-h-screen">
-            <div className="absolute top-0 left-0 w-full z-30">
-              <Header />
-            </div>
-            {children}
+            <Header />
+            <main className="flex-grow">
+              {children}
+            </main>
+            <Footer />
           </div>
           <Toaster />
       </body>
