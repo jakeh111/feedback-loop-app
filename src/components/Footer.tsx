@@ -18,20 +18,23 @@ export function Footer() {
                         </p>
                     </div>
                     <div className="flex flex-col gap-2 items-start md:items-end">
+                        <Button asChild>
+                            <Link href="#" className="group">
+                                <LinkIcon />
+                                <span className="max-w-[55px] group-hover:max-w-0 overflow-hidden transition-all duration-300 ease-in-out">
+                                  Socials
+                                </span>
+                                <span className="max-w-0 group-hover:max-w-xs overflow-hidden transition-all duration-300 ease-in-out">
+                                  Email | Insta | Website
+                                </span>
+                            </Link>
+                        </Button>
                          <Button asChild>
-                            <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" className="group gap-0">
+                            <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" className="group">
                               <Beer className="transition-transform group-hover:-rotate-12" />
                               <span className="max-w-0 overflow-hidden transition-all duration-300 ease-in-out group-hover:max-w-xs group-hover:ml-2">
                                 Buy Me a Beer
                               </span>
-                            </Link>
-                        </Button>
-                        <Button asChild>
-                            <Link href="#" className="group gap-0">
-                                <LinkIcon />
-                                <span className="max-w-0 overflow-hidden transition-all duration-300 ease-in-out group-hover:max-w-xs group-hover:ml-2">
-                                  Email | Insta | Website
-                                </span>
                             </Link>
                         </Button>
                     </div>
