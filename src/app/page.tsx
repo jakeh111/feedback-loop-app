@@ -48,7 +48,7 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <p className="text-lg text-muted-foreground">
-                Stop juggling email chains and confusing notes. FeedbackLoop provides one central place for precise, contextual feedback on your audio files. Upload your mix, share a private link, and get frame-accurate comments directly on the waveform.
+                Stop juggling email chains and confusing notes. TrackPolish provides one central place for precise, contextual feedback on your audio files. Upload your mix, share a private link, and get frame-accurate comments directly on the waveform.
               </p>
               <ul className="space-y-3 mt-6">
                 <li className="flex items-center gap-3">

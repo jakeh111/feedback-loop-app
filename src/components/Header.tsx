@@ -15,7 +15,7 @@ export function Header() {
       <div className="container mx-auto">
         <div className="flex items-center justify-between h-16 bg-card border rounded-lg p-4">
           <Link href="/" className="flex items-center gap-2">
-            <span className="font-bold text-lg font-headline">FeedbackLoop</span>
+            <span className="font-bold text-lg font-headline">TrackPolish</span>
           </Link>
           
           {/* Desktop Menu */}

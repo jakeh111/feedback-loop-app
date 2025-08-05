@@ -6,15 +6,15 @@ import { Footer } from '@/components/Footer';
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | FeedbackLoop',
-    default: 'FeedbackLoop',
+    template: '%s | TrackPolish',
+    default: 'TrackPolish',
   },
   description: 'Collaborative audio feedback for engineers and clients. Upload your mix, share a private link, and get frame-accurate comments directly on the waveform.',
   openGraph: {
-    title: 'FeedbackLoop',
+    title: 'TrackPolish',
     description: 'Collaborative audio feedback for engineers and clients.',
     url: 'https://audiomarker-nfgw.web.app',
-    siteName: 'FeedbackLoop',
+    siteName: 'TrackPolish',
     images: [
       {
         url: 'https://audiomarker-nfgw.web.app/og-image.png',
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'FeedbackLoop',
+    title: 'TrackPolish',
     description: 'Collaborative audio feedback for engineers and clients.',
     images: ['https://audiomarker-nfgw.web.app/og-image.png'],
   },
