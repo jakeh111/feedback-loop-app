@@ -25,27 +25,6 @@ export default function RootLayout({
       <body className="font-body antialiased">
           <div className="flex flex-col min-h-screen">
             <Header />
-            <main className="flex-grow bg-background">
-              {children}
-            </main>
-            <footer className="w-full py-4 bg-background border-t">
-              <div className="container mx-auto text-center">
-                <div className="flex items-center justify-center gap-6">
-                  <Link href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                    <Instagram className="h-6 w-6" />
-                    <span className="sr-only">Instagram</span>
-                  </Link>
-                  <Link href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                    <Youtube className="h-6 w-6" />
-                    <span className="sr-only">YouTube</span>
-                  </Link>
-                  <Link href="mailto:sidedoormedia.email@gmail.com" className="text-muted-foreground hover:text-primary transition-colors">
-                    <Mail className="h-6 w-6" />
-                    <span className="sr-only">Email</span>
-                  </Link>
-                </div>
-              </div>
-            </footer>
           </div>
           <Toaster />
       </body>
