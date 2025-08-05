@@ -35,9 +35,9 @@ export function Header() {
                 Sign Up
               </Link>
             </Button>
-            <Button asChild>
+            <Button asChild className="group">
               <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank">
-                <Beer className="mr-2 h-4 w-4" />
+                <Beer className="mr-2 h-4 w-4 transition-transform group-hover:-rotate-12" />
                 Buy Me a Beer
               </Link>
             </Button>
@@ -76,9 +76,9 @@ export function Header() {
                             </Button>
                         </SheetClose>
                         <SheetClose asChild>
-                             <Button className="justify-start" asChild>
+                             <Button className="justify-start group" asChild>
                                 <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank">
-                                    <Beer className="mr-2 h-4 w-4" />
+                                    <Beer className="mr-2 h-4 w-4 transition-transform group-hover:-rotate-12" />
                                     Buy Me a Beer
                                 </Link>
                             </Button>
