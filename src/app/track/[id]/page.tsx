@@ -1,5 +1,6 @@
 import { TrackPageClient } from "@/components/TrackPageClient";
 import type { Track } from "@/lib/types";
+import type { Metadata, ResolvingMetadata } from 'next'
 
 // In a real app, you would fetch this data from a database based on the `params.id`.
 // For this example, we'll use mock data.
@@ -34,6 +35,22 @@ const getTrackData = async (id: string): Promise<Track> => {
       ],
   };
 };
+
+type Props = {
+  params: { id: string }
+}
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const track = await getTrackData(params.id)
+ 
+  return {
+    title: `${track.title} by ${track.artist}`,
+    description: `Listen to and give feedback on ${track.title} by ${track.artist}.`,
+  }
+}
 
 
 export default async function TrackPage({ params }: { params: { id: string } }) {

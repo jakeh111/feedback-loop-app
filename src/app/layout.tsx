@@ -5,8 +5,32 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'FeedbackLoop',
-  description: 'Collaborative audio feedback for engineers and clients.',
+  title: {
+    template: '%s | FeedbackLoop',
+    default: 'FeedbackLoop',
+  },
+  description: 'Collaborative audio feedback for engineers and clients. Upload your mix, share a private link, and get frame-accurate comments directly on the waveform.',
+  openGraph: {
+    title: 'FeedbackLoop',
+    description: 'Collaborative audio feedback for engineers and clients.',
+    url: 'https://audiomarker-nfgw.web.app',
+    siteName: 'FeedbackLoop',
+    images: [
+      {
+        url: 'https://audiomarker-nfgw.web.app/og-image.png',
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FeedbackLoop',
+    description: 'Collaborative audio feedback for engineers and clients.',
+    images: ['https://audiomarker-nfgw.web.app/og-image.png'],
+  },
 };
 
 export default function RootLayout({
