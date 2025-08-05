@@ -2,8 +2,9 @@
 'use client';
 
 import Link from "next/link";
-import { Beer, Mail, Instagram } from "lucide-react";
+import { Beer, Mail, MailOpen, Instagram } from "lucide-react";
 import { Button } from "./ui/button";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 
 export function Footer() {
   return (
@@ -18,21 +19,45 @@ export function Footer() {
                         </p>
                     </div>
                     <div className="flex justify-start md:justify-end items-center gap-2">
-                        <Button asChild variant="ghost" size="icon">
-                            <a href="mailto:sidedoormedia.email@gmail.com" aria-label="Email">
-                                <Mail />
-                            </a>
-                        </Button>
-                        <Button asChild variant="ghost" size="icon">
-                            <Link href="#" aria-label="Instagram">
-                                <Instagram />
-                            </Link>
-                        </Button>
-                         <Button asChild variant="ghost" size="icon">
-                            <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" aria-label="Buy Me a Beer">
-                              <Beer />
-                            </Link>
-                        </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button asChild variant="ghost" size="icon">
+                                <a href="mailto:sidedoormedia.email@gmail.com" aria-label="Email" className="group">
+                                    <Mail className="block group-hover:hidden" />
+                                    <MailOpen className="hidden group-hover:block" />
+                                </a>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Email</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button asChild variant="ghost" size="icon">
+                                <Link href="#" aria-label="Instagram">
+                                    <Instagram />
+                                </Link>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Instagram</p>
+                          </TooltipContent>
+                        </Tooltip>
+                         <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button asChild variant="ghost" size="icon">
+                                <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" aria-label="Buy Me a Beer" className="group">
+                                  <Beer className="transition-transform group-hover:rotate-12" />
+                                </Link>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Buy Me a Beer</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                 </div>
                  <div className="border-t border-border mt-6 pt-4 text-center text-xs text-muted-foreground">
