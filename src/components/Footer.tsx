@@ -18,10 +18,12 @@ export function Footer() {
                         </p>
                     </div>
                     <div className="flex flex-col gap-4 items-start md:items-end">
-                         <Button asChild className="group">
-                            <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank">
-                            <Beer className="mr-2 h-4 w-4 transition-transform group-hover:-rotate-12" />
-                            Buy Me a Beer
+                         <Button asChild>
+                            <Link href="https://buymeacoffee.com/sidedoormedia" target="_blank" className="group">
+                              <Beer className="transition-transform group-hover:-rotate-12" />
+                              <span className="max-w-0 overflow-hidden transition-all duration-300 ease-in-out group-hover:max-w-xs group-hover:ml-2">
+                                Buy Me a Beer
+                              </span>
                             </Link>
                         </Button>
                     </div>
