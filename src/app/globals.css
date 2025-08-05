@@ -53,4 +53,16 @@
   .card {
     @apply relative bg-card text-card-foreground drop-shadow-custom-md border-l-4 border-primary;
   }
+  .slow-zoom {
+    animation: slow-zoom 20s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes slow-zoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.1);
+  }
 }

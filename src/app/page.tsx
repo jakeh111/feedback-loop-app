@@ -27,7 +27,7 @@ export default function Home() {
           src={randomImage.src}
           alt="Abstract audio visualization"
           fill
-          className="object-cover"
+          className="object-cover slow-zoom"
           data-ai-hint={randomImage.hint}
           priority
         />
