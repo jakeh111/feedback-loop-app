@@ -2,7 +2,7 @@
 'use client';
 
 import Link from "next/link";
-import { Beer, Mail, MailOpen, Instagram, Sparkles } from "lucide-react";
+import { Beer, Mail, MailOpen, Instagram } from "lucide-react";
 import { Button } from "./ui/button";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 
@@ -36,11 +36,8 @@ export function Footer() {
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button asChild variant="ghost" size="icon">
-                                <Link href="#" aria-label="Instagram" className="group relative">
+                                <Link href="#" aria-label="Instagram">
                                     <Instagram />
-                                    <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                    <Sparkles className="absolute top-0 right-0 h-2 w-2 text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100" />
-                                     <Sparkles className="absolute -top-1 right-1 h-2 w-2 text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-200" />
                                 </Link>
                             </Button>
                           </TooltipTrigger>
