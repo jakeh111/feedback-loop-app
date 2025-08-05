@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose } from "./ui/sheet";
 export function Header() {
 
   return (
-    <header className="container mx-auto px-4">
+    <header className="container mx-auto px-4 pt-4">
       <div className="flex items-center justify-between h-16 bg-card border rounded-lg p-4">
         <Link href="/" className="flex items-center gap-2">
           <span className="font-bold text-lg font-headline">FeedbackLoop</span>
