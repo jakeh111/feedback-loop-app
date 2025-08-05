@@ -6,23 +6,23 @@
   :root, .indigo {
     --background: 240 10% 11%;
     --foreground: 210 20% 98%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 11%;
+    --card: 240 10% 11%;
+    --card-foreground: 210 20% 98%;
     --popover: 240 10% 11%;
     --popover-foreground: 210 20% 98%;
-    --primary: 220 85% 60%;
+    --primary: 260 85% 65%;
     --primary-foreground: 210 20% 98%;
     --secondary: 240 5% 20%;
     --secondary-foreground: 210 20% 98%;
     --muted: 240 5% 17%;
     --muted-foreground: 210 15% 65%;
-    --accent: 220 85% 60%;
+    --accent: 260 85% 65%;
     --accent-foreground: 210 20% 98%;
     --destructive: 0 70% 55%;
     --destructive-foreground: 210 20% 98%;
     --border: 240 5% 25%;
     --input: 240 5% 25%;
-    --ring: 220 85% 60%;
+    --ring: 260 85% 65%;
     --radius: 0.75rem;
     --chart-1: 220 70% 50%;
     --chart-2: 270 70% 65%;
