@@ -14,8 +14,8 @@
   # a firebase.json file is written into the user's directory
   services.firebase.emulators = {
     detect = true;
-    projectId = "demo-app";
-    services = ["auth" "firestore"];
+    projectId = "audiomarker";
+ services = ["auth" "firestore" "dataconnect"];
   };
   idx = {
     # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"

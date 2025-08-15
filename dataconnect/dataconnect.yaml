@@ -1,0 +1,13 @@
+specVersion: "v1"
+serviceId: "audiomarker"  # Must match your Firebase project ID
+location: "us-central1"   # Must match your project's location
+schema:
+  source: "./schema"      # Path to your GraphQL schema directory
+datasource:
+  postgresql:
+    database: "fdcdb"     # Your local PostgreSQL database name
+    host: "127.0.0.1"     # More reliable than "localhost" for some systems
+    port: 5432            # Default PostgreSQL port
+    username: "postgres"  # Your PostgreSQL username
+    password: ""          # Empty if no password, or use environment variables
+connectorDirs: ["./connector"]  # Optional: Only if you have custom connectors
