@@ -10,37 +10,28 @@ interface AdminServices {
   storage: Storage;
 }
 
-// Using `globalThis` prevents re-initialization during hot-reloads in development.
-let adminServices: AdminServices | null = (globalThis as any)._firebaseAdminServices;
-
+// This is a robust way to initialize Firebase Admin SDK in a serverless environment like Next.js
+// It prevents re-initialization during hot-reloads in development.
 const getFirebaseAdmin = (): AdminServices => {
-  if (adminServices) {
-    return adminServices;
+  const existingApp = admin.apps.find((app) => app?.name === 'DEFAULT');
+
+  if (existingApp) {
+    return {
+      app: existingApp,
+      firestore: admin.firestore(existingApp),
+      storage: admin.storage(existingApp),
+    };
   }
 
-  if (admin.apps.length === 0) {
-    try {
-      // When running in a Google Cloud environment (like App Hosting), the SDK can
-      // automatically find the credentials. For local development, you would
-      // typically use a service account key file.
-      admin.initializeApp({
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      });
+  const app = admin.initializeApp({
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  });
 
-    } catch (error) {
-       console.error('Firebase Admin initialization error', error);
-       throw error;
-    }
-  }
-
-  const app = admin.app();
-  const firestore = admin.firestore(app);
-  const storage = admin.storage(app);
-
-  adminServices = { app, firestore, storage };
-  (globalThis as any)._firebaseAdminServices = adminServices;
-
-  return adminServices;
+  return {
+    app,
+    firestore: admin.firestore(app),
+    storage: admin.storage(app),
+  };
 };
 
 export const { firestore, storage } = getFirebaseAdmin();
