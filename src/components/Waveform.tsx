@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef } from 'react';
@@ -32,7 +33,7 @@ export function Waveform({ data, currentTime, duration, onSeek, isPlaying, comme
       onClick={handleWaveformClick}
     >
       {/* Waveform background */}
-      <div className="absolute top-1/2 -translate-y-1/2 w-full h-full flex items-center gap-px overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full flex items-center gap-px overflow-hidden">
         {data.map((val, i) => (
           <div
             key={i}
@@ -66,7 +67,7 @@ export function Waveform({ data, currentTime, duration, onSeek, isPlaying, comme
 
       {/* Progress fill */}
       <div 
-        className="absolute top-1/2 -translate-y-1/2 h-full bg-primary/50"
+        className="absolute top-0 left-0 h-full bg-primary/50"
         style={{ width: `${progress}%`}}
       />
        
