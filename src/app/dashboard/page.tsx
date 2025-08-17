@@ -1,24 +1,51 @@
+
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusCircle, Music, MessageSquare, ListMusic } from "lucide-react";
-import { getDashboardTracks } from "@/lib/data";
+import { PlusCircle, Music, MessageSquare, ListMusic, Loader2 } from "lucide-react";
+import { getDashboardTracks, type DashboardTrack } from "@/lib/data";
 import { UploadDialog } from "@/components/UploadDialog";
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
-export default async function DashboardPage() {
-  const tracks = await getDashboardTracks();
+export default function DashboardPage() {
+  const [tracks, setTracks] = useState<DashboardTrack[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuth, setIsAuth] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setIsAuth(true);
+        const userTracks = await getDashboardTracks();
+        setTracks(userTracks);
+      } else {
+        setIsAuth(false);
+        setTracks([]);
+      }
+      setIsLoading(false);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
-        <UploadDialog>
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Upload New Track
-          </Button>
-        </UploadDialog>
+        {isAuth && (
+          <UploadDialog>
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Upload New Track
+            </Button>
+          </UploadDialog>
+        )}
       </div>
 
       <Card className="drop-shadow-custom-md">
@@ -27,7 +54,12 @@ export default async function DashboardPage() {
           <CardDescription>A list of your uploaded tracks for feedback.</CardDescription>
         </CardHeader>
         <CardContent>
-          {tracks.length > 0 ? (
+          {isLoading ? (
+             <div className="text-center text-muted-foreground p-12">
+                <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+                <p className="mt-4">Loading your tracks...</p>
+             </div>
+          ) : tracks.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>

@@ -1,31 +1,48 @@
-// In a real-world application, this file would contain functions to fetch data from a database or an external API.
-// For this prototype, we'll simulate that data fetching with a delay.
+
+import { firestore, auth } from './firebase';
+import { collection, query, where, getDocs, Timestamp, orderBy } from 'firebase/firestore';
 
 export type DashboardTrack = {
   id: string;
   title: string;
-  comments: number;
+  comments: number; // For now, we'll keep this as a static number. We can wire this up later.
   date: string;
 };
 
-// This is the mock data that used to be in the dashboard page component.
-const mockTracks: DashboardTrack[] = [
-  { id: "a1b2c3d4", title: "Sunset Groove", comments: 5, date: "2024-05-10" },
-  { id: "e5f6g7h8", title: "Midnight Mix v3", comments: 12, date: "2024-05-08" },
-  { id: "i9j0k1l2", title: "Vocal Takes - Final", comments: 8, date: "2024-05-05" },
-  { id: "m3n4o5p6", title: "Acoustic Demo", comments: 2, date: "2024-05-02" },
-];
-
 /**
- * Fetches the tracks for the main dashboard view.
- * In a real app, this would fetch data for the currently logged-in user.
+ * Fetches the tracks for the currently logged-in user.
  */
 export const getDashboardTracks = async (): Promise<DashboardTrack[]> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 500));
+  const user = auth.currentUser;
+  if (!user) {
+    // If the user is not logged in, return an empty array.
+    // This can happen during server-side rendering before auth state is available.
+    return [];
+  }
 
-  // To test the empty state, you can return an empty array:
-  // return [];
+  try {
+    const tracksCollection = collection(firestore, 'tracks');
+    const q = query(tracksCollection, where("userId", "==", user.uid), orderBy("createdAt", "desc"));
+    
+    const querySnapshot = await getDocs(q);
+    
+    const tracks: DashboardTrack[] = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      const createdAt = data.createdAt as Timestamp;
+      
+      return {
+        id: doc.id,
+        title: data.title || 'Untitled Track',
+        // We'll placeholder the comment count for now.
+        comments: 0,
+        date: createdAt ? createdAt.toDate().toLocaleDateString() : new Date().toLocaleDateString(),
+      };
+    });
 
-  return mockTracks;
+    return tracks;
+  } catch (error) {
+    console.error("Error fetching user tracks:", error);
+    // In case of an error, return an empty array to prevent the page from crashing.
+    return [];
+  }
 };

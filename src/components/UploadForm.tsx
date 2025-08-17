@@ -6,8 +6,9 @@ import { UploadCloud } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { storage } from '@/lib/firebase';
-import { ref, uploadBytesResumable } from 'firebase/storage';
+import { storage, firestore, auth } from '@/lib/firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Progress } from './ui/progress';
 
 interface UploadFormProps {
@@ -35,8 +36,19 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     }
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const user = auth.currentUser;
+
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Not Authenticated",
+        description: "You must be logged in to upload a track.",
+      });
+      return;
+    }
+
     if (!selectedFile) {
        toast({
         variant: "destructive",
@@ -48,9 +60,7 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     
     setIsUploading(true);
     
-    // In a real app, this ID would come from creating a document in Firestore.
-    const trackId = Math.random().toString(36).substring(2, 15);
-    const storageRef = ref(storage, `tracks/${trackId}/${selectedFile.name}`);
+    const storageRef = ref(storage, `tracks/${user.uid}/${selectedFile.name}`);
     const uploadTask = uploadBytesResumable(storageRef, selectedFile);
 
     uploadTask.on('state_changed',
@@ -68,12 +78,51 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
           description: "An error occurred while uploading your track. Please try again.",
         });
       },
-      () => {
-        toast({
-          title: "Upload Successful",
-          description: "Your track is ready.",
-        });
-        onUploadComplete(trackId);
+      async () => {
+        try {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          const trackTitle = selectedFile.name.replace(/\.[^/.]+$/, ""); // Remove file extension for title
+
+          // Generate a consistent pseudo-random waveform 
+          const seedrandom = (seed: string) => {
+            let seedVal = 0;
+            for(let i = 0; i < seed.length; i++) {
+                seedVal += seed.charCodeAt(i);
+            }
+            const random = () => {
+                const x = Math.sin(seedVal++) * 10000;
+                return x - Math.floor(x);
+            };
+            return random;
+          }
+          const random = seedrandom(downloadURL); // Use downloadURL for a consistent seed
+          const waveform = Array.from({ length: 100 }, () => Math.round(random() * 100));
+
+
+          const trackDocRef = await addDoc(collection(firestore, 'tracks'), {
+            title: trackTitle,
+            artist: user.displayName || 'Unknown Artist',
+            audioUrl: downloadURL,
+            storagePath: uploadTask.snapshot.ref.fullPath,
+            waveform: waveform,
+            userId: user.uid,
+            createdAt: serverTimestamp(),
+          });
+
+          toast({
+            title: "Upload Successful",
+            description: "Your track is ready and saved to your dashboard.",
+          });
+          onUploadComplete(trackDocRef.id);
+        } catch (error) {
+           console.error("Error creating track document:", error);
+           toast({
+            variant: "destructive",
+            title: "Error Saving Track",
+            description: "Your file was uploaded, but we couldn't save it to your dashboard. Please contact support.",
+          });
+          setIsUploading(false);
+        }
       }
     );
   };
