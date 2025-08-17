@@ -132,7 +132,7 @@ export default function DashboardPage() {
                         <Button asChild variant="outline" size="sm">
                           <Link href={`/track/${track.id}`}>View Feedback</Link>
                         </Button>
-                         <Button onClick={() => setTrackToDelete(track)} variant="destructive" size="sm">
+                         <Button onClick={() => setTrackToDelete(track)} variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete
                         </Button>
@@ -169,7 +169,7 @@ export default function DashboardPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteTrack} disabled={isDeleting}>
+            <AlertDialogAction onClick={handleDeleteTrack} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Continue
             </AlertDialogAction>
