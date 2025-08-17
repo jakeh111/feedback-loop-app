@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { UploadCloud } from 'lucide-react';
+import { UploadCloud, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +10,7 @@ import { storage, firestore, auth } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Progress } from './ui/progress';
+import lamejs from 'lamejs';
 
 interface UploadFormProps {
   onUploadComplete: (trackId: string) => void;
@@ -52,12 +53,58 @@ const generateWaveformData = async (file: File): Promise<number[]> => {
     });
 };
 
+const convertWavToMp3 = (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                if (!e.target?.result) return reject(new Error("Failed to read file"));
+                const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+                audioContext.decodeAudioData(e.target.result as ArrayBuffer, (buffer) => {
+                    const wav = lamejs.WavHeader.readHeader(new DataView(e.target!.result as ArrayBuffer));
+                    const samples = new Int16Array(e.target!.result as ArrayBuffer, wav.dataOffset, wav.dataLen / 2);
+                    const mp3Encoder = new lamejs.Mp3Encoder(wav.channels, wav.sampleRate, 128);
+                    
+                    const maxSamples = 1152;
+                    let mp3Data = [];
+
+                    for (let i = 0; i < samples.length; i += maxSamples) {
+                        const sampleChunk = samples.subarray(i, i + maxSamples);
+                        const mp3buf = mp3Encoder.encodeBuffer(sampleChunk);
+                        if (mp3buf.length > 0) {
+                            mp3Data.push(mp3buf);
+                        }
+                    }
+
+                    const mp3buf = mp3Encoder.flush();
+                    if (mp3buf.length > 0) {
+                        mp3Data.push(mp3buf);
+                    }
+
+                    const mp3Blob = new Blob(mp3Data.map(d => new Uint8Array(d)), { type: 'audio/mpeg' });
+                    const mp3File = new File([mp3Blob], file.name.replace(/\.[^/.]+$/, "") + ".mp3", {
+                        type: 'audio/mpeg',
+                        lastModified: Date.now()
+                    });
+
+                    resolve(mp3File);
+                });
+            } catch (error) {
+                reject(error);
+            }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    });
+};
+
 
 export function UploadForm({ onUploadComplete }: UploadFormProps) {
   const { toast } = useToast();
-  const [isUploading, setIsUploading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [statusText, setStatusText] = useState("");
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -79,30 +126,30 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     const user = auth.currentUser;
 
     if (!user) {
-      toast({
-        variant: "destructive",
-        title: "Not Authenticated",
-        description: "You must be logged in to upload a track.",
-      });
+      toast({ variant: "destructive", title: "Not Authenticated", description: "You must be logged in to upload a track." });
       return;
     }
 
     if (!selectedFile) {
-       toast({
-        variant: "destructive",
-        title: "No file selected",
-        description: "Please select an MP3 or WAV file to upload.",
-      });
+       toast({ variant: "destructive", title: "No file selected", description: "Please select an MP3 or WAV file to upload." });
       return;
     }
     
-    setIsUploading(true);
+    setIsProcessing(true);
+    let fileToUpload = selectedFile;
 
     try {
-      const waveform = await generateWaveformData(selectedFile);
+      if (selectedFile.type === 'audio/wav' || selectedFile.type === 'audio/wave') {
+        setStatusText("Converting WAV to MP3...");
+        fileToUpload = await convertWavToMp3(selectedFile);
+      }
+
+      setStatusText("Generating waveform...");
+      const waveform = await generateWaveformData(fileToUpload);
       
-      const storageRef = ref(storage, `tracks/${user.uid}/${Date.now()}-${selectedFile.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, selectedFile);
+      setStatusText("Uploading file...");
+      const storageRef = ref(storage, `tracks/${user.uid}/${Date.now()}-${fileToUpload.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
 
       uploadTask.on('state_changed',
         (snapshot) => {
@@ -111,18 +158,15 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
         },
         (error) => {
           console.error("Upload error:", error);
-          setIsUploading(false);
+          setIsProcessing(false);
           setUploadProgress(0);
-          toast({
-            variant: "destructive",
-            title: "Upload Failed",
-            description: "An error occurred while uploading your track. Please try again.",
-          });
+          setStatusText("");
+          toast({ variant: "destructive", title: "Upload Failed", description: "An error occurred while uploading your track. Please try again." });
         },
         async () => {
           try {
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            const trackTitle = selectedFile.name.replace(/\.[^/.]+$/, "");
+            const trackTitle = fileToUpload.name.replace(/\.[^/.]+$/, "");
 
             const trackDocRef = await addDoc(collection(firestore, 'tracks'), {
               title: trackTitle,
@@ -135,29 +179,25 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
               commentCount: 0,
             });
 
-            toast({
-              title: "Upload Successful",
-              description: "Your track is ready and saved to your dashboard.",
-            });
+            toast({ title: "Upload Successful", description: "Your track is ready and saved to your dashboard." });
             onUploadComplete(trackDocRef.id);
           } catch (error) {
             console.error("Error creating track document:", error);
-            toast({
-              variant: "destructive",
-              title: "Error Saving Track",
-              description: "Your file was uploaded, but we couldn't save it to your dashboard. Please contact support.",
-            });
-            setIsUploading(false);
+            toast({ variant: "destructive", title: "Error Saving Track", description: "Your file was uploaded, but we couldn't save it to your dashboard. Please contact support." });
+          } finally {
+            setIsProcessing(false);
+            setStatusText("");
           }
         }
       );
     } catch (error) {
-        console.error("Waveform generation error:", error);
-        setIsUploading(false);
+        console.error("Processing error:", error);
+        setIsProcessing(false);
+        setStatusText("");
         toast({
             variant: "destructive",
             title: "Could Not Process Audio",
-            description: "There was an error analyzing the audio file. Please try a different file.",
+            description: `There was an error processing the audio file. ${error instanceof Error ? error.message : ''}`,
         });
     }
   };
@@ -173,21 +213,24 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
                 </p>
                 <p className="text-xs text-muted-foreground">MP3 or WAV (MAX. 80MB)</p>
             </div>
-            <Input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} accept=".mp3,.wav,audio/mpeg,audio/wave" disabled={isUploading} />
+            <Input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} accept=".mp3,.wav,audio/mpeg,audio/wave" disabled={isProcessing} />
         </label>
       </div>
 
-      {selectedFile && !isUploading && <p className="text-sm text-center text-muted-foreground">Selected: {selectedFile.name}</p>}
+      {selectedFile && !isProcessing && <p className="text-sm text-center text-muted-foreground">Selected: {selectedFile.name}</p>}
 
-      {isUploading && (
+      {isProcessing && (
         <div className="space-y-2">
-            <p className="text-sm text-center text-muted-foreground">Uploading: {selectedFile?.name}</p>
-            <Progress value={uploadProgress} />
+            <p className="text-sm text-center text-muted-foreground flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin"/>
+              {statusText}
+            </p>
+            {statusText === 'Uploading file...' && <Progress value={uploadProgress} />}
         </div>
       )}
 
-      <Button type="submit" className="w-full" disabled={isUploading || !selectedFile}>
-        {isUploading ? 'Uploading...' : 'Create Session'}
+      <Button type="submit" className="w-full" disabled={isProcessing || !selectedFile}>
+        {isProcessing ? 'Processing...' : 'Create Session'}
       </Button>
     </form>
   );
