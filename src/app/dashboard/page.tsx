@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PlusCircle, Music, MessageSquare, ListMusic } from "lucide-react";
 import { getDashboardTracks } from "@/lib/data";
+import { UploadDialog } from "@/components/UploadDialog";
 
 export default async function DashboardPage() {
   const tracks = await getDashboardTracks();
@@ -12,12 +13,12 @@ export default async function DashboardPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
-        <Button asChild>
-          <Link href="/">
+        <UploadDialog>
+          <Button>
             <PlusCircle className="mr-2 h-4 w-4" />
             Upload New Track
-          </Link>
-        </Button>
+          </Button>
+        </UploadDialog>
       </div>
 
       <Card className="drop-shadow-custom-md">
@@ -64,12 +65,12 @@ export default async function DashboardPage() {
               <ListMusic className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="mt-4 text-lg font-semibold">No tracks uploaded</h3>
               <p className="mt-1 text-sm">Upload your first track to get started.</p>
-              <Button asChild className="mt-4">
-                <Link href="/">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Upload Track
-                </Link>
-              </Button>
+               <UploadDialog>
+                  <Button className="mt-4">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Upload Track
+                  </Button>
+              </UploadDialog>
             </div>
           )}
         </CardContent>

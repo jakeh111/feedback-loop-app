@@ -1,9 +1,7 @@
 
-'use client';
-
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
-import { getAuth, connectAuthEmulator, Auth } from "firebase/auth";
-import { getStorage, connectStorageEmulator, FirebaseStorage } from "firebase/storage";
+import { getAuth, Auth } from "firebase/auth";
+import { getStorage, FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,24 +12,33 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: FirebaseApp;
-let auth: Auth;
-let storage: FirebaseStorage;
-
-if (typeof window !== 'undefined' && !getApps().length) {
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  storage = getStorage(app);
-
-  if (process.env.NODE_ENV === 'development') {
-    // Note: You must run the Firebase emulators for this to work.
-    // connectAuthEmulator(auth, "http://127.0.0.1:9025", { disableWarnings: true });
-    // connectStorageEmulator(storage, "127.0.0.1", 9198);
+// This function ensures that we initialize the app only once.
+function getFirebaseApp(): FirebaseApp {
+  if (getApps().length > 0) {
+    return getApp();
   }
-} else {
-  app = getApp();
-  auth = getAuth(app);
-  storage = getStorage(app);
+  return initializeApp(firebaseConfig);
 }
+
+const app = getFirebaseApp();
+const auth = getAuth(app);
+const storage = getStorage(app);
+
+// It's important to only connect to emulators on the client side,
+// and only in development mode.
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    // Note: You must run the Firebase emulators for this to work.
+    // We are currently using the live Firebase services as per our last fix.
+    // To re-enable emulators, uncomment these lines.
+    // import { connectAuthEmulator } from "firebase/auth";
+    // import { connectStorageEmulator } from "firebase/storage";
+    // try {
+    //   connectAuthEmulator(auth, "http://127.0.0.1:9025");
+    //   connectStorageEmulator(storage, "127.0.0.1", 9198);
+    // } catch (e) {
+    //   console.log("Emulators already connected or error connecting", e);
+    // }
+}
+
 
 export { app, auth, storage };

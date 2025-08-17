@@ -4,9 +4,10 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { UploadForm } from '@/components/UploadForm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
+import { UploadDialog } from '@/components/UploadDialog';
+import { Button } from '@/components/ui/button';
 
 const heroImages = [
   { src: "https://firebasestorage.googleapis.com/v0/b/audiomarker.firebasestorage.app/o/claudia-ramirez-jK47-bR5VnU-unsplash.jpg?alt=media&token=ca1d6125-e267-4316-9895-b809b867772a", hint: "music production" },
@@ -71,12 +72,14 @@ export default function Home() {
             </CardContent>
           </Card>
           <Card className="h-fit drop-shadow-custom-md">
-            <CardHeader>
+             <CardHeader>
               <CardTitle>Get Started</CardTitle>
               <CardDescription>Upload an MP3 or WAV to create your feedback session.</CardDescription>
             </CardHeader>
-            <CardContent className="px-6 pb-6">
-              <UploadForm />
+            <CardContent>
+                <UploadDialog>
+                    <Button className="w-full">Upload Your First Track</Button>
+                </UploadDialog>
             </CardContent>
           </Card>
         </div>

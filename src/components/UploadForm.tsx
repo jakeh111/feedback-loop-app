@@ -2,7 +2,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { UploadCloud } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -11,8 +10,11 @@ import { storage } from '@/lib/firebase';
 import { ref, uploadBytesResumable } from 'firebase/storage';
 import { Progress } from './ui/progress';
 
-export function UploadForm() {
-  const router = useRouter();
+interface UploadFormProps {
+  onUploadComplete: (trackId: string) => void;
+}
+
+export function UploadForm({ onUploadComplete }: UploadFormProps) {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -71,7 +73,7 @@ export function UploadForm() {
           title: "Upload Successful",
           description: "Your track is ready.",
         });
-        router.push(`/track/${trackId}`);
+        onUploadComplete(trackId);
       }
     );
   };
@@ -101,7 +103,7 @@ export function UploadForm() {
       )}
 
       <Button type="submit" className="w-full" disabled={isUploading || !selectedFile}>
-        {isUploading ? 'Uploading...' : 'Upload Track'}
+        {isUploading ? 'Uploading...' : 'Create Session'}
       </Button>
     </form>
   );
