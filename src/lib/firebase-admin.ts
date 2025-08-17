@@ -15,8 +15,11 @@ if (!global.firebaseAdmin) {
     app = admin.apps[0]!;
   } else {
     // In a deployed environment like App Hosting, the SDK will automatically
-    // find the necessary credentials.
-    app = admin.initializeApp();
+    // find the necessary credentials. For local development, we provide the
+    // project ID explicitly to ensure a stable connection.
+    app = admin.initializeApp({
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    });
   }
 
   global.firebaseAdmin = {
