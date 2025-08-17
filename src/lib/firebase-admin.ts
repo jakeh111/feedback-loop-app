@@ -11,5 +11,6 @@ const app = admin.apps.length
 
 const firestore = admin.firestore(app);
 const storage = admin.storage(app);
+const auth = admin.auth(app);
 
-export { app, firestore, storage };
+export { app, firestore, storage, auth };
