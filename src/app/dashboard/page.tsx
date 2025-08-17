@@ -52,7 +52,13 @@ export default function DashboardPage() {
       }
     });
 
-    return () => unsubscribe();
+    // Add a listener to re-fetch tracks when the window gains focus
+    window.addEventListener('focus', fetchTracks);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('focus', fetchTracks);
+    };
   }, [fetchTracks]);
 
   const handleDeleteTrack = async () => {
