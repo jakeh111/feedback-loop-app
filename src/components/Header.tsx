@@ -60,10 +60,10 @@ export function Header() {
               <>
                  <Button variant="ghost">
                     <User className="mr-2 h-4 w-4"/>
-                    {user.email}
+                    {user.displayName || user.email}
                  </Button>
                  <Button asChild variant="outline">
-                    <Link href="/dashboard">Dashboard</Link>
+                    <Link href="/dashboard">{user.displayName ? `${user.displayName.split(' ')[0]}'s Dashboard` : 'Dashboard'}</Link>
                  </Button>
                 <Button onClick={handleLogout} variant="ghost">
                   <LogOut />
@@ -106,12 +106,12 @@ export function Header() {
                            <SheetClose asChild>
                              <Button variant="ghost" className="justify-start">
                                 <User className="mr-2 h-4 w-4"/>
-                                {user.email}
+                                {user.displayName || user.email}
                              </Button>
                            </SheetClose>
                             <SheetClose asChild>
                                <Button variant="outline" className="justify-start" asChild>
-                                    <Link href="/dashboard">Dashboard</Link>
+                                    <Link href="/dashboard">{user.displayName ? `${user.displayName.split(' ')[0]}'s Dashboard` : 'Dashboard'}</Link>
                                 </Button>
                             </SheetClose>
                            <SheetClose asChild>

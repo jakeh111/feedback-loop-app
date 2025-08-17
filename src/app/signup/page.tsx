@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link"
@@ -5,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button"
@@ -29,6 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FirebaseError } from "firebase/app";
 
 const formSchema = z.object({
+  name: z.string().min(1, { message: "Name is required." }),
   email: z.string().email({
     message: "Please enter a valid email address.",
   }),
@@ -43,6 +45,7 @@ export default function SignupPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: "",
       email: "",
       password: "",
     },
@@ -50,7 +53,10 @@ export default function SignupPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      await updateProfile(userCredential.user, {
+        displayName: values.name,
+      });
       toast({
         title: "Account Created!",
         description: "You have been successfully signed up.",
@@ -94,6 +100,19 @@ export default function SignupPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+               <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your Name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="email"
