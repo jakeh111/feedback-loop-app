@@ -22,16 +22,17 @@ export async function deleteTrack(trackId: string, storagePath: string): Promise
   }
   
   try {
-    // Delete the Firestore document
-    const trackDocRef = doc(firestore, 'tracks', trackId);
-    await deleteDoc(trackDocRef);
-
-    // Delete the file from Firebase Storage
+    // Delete the file from Firebase Storage first
     const storageRef = ref(storage, storagePath);
     await deleteObject(storageRef);
+
+    // Then, delete the Firestore document
+    const trackDocRef = doc(firestore, 'tracks', trackId);
+    await deleteDoc(trackDocRef);
     
   } catch (error) {
     console.error("Error deleting track:", error);
-    throw new Error("Failed to delete track.");
+    // Re-throw the original error to be caught by the client
+    throw error;
   }
 }

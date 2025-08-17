@@ -64,13 +64,15 @@ export default function DashboardPage() {
         title: "Track Deleted",
         description: `"${trackToDelete.title}" has been permanently removed.`,
       });
-      fetchTracks(); // Refresh the list
+      // This is a more robust way to refresh the list after deletion
+      setTracks(currentTracks => currentTracks.filter(t => t.id !== trackToDelete.id));
     } catch (error) {
+       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
        console.error("Failed to delete track:", error);
        toast({
         variant: "destructive",
         title: "Deletion Failed",
-        description: "Could not delete the track. Please check permissions or try again.",
+        description: `Could not delete the track. ${errorMessage}`,
       });
     } finally {
       setIsDeleting(false);
@@ -171,7 +173,7 @@ export default function DashboardPage() {
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteTrack} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Continue
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
