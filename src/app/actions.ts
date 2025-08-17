@@ -30,7 +30,7 @@ export async function deleteTrack(trackId: string, storagePath: string): Promise
     
   } catch (error) {
     console.error("Error deleting track:", error);
-     if (error instanceof FirebaseError || (error instanceof Error && error.name === 'FirebaseError')) {
+     if (error instanceof Error) {
        // This will give us a more specific error message from Firebase
        throw new Error(error.message);
     }
@@ -38,3 +38,4 @@ export async function deleteTrack(trackId: string, storagePath: string): Promise
     throw error;
   }
 }
+
