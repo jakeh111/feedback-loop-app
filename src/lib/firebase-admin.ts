@@ -1,7 +1,8 @@
 
-import { initializeApp, getApps, getApp, type App, type AppOptions, credential } from 'firebase-admin/app';
+import { initializeApp, getApps, getApp, type App, type AppOptions } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getStorage, type Storage } from 'firebase-admin/storage';
+import * as admin from 'firebase-admin';
 
 // This is a robust way to initialize Firebase Admin SDK in a serverless environment like Next.js
 // It ensures that we only initialize the app once.
@@ -33,7 +34,7 @@ const getFirebaseAdmin = (): AdminServices => {
       // In App Hosting, default credentials are used. We are explicitly defining the service account
       // to ensure the correct one is used, which can prevent authentication issues.
       if (process.env.FIREBASE_ADMIN_CLIENT_EMAIL) {
-        appOptions.credential = credential.applicationDefault();
+        appOptions.credential = admin.credential.applicationDefault();
         appOptions.serviceAccountId = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
       }
       
