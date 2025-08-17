@@ -10,9 +10,7 @@ import type { Storage } from 'firebase-admin/storage';
 
 const app = admin.apps.length
   ? admin.apps[0]!
-  : admin.initializeApp({
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    });
+  : admin.initializeApp();
 
 const auth = admin.auth(app);
 const firestore = admin.firestore(app);
