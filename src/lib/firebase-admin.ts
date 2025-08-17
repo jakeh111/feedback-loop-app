@@ -12,7 +12,6 @@ if (admin.apps.length === 0) {
   app = admin.initializeApp({
     // Explicitly providing the project ID and storage bucket can resolve
     // credential discovery issues in some environments.
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   });
 } else {
