@@ -58,10 +58,6 @@ export function Header() {
               <div className="h-8 w-24 bg-muted rounded-md animate-pulse" />
             ) : user ? (
               <>
-                 <Button variant="ghost">
-                    <User className="mr-2 h-4 w-4"/>
-                    {user.displayName || user.email}
-                 </Button>
                  <Button asChild variant="outline">
                     <Link href="/dashboard">{user.displayName ? `${user.displayName.split(' ')[0]}'s Dashboard` : 'Dashboard'}</Link>
                  </Button>
@@ -103,12 +99,6 @@ export function Header() {
                          <div className="h-8 w-full bg-muted rounded-md animate-pulse" />
                       ) : user ? (
                         <>
-                           <SheetClose asChild>
-                             <Button variant="ghost" className="justify-start">
-                                <User className="mr-2 h-4 w-4"/>
-                                {user.displayName || user.email}
-                             </Button>
-                           </SheetClose>
                             <SheetClose asChild>
                                <Button variant="outline" className="justify-start" asChild>
                                     <Link href="/dashboard">{user.displayName ? `${user.displayName.split(' ')[0]}'s Dashboard` : 'Dashboard'}</Link>
