@@ -34,36 +34,37 @@ export default function DashboardPage() {
   const { toast } = useToast();
 
   const handleUploadComplete = () => {
-    toast({
-      title: "Upload Complete",
-      description: "Your track has been added to your dashboard.",
-    });
+    // This is a placeholder for a more robust notification system
+    // For now, we just rely on the onSnapshot listener to update the track list
   };
 
   useEffect(() => {
-    const authUnsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    // First, set up an observer on the Auth object to get the user's sign-in state.
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      if (!currentUser) {
-        setIsLoading(false);
-      }
+      setIsLoading(false); // Set loading to false once we have auth state
     });
 
-    return () => authUnsubscribe();
+    // Unsubscribe from the auth observer when the component unmounts
+    return () => unsubscribeAuth();
   }, []);
 
+
   useEffect(() => {
+    // If we have a user, set up the real-time listener for their tracks
     if (user) {
-      setIsLoading(true);
-      const tracksUnsubscribe = getDashboardTracks((userTracks) => {
+      // getDashboardTracks returns an unsubscribe function
+      const unsubscribeTracks = getDashboardTracks(user.uid, (userTracks) => {
         setTracks(userTracks);
-        setIsLoading(false);
       });
 
-      return () => tracksUnsubscribe();
+      // Unsubscribe from the tracks listener when the user changes or component unmounts
+      return () => unsubscribeTracks();
     } else {
+      // If there's no user, clear the tracks
       setTracks([]);
     }
-  }, [user]);
+  }, [user]); // This effect runs whenever the user object changes
 
 
   const handleDeleteTrack = async () => {
