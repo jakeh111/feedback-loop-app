@@ -21,8 +21,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { deleteTrack } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
+import { deleteTrack } from '@/app/actions';
 
 export type DashboardTrack = {
   id: string;
@@ -42,7 +42,9 @@ export default function DashboardPage() {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      setIsLoading(false); 
+      if (!currentUser) {
+        setIsLoading(false);
+      }
     });
     return () => unsubscribeAuth();
   }, []);
@@ -50,6 +52,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user) {
+      setIsLoading(true);
       const q = query(
         collection(firestore, 'tracks'),
         where("userId", "==", user.uid),
@@ -71,16 +74,24 @@ export default function DashboardPage() {
           };
         });
         setTracks(userTracks);
+        setIsLoading(false);
       }, (error) => {
         console.error("Error fetching real-time tracks:", error);
+        toast({
+          variant: 'destructive',
+          title: 'Error fetching tracks',
+          description: 'Could not load your tracks. Please try again later.'
+        })
         setTracks([]);
+        setIsLoading(false);
       });
 
       return () => unsubscribeTracks();
     } else {
       setTracks([]);
+      setIsLoading(false);
     }
-  }, [user]); 
+  }, [user, toast]); 
 
 
   const handleDeleteTrack = async () => {
