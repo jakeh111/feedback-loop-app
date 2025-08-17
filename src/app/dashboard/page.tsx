@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { PlusCircle, Music, MessageSquare, ListMusic, Loader2, Trash2 } from "lucide-react";
 import { getDashboardTracks, type DashboardTrack } from "@/lib/data";
 import { UploadDialog } from "@/components/UploadDialog";
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import {
   AlertDialog,
@@ -28,38 +28,47 @@ import { useToast } from '@/hooks/use-toast';
 export default function DashboardPage() {
   const [tracks, setTracks] = useState<DashboardTrack[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuth, setIsAuth] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [trackToDelete, setTrackToDelete] = useState<DashboardTrack | null>(null);
   const { toast } = useToast();
 
-  const fetchTracks = useCallback(async () => {
-    setIsLoading(true);
-    const userTracks = await getDashboardTracks();
-    setTracks(userTracks);
-    setIsLoading(false);
+  const handleUploadComplete = () => {
+    // The realtime listener will automatically update the track list.
+    // We can show a toast or do other UI updates here if needed.
+    toast({
+      title: "Upload Complete",
+      description: "Your track has been added to your dashboard.",
+    });
+  };
+
+  useEffect(() => {
+    // Listen for authentication changes
+    const authUnsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setIsLoading(false);
+    });
+
+    return () => authUnsubscribe();
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setIsAuth(true);
-        fetchTracks();
-      } else {
-        setIsAuth(false);
-        setTracks([]);
+    if (user) {
+      setIsLoading(true);
+      // Set up the realtime listener for tracks
+      const tracksUnsubscribe = getDashboardTracks((userTracks) => {
+        setTracks(userTracks);
         setIsLoading(false);
-      }
-    });
+      });
 
-    // Add a listener to re-fetch tracks when the window gains focus
-    window.addEventListener('focus', fetchTracks);
+      // Return the cleanup function for the realtime listener
+      return () => tracksUnsubscribe();
+    } else {
+      // If there's no user, clear the tracks
+      setTracks([]);
+    }
+  }, [user]); // This effect re-runs when the user object changes
 
-    return () => {
-      unsubscribe();
-      window.removeEventListener('focus', fetchTracks);
-    };
-  }, [fetchTracks]);
 
   const handleDeleteTrack = async () => {
     if (!trackToDelete) return;
@@ -70,8 +79,7 @@ export default function DashboardPage() {
         title: "Track Deleted",
         description: `"${trackToDelete.title}" has been permanently removed.`,
       });
-      // This is a more robust way to refresh the list after deletion
-      setTracks(currentTracks => currentTracks.filter(t => t.id !== trackToDelete.id));
+      // The realtime listener will automatically remove the track from the UI.
     } catch (error) {
        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
        console.error("Failed to delete track:", error);
@@ -91,8 +99,8 @@ export default function DashboardPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
-          {isAuth && (
-            <UploadDialog onUploadComplete={fetchTracks}>
+          {user && (
+            <UploadDialog onUploadComplete={handleUploadComplete}>
               <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Upload New Track
@@ -154,7 +162,7 @@ export default function DashboardPage() {
                 <ListMusic className="mx-auto h-12 w-12 text-muted-foreground" />
                 <h3 className="mt-4 text-lg font-semibold">No tracks uploaded</h3>
                 <p className="mt-1 text-sm">Upload your first track to get started.</p>
-                <UploadDialog onUploadComplete={fetchTracks}>
+                <UploadDialog onUploadComplete={handleUploadComplete}>
                     <Button className="mt-4">
                       <PlusCircle className="mr-2 h-4 w-4" />
                       Upload Track
@@ -173,7 +181,7 @@ export default function DashboardPage() {
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the track
               "{trackToDelete?.title}" and all associated data from our servers.
-            </AlertDialogDescription>
+            </Description>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
