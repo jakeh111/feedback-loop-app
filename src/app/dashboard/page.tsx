@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -34,8 +34,6 @@ export default function DashboardPage() {
   const { toast } = useToast();
 
   const handleUploadComplete = () => {
-    // The realtime listener will automatically update the track list.
-    // We can show a toast or do other UI updates here if needed.
     toast({
       title: "Upload Complete",
       description: "Your track has been added to your dashboard.",
@@ -43,10 +41,11 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    // Listen for authentication changes
     const authUnsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      setIsLoading(false);
+      if (!currentUser) {
+        setIsLoading(false);
+      }
     });
 
     return () => authUnsubscribe();
@@ -55,19 +54,16 @@ export default function DashboardPage() {
   useEffect(() => {
     if (user) {
       setIsLoading(true);
-      // Set up the realtime listener for tracks
       const tracksUnsubscribe = getDashboardTracks((userTracks) => {
         setTracks(userTracks);
         setIsLoading(false);
       });
 
-      // Return the cleanup function for the realtime listener
       return () => tracksUnsubscribe();
     } else {
-      // If there's no user, clear the tracks
       setTracks([]);
     }
-  }, [user]); // This effect re-runs when the user object changes
+  }, [user]);
 
 
   const handleDeleteTrack = async () => {
@@ -79,7 +75,6 @@ export default function DashboardPage() {
         title: "Track Deleted",
         description: `"${trackToDelete.title}" has been permanently removed.`,
       });
-      // The realtime listener will automatically remove the track from the UI.
     } catch (error) {
        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
        console.error("Failed to delete track:", error);
@@ -173,15 +168,14 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-
-       <AlertDialog open={!!trackToDelete} onOpenChange={() => setTrackToDelete(null)}>
+      <AlertDialog open={!!trackToDelete} onOpenChange={() => setTrackToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the track
               "{trackToDelete?.title}" and all associated data from our servers.
-            </Description>
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
