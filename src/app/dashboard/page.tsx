@@ -22,7 +22,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
-import { deleteTrack } from '@/app/actions';
 
 export type DashboardTrack = {
   id: string;
@@ -98,6 +97,7 @@ export default function DashboardPage() {
     if (!trackToDelete) return;
     setIsDeleting(true);
     try {
+      const { deleteTrack } = await import('@/app/actions');
       await deleteTrack(trackToDelete.id);
       toast({
         title: "Track Deleted",
