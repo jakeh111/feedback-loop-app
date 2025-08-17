@@ -10,28 +10,29 @@ interface AdminServices {
   storage: Storage;
 }
 
-// This is a robust way to initialize Firebase Admin SDK in a serverless environment like Next.js
-// It prevents re-initialization during hot-reloads in development.
-const getFirebaseAdmin = (): AdminServices => {
-  const existingApp = admin.apps.find((app) => app?.name === 'DEFAULT');
+// This is a more robust way to initialize Firebase Admin SDK in a serverless environment like Next.js
+// It uses the global object to store the initialized services, preventing re-initialization
+// during hot-reloads in development, which is a common cause of the 'INTERNAL' TypeError.
+if (!global.firebaseAdmin) {
+  try {
+    const app = admin.apps.length > 0 ? admin.apps[0]! : admin.initializeApp({
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    });
 
-  if (existingApp) {
-    return {
-      app: existingApp,
-      firestore: admin.firestore(existingApp),
-      storage: admin.storage(existingApp),
+    global.firebaseAdmin = {
+      app,
+      firestore: admin.firestore(app),
+      storage: admin.storage(app),
     };
+  } catch (error) {
+    // Catch initialization errors, which can happen if the logic above isn't fullproof
+    // during certain hot-reload scenarios.
+    if (!/already exists/u.test(error instanceof Error ? error.message : '')) {
+      throw error;
+    }
+    // If it already exists, we can assume the services are on the global object
+    // from a previous, successful initialization.
   }
+}
 
-  const app = admin.initializeApp({
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  });
-
-  return {
-    app,
-    firestore: admin.firestore(app),
-    storage: admin.storage(app),
-  };
-};
-
-export const { firestore, storage } = getFirebaseAdmin();
+export const { firestore, storage } = global.firebaseAdmin as AdminServices;
