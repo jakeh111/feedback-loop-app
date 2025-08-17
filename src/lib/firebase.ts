@@ -1,11 +1,8 @@
 
 'use client';
 
-// Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -22,12 +19,12 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 
 // Connect to emulators in development
-if (process.env.NODE_ENV === 'development') {
-  // Check if emulators are already running to avoid re-connecting
-  // This is a common pattern to prevent errors in Next.js hot-reloading environments
-  if (!(auth as any)._emulatorConfig) {
-    connectAuthEmulator(auth, "http://127.0.0.1:9025");
-  }
-}
+// if (process.env.NODE_ENV === 'development') {
+//   // Check if emulators are already running to avoid re-connecting
+//   // This is a common pattern to prevent errors in Next.js hot-reloading environments
+//   if (!(auth as any)._emulatorConfig) {
+//     connectAuthEmulator(auth, "http://127.0.0.1:9025");
+//   }
+// }
 
 export { app, auth };
