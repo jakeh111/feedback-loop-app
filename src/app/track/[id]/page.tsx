@@ -32,7 +32,7 @@ const getTrackData = async (id: string): Promise<Track | null> => {
       return random;
     }
     const random = seedrandom(id);
-    const waveform = Array.from({ length: 100 }, () => Math.round(random() * 100));
+    const randomWaveform = Array.from({ length: 100 }, () => Math.round(random() * 100));
 
 
     return {
@@ -40,7 +40,7 @@ const getTrackData = async (id: string): Promise<Track | null> => {
       title: data.title || "Untitled Track",
       artist: data.artist || "Unknown Artist",
       audioUrl: data.audioUrl,
-      waveform: data.waveform && data.waveform.length > 0 ? data.waveform : waveform,
+      waveform: data.waveform && data.waveform.length > 0 ? data.waveform : randomWaveform,
     };
   } catch (error) {
     console.error("Error fetching track data:", error);

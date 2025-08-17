@@ -15,6 +15,44 @@ interface UploadFormProps {
   onUploadComplete: (trackId: string) => void;
 }
 
+const generateWaveformData = async (file: File): Promise<number[]> => {
+    return new Promise((resolve, reject) => {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            if (!e.target?.result) {
+                return reject(new Error("Failed to read file"));
+            }
+            audioContext.decodeAudioData(e.target.result as ArrayBuffer, (buffer) => {
+                const rawData = buffer.getChannelData(0);
+                const samples = 100; // Number of waveform points
+                const blockSize = Math.floor(rawData.length / samples);
+                const filteredData = [];
+                for (let i = 0; i < samples; i++) {
+                    const blockStart = blockSize * i;
+                    let sum = 0;
+                    for (let j = 0; j < blockSize; j++) {
+                        sum += Math.abs(rawData[blockStart + j]);
+                    }
+                    filteredData.push(sum / blockSize);
+                }
+                
+                const multiplier = Math.pow(Math.max(...filteredData), -1);
+                const normalizedData = filteredData.map(n => Math.round(n * multiplier * 100));
+                resolve(normalizedData);
+            }).catch(reject);
+        };
+
+        reader.onerror = (error) => {
+            reject(error);
+        };
+        
+        reader.readAsArrayBuffer(file);
+    });
+};
+
+
 export function UploadForm({ onUploadComplete }: UploadFormProps) {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
@@ -59,57 +97,69 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     }
     
     setIsUploading(true);
-    
-    const storageRef = ref(storage, `tracks/${user.uid}/${Date.now()}-${selectedFile.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, selectedFile);
 
-    uploadTask.on('state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setUploadProgress(progress);
-      },
-      (error) => {
-        console.error("Upload error:", error);
-        setIsUploading(false);
-        setUploadProgress(0);
-        toast({
-          variant: "destructive",
-          title: "Upload Failed",
-          description: "An error occurred while uploading your track. Please try again.",
-        });
-      },
-      async () => {
-        try {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          const trackTitle = selectedFile.name.replace(/\.[^/.]+$/, "");
+    try {
+      const waveform = await generateWaveformData(selectedFile);
+      
+      const storageRef = ref(storage, `tracks/${user.uid}/${Date.now()}-${selectedFile.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, selectedFile);
 
-          const trackDocRef = await addDoc(collection(firestore, 'tracks'), {
-            title: trackTitle,
-            artist: user.displayName || 'Unknown Artist',
-            audioUrl: downloadURL,
-            storagePath: uploadTask.snapshot.ref.fullPath,
-            waveform: [], // We can generate this later if needed
-            userId: user.uid,
-            createdAt: serverTimestamp(),
-            commentCount: 0,
-          });
-
-          toast({
-            title: "Upload Successful",
-            description: "Your track is ready and saved to your dashboard.",
-          });
-          onUploadComplete(trackDocRef.id);
-        } catch (error) {
-           console.error("Error creating track document:", error);
-           toast({
-            variant: "destructive",
-            title: "Error Saving Track",
-            description: "Your file was uploaded, but we couldn't save it to your dashboard. Please contact support.",
-          });
+      uploadTask.on('state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(progress);
+        },
+        (error) => {
+          console.error("Upload error:", error);
           setIsUploading(false);
+          setUploadProgress(0);
+          toast({
+            variant: "destructive",
+            title: "Upload Failed",
+            description: "An error occurred while uploading your track. Please try again.",
+          });
+        },
+        async () => {
+          try {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            const trackTitle = selectedFile.name.replace(/\.[^/.]+$/, "");
+
+            const trackDocRef = await addDoc(collection(firestore, 'tracks'), {
+              title: trackTitle,
+              artist: user.displayName || 'Unknown Artist',
+              audioUrl: downloadURL,
+              storagePath: uploadTask.snapshot.ref.fullPath,
+              waveform: waveform,
+              userId: user.uid,
+              createdAt: serverTimestamp(),
+              commentCount: 0,
+            });
+
+            toast({
+              title: "Upload Successful",
+              description: "Your track is ready and saved to your dashboard.",
+            });
+            onUploadComplete(trackDocRef.id);
+          } catch (error) {
+            console.error("Error creating track document:", error);
+            toast({
+              variant: "destructive",
+              title: "Error Saving Track",
+              description: "Your file was uploaded, but we couldn't save it to your dashboard. Please contact support.",
+            });
+            setIsUploading(false);
+          }
         }
-      }
-    );
+      );
+    } catch (error) {
+        console.error("Waveform generation error:", error);
+        setIsUploading(false);
+        toast({
+            variant: "destructive",
+            title: "Could Not Process Audio",
+            description: "There was an error analyzing the audio file. Please try a different file.",
+        });
+    }
   };
 
   return (
