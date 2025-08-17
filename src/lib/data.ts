@@ -7,6 +7,7 @@ export type DashboardTrack = {
   title: string;
   comments: number; // For now, we'll keep this as a static number. We can wire this up later.
   date: string;
+  storagePath: string;
 };
 
 /**
@@ -36,6 +37,7 @@ export const getDashboardTracks = async (): Promise<DashboardTrack[]> => {
         // We'll placeholder the comment count for now.
         comments: 0,
         date: createdAt ? createdAt.toDate().toLocaleDateString() : new Date().toLocaleDateString(),
+        storagePath: data.storagePath,
       };
     });
 
