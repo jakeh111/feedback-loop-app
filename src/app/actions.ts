@@ -3,6 +3,7 @@
 
 import { summarizeFeedback, SummarizeFeedbackInput, SummarizeFeedbackOutput } from "@/ai/flows/summarize-feedback";
 import { firestore, storage } from '@/lib/firebase-admin';
+import { FirebaseError } from "firebase-admin/app";
 
 export async function getSummary(input: SummarizeFeedbackInput): Promise<SummarizeFeedbackOutput> {
   try {
@@ -29,6 +30,10 @@ export async function deleteTrack(trackId: string, storagePath: string): Promise
     
   } catch (error) {
     console.error("Error deleting track:", error);
+     if (error instanceof FirebaseError || (error instanceof Error && error.name === 'FirebaseError')) {
+       // This will give us a more specific error message from Firebase
+       throw new Error(error.message);
+    }
     // Re-throw the original error to be caught by the client
     throw error;
   }
