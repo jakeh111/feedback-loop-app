@@ -12,13 +12,22 @@ import {
 import { UploadForm } from "./UploadForm";
 import { useRouter } from "next/navigation";
 
-export function UploadDialog({ children }: { children: React.ReactNode }) {
+interface UploadDialogProps {
+  children: React.ReactNode;
+  onUploadComplete?: () => void;
+}
+
+export function UploadDialog({ children, onUploadComplete }: UploadDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
 
   const handleUploadComplete = (trackId: string) => {
     setIsOpen(false);
-    router.push(`/track/${trackId}`);
+    if (onUploadComplete) {
+      onUploadComplete();
+    } else {
+      router.push(`/track/${trackId}`);
+    }
   };
   
   return (

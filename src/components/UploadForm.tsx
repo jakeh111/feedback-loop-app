@@ -60,7 +60,7 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     
     setIsUploading(true);
     
-    const storageRef = ref(storage, `tracks/${user.uid}/${selectedFile.name}`);
+    const storageRef = ref(storage, `tracks/${user.uid}/${Date.now()}-${selectedFile.name}`);
     const uploadTask = uploadBytesResumable(storageRef, selectedFile);
 
     uploadTask.on('state_changed',
@@ -81,32 +81,17 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
       async () => {
         try {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          const trackTitle = selectedFile.name.replace(/\.[^/.]+$/, ""); // Remove file extension for title
-
-          // Generate a consistent pseudo-random waveform 
-          const seedrandom = (seed: string) => {
-            let seedVal = 0;
-            for(let i = 0; i < seed.length; i++) {
-                seedVal += seed.charCodeAt(i);
-            }
-            const random = () => {
-                const x = Math.sin(seedVal++) * 10000;
-                return x - Math.floor(x);
-            };
-            return random;
-          }
-          const random = seedrandom(downloadURL); // Use downloadURL for a consistent seed
-          const waveform = Array.from({ length: 100 }, () => Math.round(random() * 100));
-
+          const trackTitle = selectedFile.name.replace(/\.[^/.]+$/, "");
 
           const trackDocRef = await addDoc(collection(firestore, 'tracks'), {
             title: trackTitle,
             artist: user.displayName || 'Unknown Artist',
             audioUrl: downloadURL,
             storagePath: uploadTask.snapshot.ref.fullPath,
-            waveform: waveform,
+            waveform: [], // We can generate this later if needed
             userId: user.uid,
             createdAt: serverTimestamp(),
+            commentCount: 0,
           });
 
           toast({
