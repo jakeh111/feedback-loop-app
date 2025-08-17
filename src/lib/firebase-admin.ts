@@ -20,26 +20,12 @@ const getFirebaseAdmin = (): AdminServices => {
 
   if (admin.apps.length === 0) {
     try {
-      // When running in a Google Cloud environment, the SDK can automatically
-      // find the credentials. For local development and other environments,
-      // we use a service account key file stored in environment variables.
-      const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n');
-
-      if (privateKey && process.env.FIREBASE_ADMIN_CLIENT_EMAIL && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
-         admin.initializeApp({
-            credential: admin.credential.cert({
-              projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-              clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-              privateKey: privateKey,
-            }),
-            storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        });
-      } else {
-        // Fallback for environments where Application Default Credentials are available
-        admin.initializeApp({
-            storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        });
-      }
+      // When running in a Google Cloud environment (like App Hosting), the SDK can
+      // automatically find the credentials. For local development, you would
+      // typically use a service account key file.
+      admin.initializeApp({
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      });
 
     } catch (error) {
        console.error('Firebase Admin initialization error', error);

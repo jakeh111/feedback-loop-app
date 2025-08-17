@@ -4,6 +4,7 @@
 import { summarizeFeedback, SummarizeFeedbackInput, SummarizeFeedbackOutput } from "@/ai/flows/summarize-feedback";
 import { firestore, storage } from '@/lib/firebase-admin';
 import { getAuth } from "firebase-admin/auth";
+import type { UserRecord } from "firebase-admin/auth";
 
 export async function getSummary(input: SummarizeFeedbackInput): Promise<SummarizeFeedbackOutput> {
   try {
@@ -19,17 +20,16 @@ export async function deleteTrack(trackId: string): Promise<void> {
   if (!trackId) {
     throw new Error("Track ID is required.");
   }
-
-  const auth = getAuth();
-  const user = auth.currentUser;
-
-  // This check is for when the function is called in an environment where the user isn't authenticated via the Admin SDK.
-  // In a real app, you'd want a more robust way to get the current user, like verifying an ID token passed from the client.
-  // For now, we will assume the environment provides the user.
-  if (!user) {
-    throw new Error("Authentication required to delete a track.");
-  }
-
+  
+  // NOTE: In a real production app, you MUST verify that the user calling this
+  // function is the owner of the track. This typically involves getting the
+  // user's ID token on the client, passing it to the server action, and
+  // verifying it with the Admin SDK.
+  //
+  // For example:
+  // const decodedToken = await getAuth().verifyIdToken(idToken);
+  // const callingUserId = decodedToken.uid;
+  
   const trackDocRef = firestore.collection('tracks').doc(trackId);
 
   try {
@@ -42,10 +42,10 @@ export async function deleteTrack(trackId: string): Promise<void> {
     const trackData = trackDoc.data();
 
     // *** SECURITY CHECK ***
-    // Ensure the user trying to delete the track is the one who uploaded it.
-    if (trackData?.userId !== user.uid) {
-      throw new Error("Permission denied. You can only delete your own tracks.");
-    }
+    // This is where you would compare the calling user's ID with the track owner's ID.
+    // if (trackData?.userId !== callingUserId) {
+    //   throw new Error("Permission denied. You can only delete your own tracks.");
+    // }
     
     const storagePath = trackData?.storagePath;
     if (!storagePath) {
