@@ -12,9 +12,8 @@ interface AdminServices {
   storage: Storage;
 }
 
-// A global variable to hold the initialized services.
 // Using `globalThis` prevents re-initialization during hot-reloads in development.
-let adminServices: AdminServices | null = null;
+let adminServices: AdminServices | null = (globalThis as any)._firebaseAdminServices;
 
 const getFirebaseAdmin = (): AdminServices => {
   if (adminServices) {
@@ -32,7 +31,7 @@ const getFirebaseAdmin = (): AdminServices => {
 
       // When running locally or in some CI environments, GOOGLE_APPLICATION_CREDENTIALS might be used.
       // In App Hosting, default credentials are used. We are explicitly defining the service account
-      // to ensure the correct one is used.
+      // to ensure the correct one is used, which can prevent authentication issues.
       if (process.env.FIREBASE_ADMIN_CLIENT_EMAIL) {
         appOptions.credential = credential.applicationDefault();
         appOptions.serviceAccountId = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
@@ -55,6 +54,10 @@ const getFirebaseAdmin = (): AdminServices => {
   const storage = getStorage(app);
 
   adminServices = { app, firestore, storage };
+
+  // Store it in the global object to prevent re-initialization
+  (globalThis as any)._firebaseAdminServices = adminServices;
+
 
   return adminServices;
 };
