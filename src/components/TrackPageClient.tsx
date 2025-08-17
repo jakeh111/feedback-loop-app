@@ -12,7 +12,7 @@ import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 export function TrackPageClient({ track }: { track: Track }) {
-  const [comments, setComments] = useState<Comment[]>(track.comments);
+  const [comments, setComments] = useState<Comment[]>([]);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
   const searchParams = useSearchParams();

@@ -15,5 +15,4 @@ export type Track = {
   artist: string;
   audioUrl: string;
   waveform: number[];
-  comments: Comment[];
 };

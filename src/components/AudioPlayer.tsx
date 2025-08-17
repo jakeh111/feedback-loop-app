@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
-import type { Track } from '@/lib/types';
+import type { Track, Comment } from '@/lib/types';
 import { Waveform } from './Waveform';
 import { Button } from './ui/button';
 import { Play, Pause, Volume2, VolumeX, Rewind, FastForward } from 'lucide-react';
@@ -10,9 +10,10 @@ import { Slider } from './ui/slider';
 interface AudioPlayerProps {
   track: Track;
   onSeek: (time: number) => void;
+  comments?: Comment[];
 }
 
-export const AudioPlayer = forwardRef<HTMLAudioElement, AudioPlayerProps>(({ track, onSeek }, ref) => {
+export const AudioPlayer = forwardRef<HTMLAudioElement, AudioPlayerProps>(({ track, onSeek, comments = [] }, ref) => {
   const internalAudioRef = useRef<HTMLAudioElement>(null);
   useImperativeHandle(ref, () => internalAudioRef.current!, []);
   
@@ -108,7 +109,7 @@ export const AudioPlayer = forwardRef<HTMLAudioElement, AudioPlayerProps>(({ tra
         duration={duration}
         onSeek={handleSeek}
         isPlaying={isPlaying}
-        comments={track.comments}
+        comments={comments}
       />
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm font-mono text-muted-foreground w-28">
