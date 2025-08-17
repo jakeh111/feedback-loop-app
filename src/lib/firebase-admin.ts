@@ -6,6 +6,16 @@ import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getStorage, type Storage } from 'firebase-admin/storage';
 import './global.d.ts';
 
+// DEBUGGING: Log environment variables to check if they are loaded correctly.
+console.log("Attempting to initialize Firebase Admin SDK with these env vars:");
+console.log({
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  // Check if the private key exists to avoid printing the whole secret key
+  privateKey: process.env.FIREBASE_PRIVATE_KEY ? 'Loaded Successfully' : 'NOT LOADED', 
+});
+
+
 // This singleton pattern prevents the Firebase Admin SDK from being initialized multiple times
 // during Next.js hot-reloading in a development environment. This is a robust solution to
 // prevent the "already exists" error and other initialization-related issues.
