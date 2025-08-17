@@ -1,7 +1,8 @@
 
-import { initializeApp, getApps, getApp, type App } from 'firebase-admin/app';
+import { initializeApp, getApps, getApp, type App, type AppOptions } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getStorage, type Storage } from 'firebase-admin/storage';
+import { credential } from 'firebase-admin';
 
 // This is a robust way to initialize Firebase Admin SDK in a serverless environment like Next.js
 // It ensures that we only initialize the app once.
@@ -26,9 +27,20 @@ const getFirebaseAdmin = (): AdminServices => {
   // In Firebase Hosting with App Hosting, this is handled automatically.
   if (getApps().length === 0) {
     try {
-      initializeApp({
+       const appOptions: AppOptions = {
         storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      });
+      };
+
+      // When running locally or in some CI environments, GOOGLE_APPLICATION_CREDENTIALS might be used.
+      // In App Hosting, default credentials are used. We are explicitly defining the service account
+      // to ensure the correct one is used.
+      if (process.env.FIREBASE_ADMIN_CLIENT_EMAIL) {
+        appOptions.credential = credential.applicationDefault();
+        appOptions.serviceAccountId = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+      }
+      
+      initializeApp(appOptions);
+
     } catch (error) {
        if (error instanceof Error && 'code' in error && (error as any).code === 'app/invalid-credential') {
           console.error('Firebase Admin initialization failed: Invalid credentials. Make sure your service account is set up correctly.');
