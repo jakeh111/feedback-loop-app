@@ -28,22 +28,4 @@ auth = getAuth(app);
 storage = getStorage(app);
 firestore = getFirestore(app);
 
-// It's important to only connect to emulators on the client side,
-// and only in development mode.
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-    // Note: You must run the Firebase emulators for this to work.
-    // We are currently using the live Firebase services as per our last fix.
-    // To re-enable emulators, uncomment these lines.
-    // import { connectAuthEmulator } from "firebase/auth";
-    // import { connectStorageEmulator } from "firebase/storage";
-    // import { connectFirestoreEmulator } from "firebase/firestore";
-    // try {
-    //   connectAuthEmulator(auth, "http://127.0.0.1:9025");
-    //   connectStorageEmulator(storage, "127.0.0.1", 9198);
-    //   connectFirestoreEmulator(firestore, "127.0.0.1", 8090);
-    // } catch (e) {
-    //   console.log("Emulators already connected or error connecting", e);
-    // }
-}
-
 export { app, auth, storage, firestore };
