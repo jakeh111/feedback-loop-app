@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PlusCircle, Music, MessageSquare, ListMusic, Loader2, Trash2 } from "lucide-react";
-import { getDashboardTracks, type DashboardTrack } from "@/lib/data";
 import { UploadDialog } from "@/components/UploadDialog";
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, firestore } from '@/lib/firebase';
+import { collection, query, where, onSnapshot, orderBy, Timestamp } from 'firebase/firestore';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,47 +24,63 @@ import {
 import { deleteTrack } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 
+export type DashboardTrack = {
+  id: string;
+  title: string;
+  comments: number; 
+  date: string;
+};
 
 export default function DashboardPage() {
   const [tracks, setTracks] = useState<DashboardTrack[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [trackToDelete, setTrackToDelete] = useState<DashboardTrack | null>(null);
+  const [trackToDelete, setTrackToDelete] = useState<DashboardTrack & { title: string } | null>(null);
   const { toast } = useToast();
 
-  const handleUploadComplete = () => {
-    // This is a placeholder for a more robust notification system
-    // For now, we just rely on the onSnapshot listener to update the track list
-  };
-
   useEffect(() => {
-    // First, set up an observer on the Auth object to get the user's sign-in state.
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      setIsLoading(false); // Set loading to false once we have auth state
+      setIsLoading(false); 
     });
-
-    // Unsubscribe from the auth observer when the component unmounts
     return () => unsubscribeAuth();
   }, []);
 
 
   useEffect(() => {
-    // If we have a user, set up the real-time listener for their tracks
     if (user) {
-      // getDashboardTracks returns an unsubscribe function
-      const unsubscribeTracks = getDashboardTracks(user.uid, (userTracks) => {
+      const q = query(
+        collection(firestore, 'tracks'),
+        where("userId", "==", user.uid),
+        orderBy("createdAt", "desc")
+      );
+
+      const unsubscribeTracks = onSnapshot(q, (querySnapshot) => {
+        const userTracks: DashboardTrack[] = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          const date = data.createdAt instanceof Timestamp
+            ? data.createdAt.toDate()
+            : new Date();
+
+          return {
+            id: doc.id,
+            title: data.title || 'Untitled Track',
+            comments: data.commentCount || 0,
+            date: date.toLocaleDateString(),
+          };
+        });
         setTracks(userTracks);
+      }, (error) => {
+        console.error("Error fetching real-time tracks:", error);
+        setTracks([]);
       });
 
-      // Unsubscribe from the tracks listener when the user changes or component unmounts
       return () => unsubscribeTracks();
     } else {
-      // If there's no user, clear the tracks
       setTracks([]);
     }
-  }, [user]); // This effect runs whenever the user object changes
+  }, [user]); 
 
 
   const handleDeleteTrack = async () => {
@@ -90,13 +106,18 @@ export default function DashboardPage() {
     }
   };
 
+  const getTrackForDeletion = (trackId: string): (DashboardTrack & { title: string }) | null => {
+    const track = tracks.find(t => t.id === trackId);
+    return track ? { ...track, title: track.title } : null;
+  }
+
   return (
     <>
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
           {user && (
-            <UploadDialog onUploadComplete={handleUploadComplete}>
+            <UploadDialog onUploadComplete={() => {}}>
               <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Upload New Track
@@ -144,7 +165,10 @@ export default function DashboardPage() {
                         <Button asChild variant="outline" size="sm">
                           <Link href={`/track/${track.id}`}>View Feedback</Link>
                         </Button>
-                         <Button onClick={() => setTrackToDelete(track)} variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+                         <Button onClick={() => {
+                            const fullTrack = getTrackForDeletion(track.id);
+                            if (fullTrack) setTrackToDelete(fullTrack);
+                         }} variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete
                         </Button>
@@ -158,7 +182,7 @@ export default function DashboardPage() {
                 <ListMusic className="mx-auto h-12 w-12 text-muted-foreground" />
                 <h3 className="mt-4 text-lg font-semibold">No tracks uploaded</h3>
                 <p className="mt-1 text-sm">Upload your first track to get started.</p>
-                <UploadDialog onUploadComplete={handleUploadComplete}>
+                <UploadDialog onUploadComplete={() => {}}>
                     <Button className="mt-4">
                       <PlusCircle className="mr-2 h-4 w-4" />
                       Upload Track
