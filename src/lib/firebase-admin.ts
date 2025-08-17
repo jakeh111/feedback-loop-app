@@ -1,8 +1,7 @@
 
-import { initializeApp, getApps, getApp, type App, type AppOptions } from 'firebase-admin/app';
+import { initializeApp, getApps, getApp, type App, type AppOptions, credential } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getStorage, type Storage } from 'firebase-admin/storage';
-import { credential } from 'firebase-admin';
 
 // This is a robust way to initialize Firebase Admin SDK in a serverless environment like Next.js
 // It ensures that we only initialize the app once.
