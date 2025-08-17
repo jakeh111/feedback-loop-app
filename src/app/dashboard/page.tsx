@@ -70,7 +70,7 @@ export default function DashboardPage() {
        toast({
         variant: "destructive",
         title: "Deletion Failed",
-        description: "Could not delete the track. Please try again.",
+        description: "Could not delete the track. Please check permissions or try again.",
       });
     } finally {
       setIsDeleting(false);
