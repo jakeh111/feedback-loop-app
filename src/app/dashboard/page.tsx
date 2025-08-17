@@ -59,7 +59,7 @@ export default function DashboardPage() {
     if (!trackToDelete) return;
     setIsDeleting(true);
     try {
-      await deleteTrack(trackToDelete.id, trackToDelete.storagePath);
+      await deleteTrack(trackToDelete.id);
       toast({
         title: "Track Deleted",
         description: `"${trackToDelete.title}" has been permanently removed.`,
