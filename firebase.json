@@ -38,7 +38,15 @@
       "enabled": true,
       "host": "127.0.0.1"
     },
-    "singleProjectMode": true
+    "singleProjectMode": true,
+    "apphosting": {
+      "port": 5002,
+      "rootDirectory": "./",
+      "startCommand": "npm run dev"
+    },
+    "tasks": {
+      "port": 9499
+    }
   },
   "hosting": {
     "public": "public",

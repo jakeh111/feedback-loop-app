@@ -25,7 +25,7 @@ if (!getApps().length) {
 const auth = getAuth(app);
 
 if (process.env.NODE_ENV === 'development') {
-    connectAuthEmulator(auth, "http://127.0.0.1:9025", { disableWarnings: true });
+    connectAuthEmulator(auth, "http://localhost:9025", { disableWarnings: true });
 }
 
 
