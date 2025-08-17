@@ -1,3 +1,5 @@
+'use client';
+
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
@@ -25,7 +27,7 @@ if (!getApps().length) {
 const auth = getAuth(app);
 
 if (process.env.NODE_ENV === 'development') {
-    connectAuthEmulator(auth, "http://localhost:9025", { disableWarnings: true });
+    connectAuthEmulator(auth, "http://127.0.0.1:9025");
 }
 
 
