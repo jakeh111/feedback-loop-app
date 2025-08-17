@@ -1,10 +1,10 @@
 
 'use client';
 
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
+import { getAuth, connectAuthEmulator, Auth } from "firebase/auth";
+import { getStorage, connectStorageEmulator, FirebaseStorage } from "firebase/storage";
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -14,17 +14,24 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase for client-side
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
+let app: FirebaseApp;
+let auth: Auth;
+let storage: FirebaseStorage;
 
-// Connect to emulators in development
-// if (process.env.NODE_ENV === 'development') {
-//   // Check if emulators are already running to avoid re-connecting
-//   // This is a common pattern to prevent errors in Next.js hot-reloading environments
-//   if (!(auth as any)._emulatorConfig) {
-//     connectAuthEmulator(auth, "http://127.0.0.1:9025");
-//   }
-// }
+if (typeof window !== 'undefined' && !getApps().length) {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  storage = getStorage(app);
 
-export { app, auth };
+  if (process.env.NODE_ENV === 'development') {
+    // Note: You must run the Firebase emulators for this to work.
+    // connectAuthEmulator(auth, "http://127.0.0.1:9025", { disableWarnings: true });
+    // connectStorageEmulator(storage, "127.0.0.1", 9198);
+  }
+} else {
+  app = getApp();
+  auth = getAuth(app);
+  storage = getStorage(app);
+}
+
+export { app, auth, storage };

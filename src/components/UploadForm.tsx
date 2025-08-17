@@ -7,11 +7,15 @@ import { UploadCloud } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytesResumable } from 'firebase/storage';
+import { Progress } from './ui/progress';
 
 export function UploadForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,16 +46,34 @@ export function UploadForm() {
     
     setIsUploading(true);
     
-    // Simulate upload process
-    setTimeout(() => {
-      // In a real app, this ID would come from the database after storing the track.
-      const trackId = Math.random().toString(36).substring(2, 15);
-      toast({
-        title: "Upload Successful",
-        description: "Your track is being processed and will be available shortly.",
-      });
-      router.push(`/track/${trackId}`);
-    }, 1500);
+    // In a real app, this ID would come from creating a document in Firestore.
+    const trackId = Math.random().toString(36).substring(2, 15);
+    const storageRef = ref(storage, `tracks/${trackId}/${selectedFile.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, selectedFile);
+
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      },
+      (error) => {
+        console.error("Upload error:", error);
+        setIsUploading(false);
+        setUploadProgress(0);
+        toast({
+          variant: "destructive",
+          title: "Upload Failed",
+          description: "An error occurred while uploading your track. Please try again.",
+        });
+      },
+      () => {
+        toast({
+          title: "Upload Successful",
+          description: "Your track is ready.",
+        });
+        router.push(`/track/${trackId}`);
+      }
+    );
   };
 
   return (
@@ -65,11 +87,18 @@ export function UploadForm() {
                 </p>
                 <p className="text-xs text-muted-foreground">MP3 or WAV (MAX. 80MB)</p>
             </div>
-            <Input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} accept=".mp3,.wav,audio/mpeg,audio/wav,audio/wave" />
+            <Input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} accept=".mp3,.wav,audio/mpeg,audio/wave" disabled={isUploading} />
         </label>
       </div>
 
-      {selectedFile && <p className="text-sm text-center text-muted-foreground">Selected: {selectedFile.name}</p>}
+      {selectedFile && !isUploading && <p className="text-sm text-center text-muted-foreground">Selected: {selectedFile.name}</p>}
+
+      {isUploading && (
+        <div className="space-y-2">
+            <p className="text-sm text-center text-muted-foreground">Uploading: {selectedFile?.name}</p>
+            <Progress value={uploadProgress} />
+        </div>
+      )}
 
       <Button type="submit" className="w-full" disabled={isUploading || !selectedFile}>
         {isUploading ? 'Uploading...' : 'Upload Track'}
