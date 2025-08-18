@@ -279,9 +279,9 @@ export function DashboardClient() {
                                <Zap className="mr-2 h-4 w-4" />
                                Extend
                            </Button>
-                           <Button onClick={() => openDeleteDialog(track)} variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
+                           <Button onClick={() => openDeleteDialog(track)} variant="outline" size="icon" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                              <span className="sr-only">Delete</span>
                           </Button>
                         </TableCell>
                       </TableRow>
