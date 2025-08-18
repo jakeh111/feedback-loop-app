@@ -233,7 +233,9 @@ export function DashboardClient() {
                           <p className="text-sm text-muted-foreground">{user.email}</p>
                        </div>
                     </div>
-                    <Button variant="outline" disabled>Edit Profile</Button>
+                    <Button variant="outline" asChild>
+                      <Link href="/dashboard/profile">Edit Profile</Link>
+                    </Button>
                  </div>
                  <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
                     <div className="flex items-center gap-4">
