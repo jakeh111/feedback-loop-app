@@ -10,43 +10,41 @@ let auth: Auth;
 let firestore: Firestore;
 let storage: Storage;
 
-// This is the service account object that will be used to authenticate
-// the Firebase Admin SDK. It's constructed from environment variables.
 const serviceAccount = {
   projectId: process.env.FIREBASE_PROJECT_ID,
   clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  // The private key from the environment variable needs to have its escaped newlines
-  // replaced with actual newline characters.
   privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
 };
 
-// Check if the service account credentials are fully provided.
 const hasServiceAccount =
   serviceAccount.projectId &&
   serviceAccount.clientEmail &&
   serviceAccount.privateKey;
 
+if (process.env.NODE_ENV === 'development' && !hasServiceAccount) {
+  console.warn(
+    'Firebase Admin SDK is not initialized. Required environment variables for the service account are missing. Please ensure FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY are set in your .env.local file.'
+  );
+}
+
 if (admin.apps.length === 0) {
   if (hasServiceAccount) {
-    console.log('Initializing Firebase Admin SDK with Service Account...');
+    // Initialize with service account credentials
     app = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     });
   } else {
-     // If service account is not available, try to initialize with Application Default Credentials.
-     // This is useful for deployed environments like Google Cloud Run or App Hosting.
-     console.log('Initializing Firebase Admin SDK with Application Default Credentials...');
-     app = admin.initializeApp({
+    // Fallback for deployed environments like App Hosting
+    // which use Application Default Credentials.
+    app = admin.initializeApp({
         storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-     });
+    });
   }
 } else {
-  // If it's already initialized, just get the default app instance.
   app = admin.app();
 }
 
-// Get the services from the initialized app.
 auth = getAuth(app);
 firestore = getFirestore(app);
 storage = getStorage(app);
