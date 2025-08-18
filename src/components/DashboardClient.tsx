@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusCircle, Music, MessageSquare, ListMusic, Loader2, Trash2, Clock, Zap } from "lucide-react";
+import { PlusCircle, Music, MessageSquare, ListMusic, Loader2, Trash2, Clock, User as UserIcon, CreditCard } from "lucide-react";
 import { UploadDialog } from "@/components/UploadDialog";
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth, firestore } from '@/lib/firebase';
@@ -218,6 +218,37 @@ export function DashboardClient() {
           )}
         </div>
 
+        {user && (
+           <Card className="mb-6 drop-shadow-custom-md">
+              <CardHeader>
+                <CardTitle>My Account</CardTitle>
+                <CardDescription>View your account details and manage your subscription.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                 <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-4">
+                        <UserIcon className="h-6 w-6 text-primary" />
+                        <div>
+                          <p className="font-medium">{user.displayName}</p>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                       </div>
+                    </div>
+                    <Button variant="outline" disabled>Edit Profile</Button>
+                 </div>
+                 <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-4">
+                       <CreditCard className="h-6 w-6 text-primary" />
+                       <div>
+                          <p className="font-medium">Subscription Plan</p>
+                          <p className="text-sm text-muted-foreground">You are currently on the Free Tier.</p>
+                       </div>
+                    </div>
+                    <Button variant="outline" disabled>Manage Billing</Button>
+                 </div>
+              </CardContent>
+            </Card>
+        )}
+
         <Card className="drop-shadow-custom-md">
           <CardHeader>
             <CardTitle>My Tracks</CardTitle>
@@ -275,10 +306,6 @@ export function DashboardClient() {
                             </Badge>
                         </TableCell>
                         <TableCell className="text-right space-x-2">
-                           <Button variant="outline" size="sm" disabled>
-                               <Zap className="mr-2 h-4 w-4" />
-                               Extend
-                           </Button>
                            <Button onClick={() => openDeleteDialog(track)} variant="outline" size="icon" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
                               <Trash2 className="h-4 w-4" />
                               <span className="sr-only">Delete</span>
