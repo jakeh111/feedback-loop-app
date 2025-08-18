@@ -12,8 +12,10 @@ import { Share2, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
-import { firestore } from '@/lib/firebase';
+import { firestore, auth } from '@/lib/firebase';
 import { addComment } from '@/app/actions';
+import { onAuthStateChanged, type User } from 'firebase/auth';
+
 
 export function TrackPageClient({ track }: { track: Track }) {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -21,19 +23,34 @@ export function TrackPageClient({ track }: { track: Track }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
   const searchParams = useSearchParams();
+  const [user, setUser] = useState<User | null>(null);
   const [authorName, setAuthorName] = useState("Guest");
 
   useEffect(() => {
-    const author = searchParams.get('author');
-    if (author) {
-      setAuthorName(author);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // Set author name based on auth state or query params
+    if (user) {
+      setAuthorName(user.displayName || "Authenticated User");
+    } else {
+      const authorFromUrl = searchParams.get('author');
+      if (authorFromUrl) {
+        setAuthorName(authorFromUrl);
+      } else {
+        setAuthorName("Guest");
+      }
     }
-  }, [searchParams]);
+  }, [user, searchParams]);
 
   useEffect(() => {
     setIsLoadingComments(true);
     const commentsRef = collection(firestore, 'tracks', track.id, 'comments');
-    const q = query(commentsRef, orderBy('timestamp', 'asc'));
+    const q = query(commentsRef, orderBy('createdAt', 'asc'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedComments = snapshot.docs.map(doc => {
@@ -60,12 +77,13 @@ export function TrackPageClient({ track }: { track: Track }) {
   }, [track.id, toast]);
 
   const handleAddComment = async (text: string, startTime: number, endTime?: number, youtubeUrl?: string, youtubeTimestamp?: number) => {
+    const finalAuthorName = user?.displayName || authorName;
     const commentData = {
-      author: authorName,
+      author: finalAuthorName,
       text,
       timestamp: startTime,
       endTimestamp: endTime,
-      avatarUrl: `https://placehold.co/40x40.png?text=${authorName.charAt(0)}`,
+      avatarUrl: user?.photoURL || `https://placehold.co/40x40.png?text=${finalAuthorName.charAt(0)}`,
       youtubeUrl,
       youtubeTimestamp
     };
