@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -22,9 +22,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
-import { deleteTrack } from '@/app/actions';
+import { deleteTrack, renameTrack } from '@/app/actions';
 import { differenceInDays, addDays } from 'date-fns';
 import { Badge } from './ui/badge';
+import { Input } from './ui/input';
 
 const TRACK_LIFETIME_DAYS = 30;
 
@@ -49,6 +50,10 @@ export function DashboardClient() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [trackToDelete, setTrackToDelete] = useState<DashboardTrack | null>(null);
   const { toast } = useToast();
+
+  const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
@@ -101,6 +106,13 @@ export function DashboardClient() {
     }
   }, [user, toast]); 
 
+  useEffect(() => {
+    if (editingTrackId && inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.select();
+    }
+  }, [editingTrackId]);
+
 
   const handleDeleteTrack = async () => {
     if (!trackToDelete) return;
@@ -142,9 +154,52 @@ export function DashboardClient() {
     return Math.max(0, daysLeft);
   }
   
+  const handleRename = async (trackId: string) => {
+    const originalTitle = tracks.find(t => t.id === trackId)?.title || '';
+    if (editingTitle.trim() === '' || editingTitle.trim() === originalTitle) {
+      setEditingTrackId(null);
+      return;
+    }
+
+    try {
+      await renameTrack(trackId, editingTitle);
+      toast({
+        title: "Track Renamed",
+        description: `Successfully renamed track to "${editingTitle.trim()}".`,
+      });
+    } catch (error) {
+       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+       toast({
+        variant: "destructive",
+        title: "Rename Failed",
+        description: `Could not rename the track. ${errorMessage}`,
+      });
+      // Revert title in UI on failure
+      setTracks(tracks.map(t => t.id === trackId ? { ...t, title: originalTitle } : t));
+    } finally {
+      setEditingTrackId(null);
+    }
+  }
+
+  const handleTitleClick = (track: DashboardTrack) => {
+    if(track.id === 'sample') {
+        toast({ title: "Sample Track", description: "The sample track cannot be renamed." });
+        return;
+    }
+    setEditingTrackId(track.id);
+    setEditingTitle(track.title);
+  }
+
+  const handleRenameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, trackId: string) => {
+      if (e.key === 'Enter') {
+          handleRename(trackId);
+      } else if (e.key === 'Escape') {
+          setEditingTrackId(null);
+      }
+  }
+
   const showSampleTrack = user && tracks.length === 0;
   const displayTracks = showSampleTrack ? [sampleTrack] : tracks;
-
   const finalTracks = user ? displayTracks : [];
 
 
@@ -187,13 +242,25 @@ export function DashboardClient() {
                 <TableBody>
                   {finalTracks.map((track) => {
                     const daysLeft = getDaysLeft(track.createdAt);
+                    const isEditing = editingTrackId === track.id;
                     return (
                       <TableRow key={track.id}>
-                        <TableCell className="font-medium">
-                          <Link href={`/track/${track.id}`} className="flex items-center gap-2 hover:underline">
-                            <Music className="h-4 w-4 text-muted-foreground" />
-                            {track.title}
-                          </Link>
+                        <TableCell className="font-medium flex items-center gap-2">
+                           <Music className="h-4 w-4 text-muted-foreground" />
+                           {isEditing ? (
+                               <Input
+                                  ref={inputRef}
+                                  value={editingTitle}
+                                  onChange={(e) => setEditingTitle(e.target.value)}
+                                  onBlur={() => handleRename(track.id)}
+                                  onKeyDown={(e) => handleRenameKeyDown(e, track.id)}
+                                  className="h-8"
+                                />
+                           ) : (
+                               <span onClick={() => handleTitleClick(track)} className="cursor-pointer hover:underline">
+                                 {track.title}
+                               </span>
+                           )}
                         </TableCell>
                         <TableCell>
                           <Link href={`/track/${track.id}`} className="flex items-center gap-2 hover:underline">

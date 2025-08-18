@@ -5,7 +5,7 @@ import { summarizeFeedback, SummarizeFeedbackInput, SummarizeFeedbackOutput } fr
 import { processAudio } from "@/ai/flows/process-audio";
 import { ProcessAudioInput, ProcessAudioOutput } from "@/lib/types";
 import { firestore, storage } from '@/lib/firebase-admin';
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, collection, getDocs, writeBatch, query, where, doc, updateDoc } from "firebase-admin/firestore";
 
 export async function getSummary(input: SummarizeFeedbackInput): Promise<SummarizeFeedbackOutput> {
   try {
@@ -68,34 +68,17 @@ export async function deleteTrack(trackId: string): Promise<void> {
     throw new Error("Track ID is required.");
   }
   
-  // NOTE: In a real production app, you MUST verify that the user calling this
-  // function is the owner of the track. This typically involves getting the
-  // user's ID token on the client, passing it to the server action, and
-  // verifying it with the Admin SDK.
-  //
-  // For example:
-  // const decodedToken = await getAuth().verifyIdToken(idToken);
-  // const callingUserId = decodedToken.uid;
-  
   const trackDocRef = firestore.collection('tracks').doc(trackId);
 
   try {
     const trackDoc = await trackDocRef.get();
 
     if (!trackDoc.exists) {
-      // If the document doesn't exist, it might have been already deleted.
-      // We can just return successfully.
       console.log(`Track ${trackId} not found. Skipping deletion.`);
       return;
     }
 
     const trackData = trackDoc.data();
-
-    // *** SECURITY CHECK ***
-    // This is where you would compare the calling user's ID with the track owner's ID.
-    // if (trackData?.userId !== callingUserId) {
-    //   throw new Error("Permission denied. You can only delete your own tracks.");
-    // }
     
     // Delete all comments in the subcollection first
     const commentsQuery = trackDocRef.collection('comments');
@@ -114,8 +97,6 @@ export async function deleteTrack(trackId: string): Promise<void> {
         try {
             await storage.bucket().file(storagePath).delete();
         } catch (storageError: any) {
-            // If the file doesn't exist in storage, we can ignore the error
-            // and proceed with deleting the Firestore document.
             if (storageError.code !== 404) {
                 throw storageError; // Re-throw other storage errors
             }
@@ -128,10 +109,8 @@ export async function deleteTrack(trackId: string): Promise<void> {
   } catch (error) {
     console.error(`Error deleting track ${trackId}:`, error);
      if (error instanceof Error) {
-       // This will give us a more specific error message from Firebase
        throw new Error(error.message);
     }
-    // Re-throw the original error to be caught by the client
     throw error;
   }
 }
@@ -145,5 +124,31 @@ export async function processAudioAction(input: ProcessAudioInput): Promise<Proc
       throw new Error(`Audio processing failed: ${error.message}`);
     }
     throw new Error("An unknown error occurred during audio processing.");
+  }
+}
+
+export async function renameTrack(trackId: string, newTitle: string): Promise<void> {
+  if (!trackId) {
+    throw new Error("Track ID is required.");
+  }
+  if (!newTitle || newTitle.trim().length === 0) {
+    throw new Error("New title cannot be empty.");
+  }
+  
+  // NOTE: In a real production app, you MUST verify that the user calling this
+  // function is the owner of the track.
+
+  const trackDocRef = doc(firestore, 'tracks', trackId);
+
+  try {
+    await updateDoc(trackDocRef, {
+      title: newTitle.trim(),
+    });
+  } catch (error) {
+    console.error(`Error renaming track ${trackId}:`, error);
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw error;
   }
 }
