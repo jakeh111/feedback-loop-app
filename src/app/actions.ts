@@ -3,6 +3,7 @@
 
 import { summarizeFeedback, SummarizeFeedbackInput, SummarizeFeedbackOutput } from "@/ai/flows/summarize-feedback";
 import { firestore, storage } from '@/lib/firebase-admin';
+import { FieldValue } from "firebase-admin/firestore";
 
 export async function getSummary(input: SummarizeFeedbackInput): Promise<SummarizeFeedbackOutput> {
   try {
@@ -13,6 +14,47 @@ export async function getSummary(input: SummarizeFeedbackInput): Promise<Summari
     return { summary: "An error occurred while generating the summary." };
   }
 }
+
+export async function addComment(trackId: string, commentData: {
+  author: string;
+  text: string;
+  timestamp: number;
+  endTimestamp?: number;
+  avatarUrl: string;
+  youtubeUrl?: string;
+  youtubeTimestamp?: number;
+}) {
+  if (!trackId) {
+    throw new Error("Track ID is required.");
+  }
+
+  const trackRef = firestore.collection('tracks').doc(trackId);
+  const commentsRef = trackRef.collection('comments');
+
+  try {
+    // In a transaction, add the new comment and increment the comment count
+    await firestore.runTransaction(async (transaction) => {
+      // Add the new comment
+      const newCommentRef = commentsRef.doc();
+      transaction.set(newCommentRef, {
+        ...commentData,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+
+      // Increment the comment count on the track
+      transaction.update(trackRef, {
+        commentCount: FieldValue.increment(1),
+      });
+    });
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw error;
+  }
+}
+
 
 export async function deleteTrack(trackId: string): Promise<void> {
   if (!trackId) {

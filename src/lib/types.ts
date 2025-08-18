@@ -1,4 +1,7 @@
 
+
+import type { Timestamp } from 'firebase/firestore';
+
 export type Comment = {
   id: string;
   author: string;
@@ -8,6 +11,7 @@ export type Comment = {
   avatarUrl: string;
   youtubeUrl?: string;
   youtubeTimestamp?: number;
+  createdAt: Date | Timestamp;
 };
 
 export type Track = {
