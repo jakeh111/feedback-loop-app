@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -5,9 +6,10 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { FirebaseError } from "firebase/app";
+import { useState }from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +29,17 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 const formSchema = z.object({
   email: z.string().email({
@@ -40,6 +53,9 @@ const formSchema = z.object({
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const [resetEmail, setResetEmail] = useState("");
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -84,6 +100,35 @@ export default function LoginPage() {
     }
   }
 
+  const handlePasswordReset = async () => {
+    if (!resetEmail) {
+        toast({ variant: 'destructive', title: 'Email required', description: 'Please enter your email address.' });
+        return;
+    }
+    try {
+        await sendPasswordResetEmail(auth, resetEmail);
+        toast({
+            title: 'Password Reset Email Sent',
+            description: 'If an account exists for this email, you will receive a link to reset your password shortly.',
+        });
+        setIsResetDialogOpen(false);
+        setResetEmail("");
+    } catch (error) {
+        console.error("Password reset error:", error);
+        let errorMessage = "An unexpected error occurred.";
+        if (error instanceof FirebaseError) {
+            if (error.code === 'auth/invalid-email') {
+                errorMessage = "The email address you entered is not valid.";
+            }
+        }
+        toast({
+            variant: 'destructive',
+            title: 'Failed to Send',
+            description: errorMessage,
+        });
+    }
+  }
+
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] py-12">
       <Card className="mx-auto max-w-sm w-full drop-shadow-custom-md">
@@ -116,9 +161,34 @@ export default function LoginPage() {
                   <FormItem>
                      <div className="flex items-center">
                         <FormLabel>Password</FormLabel>
-                        <Link href="#" className="ml-auto inline-block text-sm underline">
-                          Forgot your password?
-                        </Link>
+                        <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+                          <AlertDialogTrigger asChild>
+                             <Button type="button" variant="link" className="ml-auto inline-block text-sm p-0 h-auto">Forgot your password?</Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Reset Password</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Enter your email address below and we'll send you a link to reset your password.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                             <div className="grid gap-2">
+                                <Label htmlFor="reset-email">Email</Label>
+                                <Input
+                                  id="reset-email"
+                                  type="email"
+                                  placeholder="your@email.com"
+                                  value={resetEmail}
+                                  onChange={(e) => setResetEmail(e.target.value)}
+                                  required
+                                />
+                              </div>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={handlePasswordReset}>Send Reset Link</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
@@ -143,3 +213,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
