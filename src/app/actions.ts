@@ -2,7 +2,8 @@
 'use server';
 
 import { summarizeFeedback, SummarizeFeedbackInput, SummarizeFeedbackOutput } from "@/ai/flows/summarize-feedback";
-import { processAudio, ProcessAudioInput, ProcessAudioOutput } from "@/ai/flows/process-audio";
+import { processAudio } from "@/ai/flows/process-audio";
+import { ProcessAudioInput, ProcessAudioOutput } from "@/lib/types";
 import { firestore, storage } from '@/lib/firebase-admin';
 import { FieldValue } from "firebase-admin/firestore";
 

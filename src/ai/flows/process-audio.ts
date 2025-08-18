@@ -5,30 +5,12 @@
  * @fileOverview Processes an audio file, compressing it to a smaller MP3 format.
  *
  * - processAudio - A function that takes audio data and returns the processed data.
- * - ProcessAudioInput - The input type for the processAudio function.
- * - ProcessAudioOutput - The return type for the processAudio function.
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
 import { Mp3Encoder } from 'lamejs';
 import wav from 'wav';
-
-export const ProcessAudioInputSchema = z.object({
-  audioDataUri: z
-    .string()
-    .describe(
-      "A base64 encoded audio file as a data URI, including a MIME type. E.g., 'data:audio/mpeg;base64, ...'"
-    ),
-});
-export type ProcessAudioInput = z.infer<typeof ProcessAudioInputSchema>;
-
-export const ProcessAudioOutputSchema = z.object({
-  processedAudioDataUri: z
-    .string()
-    .describe('The processed audio file, returned as a base64 data URI.'),
-});
-export type ProcessAudioOutput = z.infer<typeof ProcessAudioOutputSchema>;
+import { ProcessAudioInput, ProcessAudioInputSchema, ProcessAudioOutput, ProcessAudioOutputSchema } from '@/lib/types';
 
 
 export async function processAudio(input: ProcessAudioInput): Promise<ProcessAudioOutput> {
@@ -61,22 +43,26 @@ const processAudioFlow = ai.defineFlow(
     try {
         const reader = new wav.Reader();
         
-        const samplesPromise = new Promise<Float32Array>((resolve, reject) => {
+        const samplesPromise = new Promise<Int16Array>((resolve, reject) => {
             reader.on('format', (format) => {
                 channels = format.channels;
                 sampleRate = format.sampleRate;
             });
             
+            let dataChunks: Buffer[] = [];
             reader.on('data', (chunk) => {
-                 // lamejs expects Int16Array, so we need to convert.
-                 // This assumes 16-bit audio from the WAV.
-                 const int16Pcm = new Int16Array(chunk.buffer, chunk.byteOffset, chunk.length / 2);
-                 pcmData = int16Pcm;
+                 dataChunks.push(chunk);
             });
 
             reader.on('end', () => {
-                if (pcmData) {
-                    resolve(pcmData);
+                const audioBuffer = Buffer.concat(dataChunks);
+                // lamejs expects Int16Array, so we need to convert.
+                // This assumes 16-bit audio from the WAV.
+                const int16Pcm = new Int16Array(audioBuffer.buffer, audioBuffer.byteOffset, audioBuffer.length / 2);
+
+                if (int16Pcm.length > 0) {
+                    pcmData = int16Pcm;
+                    resolve(int16Pcm);
                 } else {
                     reject(new Error("No PCM data was extracted."));
                 }

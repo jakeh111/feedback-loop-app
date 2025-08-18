@@ -1,6 +1,7 @@
 
 
 import type { Timestamp } from 'firebase/firestore';
+import { z } from 'zod';
 
 export type Comment = {
   id: string;
@@ -21,3 +22,19 @@ export type Track = {
   audioUrl: string;
   waveform: number[];
 };
+
+export const ProcessAudioInputSchema = z.object({
+  audioDataUri: z
+    .string()
+    .describe(
+      "A base64 encoded audio file as a data URI, including a MIME type. E.g., 'data:audio/mpeg;base64, ...'"
+    ),
+});
+export type ProcessAudioInput = z.infer<typeof ProcessAudioInputSchema>;
+
+export const ProcessAudioOutputSchema = z.object({
+  processedAudioDataUri: z
+    .string()
+    .describe('The processed audio file, returned as a base64 data URI.'),
+});
+export type ProcessAudioOutput = z.infer<typeof ProcessAudioOutputSchema>;
