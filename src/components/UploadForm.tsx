@@ -7,13 +7,39 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { storage, firestore, auth } from '@/lib/firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL, uploadString } from 'firebase/storage';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Progress } from './ui/progress';
+import { processAudioAction } from '@/app/actions';
 
 interface UploadFormProps {
   onUploadComplete: (trackId: string) => void;
 }
+
+const fileToDataUri = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+const dataUriToBlob = (dataUri: string): Blob => {
+    const [meta, base64] = dataUri.split(',');
+    const mime = meta.match(/:(.*?);/)?.[1];
+    if (!mime || !base64) {
+        throw new Error("Invalid data URI");
+    }
+    const byteString = atob(base64);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: mime });
+}
+
 
 const generateWaveformData = async (file: File): Promise<number[]> => {
     return new Promise((resolve, reject) => {
@@ -89,15 +115,21 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     }
     
     setIsProcessing(true);
-    const fileToUpload = selectedFile;
+    const originalFile = selectedFile;
 
     try {
       setStatusText("Generating waveform...");
-      const waveform = await generateWaveformData(fileToUpload);
+      const waveform = await generateWaveformData(originalFile);
+      
+      setStatusText("Processing audio on server...");
+      const audioDataUri = await fileToDataUri(originalFile);
+      const { processedAudioDataUri } = await processAudioAction({ audioDataUri });
       
       setStatusText("Uploading file...");
-      const storageRef = ref(storage, `tracks/${user.uid}/${Date.now()}-${fileToUpload.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
+      
+      const finalAudioBlob = dataUriToBlob(processedAudioDataUri);
+      const storageRef = ref(storage, `tracks/${user.uid}/${Date.now()}-${originalFile.name.replace(/\.[^/.]+$/, '.mp3')}`);
+      const uploadTask = uploadBytesResumable(storageRef, finalAudioBlob);
 
       uploadTask.on('state_changed',
         (snapshot) => {
@@ -114,7 +146,7 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
         async () => {
           try {
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            const trackTitle = fileToUpload.name.replace(/\.[^/.]+$/, "");
+            const trackTitle = originalFile.name.replace(/\.[^/.]+$/, "");
 
             const trackDocRef = await addDoc(collection(firestore, 'tracks'), {
               title: trackTitle,

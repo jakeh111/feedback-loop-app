@@ -2,6 +2,7 @@
 'use server';
 
 import { summarizeFeedback, SummarizeFeedbackInput, SummarizeFeedbackOutput } from "@/ai/flows/summarize-feedback";
+import { processAudio, ProcessAudioInput, ProcessAudioOutput } from "@/ai/flows/process-audio";
 import { firestore, storage } from '@/lib/firebase-admin';
 import { FieldValue } from "firebase-admin/firestore";
 
@@ -34,6 +35,11 @@ export async function addComment(trackId: string, commentData: {
   try {
     // In a transaction, add the new comment and increment the comment count
     await firestore.runTransaction(async (transaction) => {
+      const trackDoc = await transaction.get(trackRef);
+      if (!trackDoc.exists) {
+        throw new Error("Track not found.");
+      }
+
       // Add the new comment
       const newCommentRef = commentsRef.doc();
       transaction.set(newCommentRef, {
@@ -95,6 +101,16 @@ export async function deleteTrack(trackId: string): Promise<void> {
         return;
     }
 
+    // Delete all comments in the subcollection
+    const commentsQuery = firestore.collection('tracks').doc(trackId).collection('comments');
+    const commentsSnapshot = await commentsQuery.get();
+    const batch = firestore.batch();
+    commentsSnapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+    });
+    await batch.commit();
+    
+
     // Delete the file from Firebase Storage first
     await storage.bucket().file(storagePath).delete();
 
@@ -109,5 +125,17 @@ export async function deleteTrack(trackId: string): Promise<void> {
     }
     // Re-throw the original error to be caught by the client
     throw error;
+  }
+}
+
+export async function processAudioAction(input: ProcessAudioInput): Promise<ProcessAudioOutput> {
+  try {
+    return await processAudio(input);
+  } catch (error) {
+    console.error("Error processing audio:", error);
+    if (error instanceof Error) {
+      throw new Error(`Audio processing failed: ${error.message}`);
+    }
+    throw new Error("An unknown error occurred during audio processing.");
   }
 }
