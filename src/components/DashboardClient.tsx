@@ -35,6 +35,13 @@ export type DashboardTrack = {
   createdAt: Date;
 };
 
+const sampleTrack: DashboardTrack = {
+    id: 'sample',
+    title: 'Sample Track - My Masterpiece',
+    comments: 2,
+    createdAt: addDays(new Date(), -15), // Created 15 days ago
+};
+
 export function DashboardClient() {
   const [tracks, setTracks] = useState<DashboardTrack[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -96,6 +103,13 @@ export function DashboardClient() {
 
   const handleDeleteTrack = async () => {
     if (!trackToDelete) return;
+
+    if (trackToDelete.id === 'sample') {
+        toast({ title: 'Sample Track', description: 'This is a sample track and cannot be deleted.' });
+        setTrackToDelete(null);
+        return;
+    }
+
     setIsDeleting(true);
     try {
       await deleteTrack(trackToDelete.id);
@@ -126,6 +140,8 @@ export function DashboardClient() {
     const daysLeft = differenceInDays(expirationDate, new Date());
     return Math.max(0, daysLeft);
   }
+  
+  const displayTracks = tracks.length > 0 ? tracks : (user ? [] : [sampleTrack]);
 
   return (
     <>
@@ -153,7 +169,7 @@ export function DashboardClient() {
                   <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
                   <p className="mt-4">Loading your tracks...</p>
               </div>
-            ) : tracks.length > 0 ? (
+            ) : displayTracks.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -164,7 +180,7 @@ export function DashboardClient() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {tracks.map((track) => {
+                  {displayTracks.map((track) => {
                     const daysLeft = getDaysLeft(track.createdAt);
                     return (
                       <TableRow key={track.id}>

@@ -16,6 +16,28 @@ import { firestore, auth } from '@/lib/firebase';
 import { addComment } from '@/app/actions';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 
+const sampleComments: Comment[] = [
+  {
+    id: 'comment-1',
+    author: 'Alice',
+    text: "The kick drum feels a bit too punchy around 0:15. Maybe scoop out some mids?",
+    timestamp: 15,
+    avatarUrl: 'https://placehold.co/40x40.png?text=A',
+    createdAt: new Date(),
+  },
+  {
+    id: 'comment-2',
+    author: 'Bob',
+    text: "Love the synth melody that comes in from 0:30 to 0:45! It's super catchy.",
+    timestamp: 30,
+    endTimestamp: 45,
+    avatarUrl: 'https://placehold.co/40x40.png?text=B',
+    createdAt: new Date(),
+     youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    youtubeTimestamp: 43
+  },
+];
+
 
 export function TrackPageClient({ track }: { track: Track }) {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -25,6 +47,41 @@ export function TrackPageClient({ track }: { track: Track }) {
   const [user, setUser] = useState<User | null>(null);
   const [authorName, setAuthorName] = useState("");
   const [isGuestPromptOpen, setIsGuestPromptOpen] = useState(false);
+
+  useEffect(() => {
+    if (track.id === 'sample') {
+      setComments(sampleComments);
+      setIsLoadingComments(false);
+    } else {
+        setIsLoadingComments(true);
+        const commentsRef = collection(firestore, 'tracks', track.id, 'comments');
+        const q = query(commentsRef, orderBy('createdAt', 'asc'));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const fetchedComments = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              createdAt: (data.createdAt as Timestamp)?.toDate(), // Convert Firestore Timestamp to Date
+            } as Comment;
+          });
+          setComments(fetchedComments);
+          setIsLoadingComments(false);
+        }, (error) => {
+          console.error("Error fetching comments:", error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not load comments.",
+          });
+          setIsLoadingComments(false);
+        });
+
+        return () => unsubscribe();
+    }
+  }, [track.id, toast]);
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -48,35 +105,6 @@ export function TrackPageClient({ track }: { track: Track }) {
 
     return () => unsubscribe();
   }, [track.id]);
-
-  useEffect(() => {
-    setIsLoadingComments(true);
-    const commentsRef = collection(firestore, 'tracks', track.id, 'comments');
-    const q = query(commentsRef, orderBy('createdAt', 'asc'));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedComments = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          createdAt: (data.createdAt as Timestamp)?.toDate(), // Convert Firestore Timestamp to Date
-        } as Comment;
-      });
-      setComments(fetchedComments);
-      setIsLoadingComments(false);
-    }, (error) => {
-      console.error("Error fetching comments:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not load comments.",
-      });
-      setIsLoadingComments(false);
-    });
-
-    return () => unsubscribe();
-  }, [track.id, toast]);
   
   const handleNameSubmit = (name: string) => {
     sessionStorage.setItem(`guestName-${track.id}`, name);
@@ -85,6 +113,23 @@ export function TrackPageClient({ track }: { track: Track }) {
   };
 
   const handleAddComment = async (text: string, startTime: number, endTime?: number, youtubeUrl?: string, youtubeTimestamp?: number) => {
+    if (track.id === 'sample') {
+      const newComment: Comment = {
+        id: `comment-${Date.now()}`,
+        author: authorName,
+        text,
+        timestamp: startTime,
+        endTimestamp,
+        avatarUrl: user?.photoURL || `https://placehold.co/40x40.png?text=${authorName.charAt(0).toUpperCase()}`,
+        youtubeUrl,
+        youtubeTimestamp,
+        createdAt: new Date(),
+      };
+      setComments(prev => [...prev, newComment]);
+      toast({ title: "Sample Comment Added", description: "This comment is only visible in this session." });
+      return;
+    }
+
     if (!authorName) {
         toast({
             variant: "destructive",

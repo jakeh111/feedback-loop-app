@@ -6,8 +6,20 @@ import { doc, getDoc } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { notFound } from 'next/navigation';
 
+const getSampleTrack = (): Track => {
+  return {
+    id: 'sample',
+    title: 'Sample Track - My Masterpiece',
+    artist: 'Sample Artist',
+    audioUrl: 'https://firebasestorage.googleapis.com/v0/b/audiomarker.firebasestorage.app/o/sample-audio.mp3?alt=media&token=c23b3a6b-e52d-4bf2-a312-0f323871413a', // A silent mp3 file for placeholder
+    waveform: Array.from({ length: 100 }, (_, i) => Math.round(Math.sin(i * Math.PI / 25) * 40 + 50)),
+  };
+};
 
 const getTrackData = async (id: string): Promise<Track | null> => {
+  if (id === 'sample') {
+    return getSampleTrack();
+  }
   try {
     const trackDocRef = doc(firestore, 'tracks', id);
     const trackSnap = await getDoc(trackDocRef);
