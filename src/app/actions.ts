@@ -3,7 +3,6 @@
 
 import { summarizeFeedback, SummarizeFeedbackInput, SummarizeFeedbackOutput } from "@/ai/flows/summarize-feedback";
 import { firestore, storage } from '@/lib/firebase-admin';
-import type { UserRecord } from "firebase-admin/auth";
 
 export async function getSummary(input: SummarizeFeedbackInput): Promise<SummarizeFeedbackOutput> {
   try {

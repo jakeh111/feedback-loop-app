@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
+import { deleteTrack } from '@/app/actions';
 
 export type DashboardTrack = {
   id: string;
@@ -97,8 +98,6 @@ export function DashboardClient() {
     if (!trackToDelete) return;
     setIsDeleting(true);
     try {
-      // Dynamic import to ensure the server action is not bundled on the client
-      const { deleteTrack } = await import('@/app/actions');
       await deleteTrack(trackToDelete.id);
       toast({
         title: "Track Deleted",
