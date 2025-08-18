@@ -36,7 +36,7 @@ export function DashboardClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [trackToDelete, setTrackToDelete] = useState<DashboardTrack & { title: string } | null>(null);
+  const [trackToDelete, setTrackToDelete] = useState<DashboardTrack | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -117,10 +117,9 @@ export function DashboardClient() {
     }
   };
 
-  const getTrackForDeletion = (trackId: string): (DashboardTrack & { title: string }) | null => {
-    const track = tracks.find(t => t.id === trackId);
-    return track ? { ...track, title: track.title } : null;
-  }
+  const openDeleteDialog = (track: DashboardTrack) => {
+    setTrackToDelete(track);
+  };
 
   return (
     <>
@@ -176,10 +175,7 @@ export function DashboardClient() {
                         <Button asChild variant="outline" size="sm">
                           <Link href={`/track/${track.id}`}>View Feedback</Link>
                         </Button>
-                         <Button onClick={() => {
-                            const fullTrack = getTrackForDeletion(track.id);
-                            if (fullTrack) setTrackToDelete(fullTrack);
-                         }} variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+                         <Button onClick={() => openDeleteDialog(track)} variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete
                         </Button>
