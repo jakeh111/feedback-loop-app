@@ -26,29 +26,24 @@ const hasServiceAccount =
   serviceAccount.clientEmail &&
   serviceAccount.privateKey;
 
-if (hasServiceAccount) {
-  // If the SDK hasn't been initialized yet, do it now with the service account credentials.
-  if (admin.apps.length === 0) {
+if (admin.apps.length === 0) {
+  if (hasServiceAccount) {
+    console.log('Initializing Firebase Admin SDK with Service Account...');
     app = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     });
-    console.log('Firebase Admin SDK initialized with service account.');
   } else {
-    // If it's already initialized, just get the default app instance.
-    app = admin.app();
-  }
-} else {
-  // If service account is not available, try to initialize with Application Default Credentials.
-  // This is useful for deployed environments like Google Cloud Run or App Hosting.
-  if (admin.apps.length === 0) {
+     // If service account is not available, try to initialize with Application Default Credentials.
+     // This is useful for deployed environments like Google Cloud Run or App Hosting.
+     console.log('Initializing Firebase Admin SDK with Application Default Credentials...');
      app = admin.initializeApp({
         storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
      });
-     console.log('Firebase Admin SDK initialized with Application Default Credentials.');
-  } else {
-    app = admin.app();
   }
+} else {
+  // If it's already initialized, just get the default app instance.
+  app = admin.app();
 }
 
 // Get the services from the initialized app.
