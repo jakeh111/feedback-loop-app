@@ -5,81 +5,55 @@ import { getAuth, type Auth } from 'firebase-admin/auth';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getStorage, type Storage } from 'firebase-admin/storage';
 
-// DEBUGGING: Log environment variables to check if they are loaded correctly.
-console.log("Attempting to initialize Firebase Admin SDK with these env vars:");
-console.log({
+let app: App;
+let auth: Auth;
+let firestore: Firestore;
+let storage: Storage;
+
+// This is the service account object that will be used to authenticate
+// the Firebase Admin SDK. It's constructed from environment variables.
+const serviceAccount = {
   projectId: process.env.FIREBASE_PROJECT_ID,
   clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  // Check if the private key exists to avoid printing the whole secret key
-  privateKey: process.env.FIREBASE_PRIVATE_KEY ? 'Loaded Successfully' : 'NOT LOADED', 
-});
-
-
-// This singleton pattern prevents the Firebase Admin SDK from being initialized multiple times
-// during Next.js hot-reloading in a development environment. This is a robust solution to
-// prevent the "already exists" error and other initialization-related issues.
-
-const initializeAdminApp = (): {
-  app: App;
-  auth: Auth;
-  firestore: Firestore;
-  storage: Storage;
-} => {
-  // When running locally, the SDK needs explicit credentials provided via environment variables.
-  // In a deployed environment (like App Hosting), the SDK can automatically discover credentials.
-  const serviceAccount = {
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    // Replace the escaped newlines from the env variable with actual newlines
-    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-  };
-
-  if (serviceAccount.projectId && serviceAccount.clientEmail && serviceAccount.privateKey) {
-    // Local development: Use service account credentials from .env
-    if (admin.apps.length === 0) {
-      const app = admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      });
-      return {
-        app,
-        auth: getAuth(app),
-        firestore: getFirestore(app),
-        storage: getStorage(app),
-      };
-    }
-    const app = admin.apps[0]!;
-    return {
-      app,
-      auth: getAuth(app),
-      firestore: getFirestore(app),
-      storage: getStorage(app),
-    };
-
-  } else {
-    // Deployed environment: Use application default credentials
-     if (admin.apps.length === 0) {
-        const app = admin.initializeApp({
-            storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        });
-        return {
-            app,
-            auth: getAuth(app),
-            firestore: getFirestore(app),
-            storage: getStorage(app),
-        };
-     }
-     const app = admin.apps[0]!;
-     return {
-        app,
-        auth: getAuth(app),
-        firestore: getFirestore(app),
-        storage: getStorage(app),
-     }
-  }
+  // The private key from the environment variable needs to have its escaped newlines
+  // replaced with actual newline characters.
+  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
 };
 
-// Initialize the app using the singleton pattern
-const { app, auth, firestore, storage } = globalThis.firebaseAdmin ?? (globalThis.firebaseAdmin = initializeAdminApp());
+// Check if the service account credentials are fully provided.
+const hasServiceAccount =
+  serviceAccount.projectId &&
+  serviceAccount.clientEmail &&
+  serviceAccount.privateKey;
+
+if (hasServiceAccount) {
+  // If the SDK hasn't been initialized yet, do it now with the service account credentials.
+  if (admin.apps.length === 0) {
+    app = admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    });
+    console.log('Firebase Admin SDK initialized with service account.');
+  } else {
+    // If it's already initialized, just get the default app instance.
+    app = admin.app();
+  }
+} else {
+  // If service account is not available, try to initialize with Application Default Credentials.
+  // This is useful for deployed environments like Google Cloud Run or App Hosting.
+  if (admin.apps.length === 0) {
+     app = admin.initializeApp({
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+     });
+     console.log('Firebase Admin SDK initialized with Application Default Credentials.');
+  } else {
+    app = admin.app();
+  }
+}
+
+// Get the services from the initialized app.
+auth = getAuth(app);
+firestore = getFirestore(app);
+storage = getStorage(app);
 
 export { app, auth, firestore, storage };
