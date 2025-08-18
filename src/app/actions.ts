@@ -82,7 +82,10 @@ export async function deleteTrack(trackId: string): Promise<void> {
     const trackDoc = await trackDocRef.get();
 
     if (!trackDoc.exists) {
-      throw new Error("Track not found.");
+      // If the document doesn't exist, it might have been already deleted.
+      // We can just return successfully.
+      console.log(`Track ${trackId} not found. Skipping deletion.`);
+      return;
     }
 
     const trackData = trackDoc.data();
@@ -93,32 +96,36 @@ export async function deleteTrack(trackId: string): Promise<void> {
     //   throw new Error("Permission denied. You can only delete your own tracks.");
     // }
     
+    // Delete all comments in the subcollection first
+    const commentsQuery = trackDocRef.collection('comments');
+    const commentsSnapshot = await commentsQuery.get();
+    if (!commentsSnapshot.empty) {
+      const batch = firestore.batch();
+      commentsSnapshot.docs.forEach(doc => {
+          batch.delete(doc.ref);
+      });
+      await batch.commit();
+    }
+    
+    // Then, delete the file from Firebase Storage
     const storagePath = trackData?.storagePath;
-    if (!storagePath) {
-        // If there's no storage path, we can just delete the Firestore document.
-        console.warn(`Track ${trackId} has no storage path. Deleting Firestore document only.`);
-        await trackDocRef.delete();
-        return;
+    if (storagePath) {
+        try {
+            await storage.bucket().file(storagePath).delete();
+        } catch (storageError: any) {
+            // If the file doesn't exist in storage, we can ignore the error
+            // and proceed with deleting the Firestore document.
+            if (storageError.code !== 404) {
+                throw storageError; // Re-throw other storage errors
+            }
+        }
     }
 
-    // Delete all comments in the subcollection
-    const commentsQuery = firestore.collection('tracks').doc(trackId).collection('comments');
-    const commentsSnapshot = await commentsQuery.get();
-    const batch = firestore.batch();
-    commentsSnapshot.docs.forEach(doc => {
-        batch.delete(doc.ref);
-    });
-    await batch.commit();
-    
-
-    // Delete the file from Firebase Storage first
-    await storage.bucket().file(storagePath).delete();
-
-    // Then, delete the Firestore document
+    // Finally, delete the Firestore document
     await trackDocRef.delete();
     
   } catch (error) {
-    console.error("Error deleting track:", error);
+    console.error(`Error deleting track ${trackId}:`, error);
      if (error instanceof Error) {
        // This will give us a more specific error message from Firebase
        throw new Error(error.message);
@@ -127,6 +134,35 @@ export async function deleteTrack(trackId: string): Promise<void> {
     throw error;
   }
 }
+
+export async function deleteAllUserTracks(userId: string): Promise<{deletedCount: number}> {
+    if (!userId) {
+        throw new Error("User ID is required.");
+    }
+    // NOTE: This is a destructive operation. In a real production app,
+    // you would add extra security checks to ensure only authorized users
+    // can perform this action.
+
+    const tracksQuery = firestore.collection('tracks').where('userId', '==', userId);
+    const snapshot = await tracksQuery.get();
+
+    if (snapshot.empty) {
+        return { deletedCount: 0 };
+    }
+
+    let deletedCount = 0;
+    const deletePromises: Promise<void>[] = [];
+
+    snapshot.forEach(doc => {
+        deletePromises.push(deleteTrack(doc.id));
+        deletedCount++;
+    });
+
+    await Promise.all(deletePromises);
+
+    return { deletedCount };
+}
+
 
 export async function processAudioAction(input: ProcessAudioInput): Promise<ProcessAudioOutput> {
   try {
