@@ -47,6 +47,7 @@ export function TrackPageClient({ track }: { track: Track }) {
   const [user, setUser] = useState<User | null>(null);
   const [authorName, setAuthorName] = useState("");
   const [isGuestPromptOpen, setIsGuestPromptOpen] = useState(false);
+  const [selectedTime, setSelectedTime] = useState(0);
 
   useEffect(() => {
     if (track.id === 'sample') {
@@ -164,8 +165,11 @@ export function TrackPageClient({ track }: { track: Track }) {
   const handleSeekTo = useCallback((time: number) => {
     if (audioRef.current) {
       audioRef.current.currentTime = time;
-      audioRef.current.play();
+      if (audioRef.current.paused) {
+        audioRef.current.play();
+      }
     }
+    setSelectedTime(time);
   }, []);
 
   const handleShare = () => {
@@ -211,7 +215,7 @@ export function TrackPageClient({ track }: { track: Track }) {
         </div>
         <div>
             <h2 className="text-2xl font-bold font-headline mb-4">Leave Feedback {authorName && <span className="text-sm text-muted-foreground font-normal">as {authorName}</span>}</h2>
-            <AddCommentForm onAddComment={handleAddComment} audioRef={audioRef} isCommentingEnabled={isCommentingEnabled} />
+            <AddCommentForm onAddComment={handleAddComment} audioRef={audioRef} isCommentingEnabled={isCommentingEnabled} selectedTime={selectedTime} />
         </div>
       </div>
     </div>

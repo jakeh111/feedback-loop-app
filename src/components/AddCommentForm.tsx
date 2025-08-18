@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent } from './ui/card';
-import { Clock, Check, X, GitCommitHorizontal, Youtube, Link } from 'lucide-react';
+import { Clock, Check, X, GitCommitHorizontal, Youtube, Link, Pin } from 'lucide-react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Separator } from './ui/separator';
@@ -14,9 +14,10 @@ interface AddCommentFormProps {
   onAddComment: (text: string, startTime: number, endTime?: number, youtubeUrl?: string, youtubeTimestamp?: number) => void;
   audioRef: React.RefObject<HTMLAudioElement>;
   isCommentingEnabled: boolean;
+  selectedTime: number;
 }
 
-export function AddCommentForm({ onAddComment, audioRef, isCommentingEnabled }: AddCommentFormProps) {
+export function AddCommentForm({ onAddComment, audioRef, isCommentingEnabled, selectedTime }: AddCommentFormProps) {
   const [text, setText] = useState('');
   const [isRangeSelection, setIsRangeSelection] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -85,13 +86,13 @@ export function AddCommentForm({ onAddComment, audioRef, isCommentingEnabled }: 
       if (isRangeSelection && startTime !== null && endTime !== null) {
         onAddComment(text, startTime, endTime, finalYoutubeUrl, finalYoutubeTimestamp);
       } else {
-        onAddComment(text, audioRef.current.currentTime, undefined, finalYoutubeUrl, finalYoutubeTimestamp);
+        onAddComment(text, selectedTime, undefined, finalYoutubeUrl, finalYoutubeTimestamp);
       }
       resetForm();
     }
   };
 
-  const canSubmit = text.trim() && isCommentingEnabled && (!isRangeSelection || (startTime !== null && endTime !== null));
+  const canSubmit = text.trim() && isCommentingEnabled;
   const placeholderText = isCommentingEnabled ? "Leave a comment..." : "Please enter your name to comment.";
 
   return (
@@ -105,6 +106,13 @@ export function AddCommentForm({ onAddComment, audioRef, isCommentingEnabled }: 
             rows={3}
             disabled={!isCommentingEnabled}
           />
+          
+          {!isRangeSelection && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground p-2 bg-muted/50 rounded-lg">
+                <Pin className="h-4 w-4 text-primary" />
+                <span>Commenting at {formatTime(selectedTime)}</span>
+            </div>
+          )}
           
           <div className="flex flex-wrap justify-start items-center gap-2">
              <Button type="button" variant="ghost" onClick={handleToggleRangeSelection} size="sm" disabled={!isCommentingEnabled}>
