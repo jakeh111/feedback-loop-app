@@ -88,7 +88,15 @@ export default function Home() {
             <div className="grid md:grid-cols-3 gap-8 text-left">
               <Card className="drop-shadow-custom-md">
                 <CardHeader>
-                  <CardTitle>1. Upload Your Audio</CardTitle>
+                    <div className="flex items-center gap-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                            <path d="M14 16h-4a2 2 0 0 0-2 2v2H6v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2h-2v-2a2 2 0 0 0-2-2z"/>
+                            <circle cx="12" cy="11" r="1"/>
+                            <path d="M18 14h-2a4 4 0 0 0-4-4h0a4 4 0 0 0-4 4H6"/>
+                            <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        </svg>
+                        <CardTitle>1. Upload Your Audio</CardTitle>
+                    </div>
                 </CardHeader>
                 <CardContent>
                   <p>Drag and drop your MP3 or WAV file. Your private, collaborative workspace is created instantly.</p>
@@ -96,7 +104,19 @@ export default function Home() {
               </Card>
               <Card className="drop-shadow-custom-md">
                 <CardHeader>
-                  <CardTitle>2. Share the Link</CardTitle>
+                    <div className="flex items-center gap-4">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                            <circle cx="7" cy="6" r="2"/>
+                            <path d="M7 8v6"/>
+                            <path d="M9 14h2"/>
+                            <path d="M12 14v-4"/>
+                            <path d="M11 6h1.5a1.5 1.5 0 0 1 0 3H11"/>
+                            <circle cx="17" cy="6" r="2"/>
+                            <path d="M17 8v6"/>
+                            <path d="M15 14h4"/>
+                         </svg>
+                         <CardTitle>2. Share the Link</CardTitle>
+                    </div>
                 </CardHeader>
                 <CardContent>
                   <p>Grab the unique link and send it to your clients or team. No sign-up required for them to leave comments.</p>
@@ -104,7 +124,19 @@ export default function Home() {
               </Card>
               <Card className="drop-shadow-custom-md">
                 <CardHeader>
-                  <CardTitle>3. Get Precise Feedback</CardTitle>
+                    <div className="flex items-center gap-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                            <path d="M7.9 20A9 9 0 0 0 12 21a9 9 0 0 0 4.1-1"/>
+                            <path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                            <path d="M16 18H8a4 4 0 0 0-4 4h16a4 4 0 0 0-4-4z"/>
+                            <path d="M18 10h2.5a2 2 0 0 1 2 1.5v1a2 2 0 0 1-2 2.5H18"/>
+                            <path d="M20.5 13H21a1 1 0 0 1 1 1v2"/>
+                            <path d="M20 9.5V8a1 1 0 0 0-1-1h-1"/>
+                            <path d="M19 6.5v-1a1 1 0 0 0-1-1h-1.5"/>
+                            <path d="M19 12h.01"/>
+                        </svg>
+                        <CardTitle>3. Get Precise Feedback</CardTitle>
+                    </div>
                 </CardHeader>
                 <CardContent>
                   <p>Collaborators can add comments to a specific timestamp, highlight a time range, or even reference a YouTube video.</p>
