@@ -142,11 +142,9 @@ export function DashboardClient() {
     return Math.max(0, daysLeft);
   }
   
-  // Show sample track if user is logged in with no tracks, or if logged out.
-  const showSampleTrack = tracks.length === 0;
+  const showSampleTrack = user && tracks.length === 0;
   const displayTracks = showSampleTrack ? [sampleTrack] : tracks;
 
-  // Don't show sample track for a logged out user, just show the empty state.
   const finalTracks = user ? displayTracks : [];
 
 
@@ -191,15 +189,17 @@ export function DashboardClient() {
                     const daysLeft = getDaysLeft(track.createdAt);
                     return (
                       <TableRow key={track.id}>
-                        <TableCell className="font-medium flex items-center gap-2">
-                          <Music className="h-4 w-4 text-muted-foreground" />
-                          {track.title}
+                        <TableCell className="font-medium">
+                          <Link href={`/track/${track.id}`} className="flex items-center gap-2 hover:underline">
+                            <Music className="h-4 w-4 text-muted-foreground" />
+                            {track.title}
+                          </Link>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
+                          <Link href={`/track/${track.id}`} className="flex items-center gap-2 hover:underline">
                             <MessageSquare className="h-4 w-4 text-muted-foreground" />
                             {track.comments}
-                          </div>
+                          </Link>
                         </TableCell>
                          <TableCell>
                             <Badge variant={daysLeft < 7 ? "destructive" : "secondary"}>
@@ -208,9 +208,6 @@ export function DashboardClient() {
                             </Badge>
                         </TableCell>
                         <TableCell className="text-right space-x-2">
-                          <Button asChild variant="outline" size="sm">
-                            <Link href={`/track/${track.id}`}>View Feedback</Link>
-                          </Button>
                            <Button variant="outline" size="sm" disabled>
                                <Zap className="mr-2 h-4 w-4" />
                                Extend
