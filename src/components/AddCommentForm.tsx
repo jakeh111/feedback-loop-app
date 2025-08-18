@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -12,9 +13,10 @@ import { Separator } from './ui/separator';
 interface AddCommentFormProps {
   onAddComment: (text: string, startTime: number, endTime?: number, youtubeUrl?: string, youtubeTimestamp?: number) => void;
   audioRef: React.RefObject<HTMLAudioElement>;
+  isCommentingEnabled: boolean;
 }
 
-export function AddCommentForm({ onAddComment, audioRef }: AddCommentFormProps) {
+export function AddCommentForm({ onAddComment, audioRef, isCommentingEnabled }: AddCommentFormProps) {
   const [text, setText] = useState('');
   const [isRangeSelection, setIsRangeSelection] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -89,25 +91,27 @@ export function AddCommentForm({ onAddComment, audioRef }: AddCommentFormProps) 
     }
   };
 
-  const canSubmit = text.trim() && (!isRangeSelection || (startTime !== null && endTime !== null));
+  const canSubmit = text.trim() && isCommentingEnabled && (!isRangeSelection || (startTime !== null && endTime !== null));
+  const placeholderText = isCommentingEnabled ? "Leave a comment..." : "Please enter your name to comment.";
 
   return (
     <Card className="drop-shadow-custom-md">
       <CardContent className="p-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           <Textarea
-            placeholder="Leave a comment..."
+            placeholder={placeholderText}
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={3}
+            disabled={!isCommentingEnabled}
           />
           
           <div className="flex flex-wrap justify-start items-center gap-2">
-             <Button type="button" variant="ghost" onClick={handleToggleRangeSelection} size="sm">
+             <Button type="button" variant="ghost" onClick={handleToggleRangeSelection} size="sm" disabled={!isCommentingEnabled}>
                 <GitCommitHorizontal className="mr-2 h-4 w-4" />
                 {isRangeSelection ? 'Comment on Timestamp' : 'Comment on Range'}
             </Button>
-            <Button type="button" variant="ghost" onClick={() => setShowYoutube(!showYoutube)} size="sm">
+            <Button type="button" variant="ghost" onClick={() => setShowYoutube(!showYoutube)} size="sm" disabled={!isCommentingEnabled}>
                 <Youtube className="mr-2 h-4 w-4" />
                 {showYoutube ? 'Remove Reference' : 'Add YouTube Reference'}
             </Button>
