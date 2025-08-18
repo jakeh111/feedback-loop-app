@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusCircle, Music, MessageSquare, ListMusic, Loader2, Trash2, ShieldAlert } from "lucide-react";
+import { PlusCircle, Music, MessageSquare, ListMusic, Loader2, Trash2 } from "lucide-react";
 import { UploadDialog } from "@/components/UploadDialog";
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth, firestore } from '@/lib/firebase';
@@ -22,7 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
-import { deleteTrack, deleteAllUserTracks } from '@/app/actions';
+import { deleteTrack } from '@/app/actions';
 
 export type DashboardTrack = {
   id: string;
@@ -37,7 +37,6 @@ export function DashboardClient() {
   const [user, setUser] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [trackToDelete, setTrackToDelete] = useState<DashboardTrack | null>(null);
-  const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -118,29 +117,6 @@ export function DashboardClient() {
     }
   };
 
-  const handleDeleteAllTracks = async () => {
-    if (!user) return;
-    setIsDeleting(true);
-    try {
-        const result = await deleteAllUserTracks(user.uid);
-        toast({
-            title: "All Tracks Deleted",
-            description: `${result.deletedCount} track(s) have been permanently removed.`
-        });
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-        console.error("Failed to delete all tracks:", error);
-        toast({
-            variant: "destructive",
-            title: "Deletion Failed",
-            description: `Could not delete all tracks. ${errorMessage}`
-        });
-    } finally {
-        setIsDeleting(false);
-        setIsDeleteAllDialogOpen(false);
-    }
-  }
-
   const openDeleteDialog = (track: DashboardTrack) => {
     setTrackToDelete(track);
   };
@@ -151,18 +127,12 @@ export function DashboardClient() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
           {user && (
-            <div className="flex gap-2">
-                <Button variant="destructive" onClick={() => setIsDeleteAllDialogOpen(true)} disabled={tracks.length === 0}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete All Tracks
-                </Button>
-                <UploadDialog onUploadComplete={() => {}}>
-                  <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Upload New Track
-                  </Button>
-                </UploadDialog>
-            </div>
+            <UploadDialog onUploadComplete={() => {}}>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Upload New Track
+              </Button>
+            </UploadDialog>
           )}
         </div>
 
@@ -231,7 +201,6 @@ export function DashboardClient() {
         </Card>
       </div>
 
-      {/* Single track delete dialog */}
       <AlertDialog open={!!trackToDelete} onOpenChange={() => setTrackToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -246,28 +215,6 @@ export function DashboardClient() {
             <AlertDialogAction onClick={handleDeleteTrack} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Delete all tracks dialog */}
-      <AlertDialog open={isDeleteAllDialogOpen} onOpenChange={setIsDeleteAllDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-                <ShieldAlert className="text-destructive h-6 w-6" />
-                Are you absolutely sure?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete <strong>ALL {tracks.length}</strong> of your tracks and their comments from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteAllTracks} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Yes, delete all tracks
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

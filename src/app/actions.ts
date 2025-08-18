@@ -136,35 +136,6 @@ export async function deleteTrack(trackId: string): Promise<void> {
   }
 }
 
-export async function deleteAllUserTracks(userId: string): Promise<{deletedCount: number}> {
-    if (!userId) {
-        throw new Error("User ID is required.");
-    }
-    // NOTE: This is a destructive operation. In a real production app,
-    // you would add extra security checks to ensure only authorized users
-    // can perform this action.
-
-    const tracksQuery = firestore.collection('tracks').where('userId', '==', userId);
-    const snapshot = await tracksQuery.get();
-
-    if (snapshot.empty) {
-        return { deletedCount: 0 };
-    }
-
-    let deletedCount = 0;
-    const deletePromises: Promise<void>[] = [];
-
-    snapshot.forEach(doc => {
-        deletePromises.push(deleteTrack(doc.id));
-        deletedCount++;
-    });
-
-    await Promise.all(deletePromises);
-
-    return { deletedCount };
-}
-
-
 export async function processAudioAction(input: ProcessAudioInput): Promise<ProcessAudioOutput> {
   try {
     return await processAudio(input);
