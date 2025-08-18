@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusCircle, Music, MessageSquare, ListMusic, Loader2, Trash2 } from "lucide-react";
+import { PlusCircle, Music, MessageSquare, ListMusic, Loader2, Trash2, Clock, Zap } from "lucide-react";
 import { UploadDialog } from "@/components/UploadDialog";
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth, firestore } from '@/lib/firebase';
@@ -23,12 +23,16 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
 import { deleteTrack } from '@/app/actions';
+import { differenceInDays, addDays } from 'date-fns';
+import { Badge } from './ui/badge';
+
+const TRACK_LIFETIME_DAYS = 30;
 
 export type DashboardTrack = {
   id: string;
   title: string;
   comments: number; 
-  date: string;
+  createdAt: Date;
 };
 
 export function DashboardClient() {
@@ -62,15 +66,11 @@ export function DashboardClient() {
       const unsubscribeTracks = onSnapshot(q, (querySnapshot) => {
         const userTracks: DashboardTrack[] = querySnapshot.docs.map(doc => {
           const data = doc.data();
-          const date = data.createdAt instanceof Timestamp
-            ? data.createdAt.toDate()
-            : new Date();
-
           return {
             id: doc.id,
             title: data.title || 'Untitled Track',
             comments: data.commentCount || 0,
-            date: date.toLocaleDateString(),
+            createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
           };
         });
         setTracks(userTracks);
@@ -121,6 +121,12 @@ export function DashboardClient() {
     setTrackToDelete(track);
   };
 
+  const getDaysLeft = (createdAt: Date) => {
+    const expirationDate = addDays(createdAt, TRACK_LIFETIME_DAYS);
+    const daysLeft = differenceInDays(expirationDate, new Date());
+    return Math.max(0, daysLeft);
+  }
+
   return (
     <>
       <div className="container mx-auto px-4 py-8">
@@ -139,7 +145,7 @@ export function DashboardClient() {
         <Card className="drop-shadow-custom-md">
           <CardHeader>
             <CardTitle>My Tracks</CardTitle>
-            <CardDescription>A list of your uploaded tracks for feedback.</CardDescription>
+            <CardDescription>A list of your uploaded tracks for feedback. Tracks are deleted after 30 days.</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -153,35 +159,47 @@ export function DashboardClient() {
                   <TableRow>
                     <TableHead>Track Title</TableHead>
                     <TableHead>Comments</TableHead>
-                    <TableHead>Date Uploaded</TableHead>
+                    <TableHead>Time Left</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {tracks.map((track) => (
-                    <TableRow key={track.id}>
-                      <TableCell className="font-medium flex items-center gap-2">
-                        <Music className="h-4 w-4 text-muted-foreground" />
-                        {track.title}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                          {track.comments}
-                        </div>
-                      </TableCell>
-                      <TableCell>{track.date}</TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Button asChild variant="outline" size="sm">
-                          <Link href={`/track/${track.id}`}>View Feedback</Link>
-                        </Button>
-                         <Button onClick={() => openDeleteDialog(track)} variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {tracks.map((track) => {
+                    const daysLeft = getDaysLeft(track.createdAt);
+                    return (
+                      <TableRow key={track.id}>
+                        <TableCell className="font-medium flex items-center gap-2">
+                          <Music className="h-4 w-4 text-muted-foreground" />
+                          {track.title}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                            {track.comments}
+                          </div>
+                        </TableCell>
+                         <TableCell>
+                            <Badge variant={daysLeft < 7 ? "destructive" : "secondary"}>
+                                <Clock className="mr-2 h-4 w-4" />
+                                {daysLeft > 0 ? `${daysLeft} days left` : 'Deleting soon'}
+                            </Badge>
+                        </TableCell>
+                        <TableCell className="text-right space-x-2">
+                          <Button asChild variant="outline" size="sm">
+                            <Link href={`/track/${track.id}`}>View Feedback</Link>
+                          </Button>
+                           <Button variant="outline" size="sm" disabled>
+                               <Zap className="mr-2 h-4 w-4" />
+                               Extend
+                           </Button>
+                           <Button onClick={() => openDeleteDialog(track)} variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             ) : (
