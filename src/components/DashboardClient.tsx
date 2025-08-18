@@ -95,6 +95,7 @@ export function DashboardClient() {
 
       return () => unsubscribeTracks();
     } else {
+      // If user is logged out, clear tracks and loading state
       setTracks([]);
       setIsLoading(false);
     }
@@ -141,7 +142,13 @@ export function DashboardClient() {
     return Math.max(0, daysLeft);
   }
   
-  const displayTracks = tracks.length > 0 ? tracks : (user ? [] : [sampleTrack]);
+  // Show sample track if user is logged in with no tracks, or if logged out.
+  const showSampleTrack = tracks.length === 0;
+  const displayTracks = showSampleTrack ? [sampleTrack] : tracks;
+
+  // Don't show sample track for a logged out user, just show the empty state.
+  const finalTracks = user ? displayTracks : [];
+
 
   return (
     <>
@@ -169,7 +176,7 @@ export function DashboardClient() {
                   <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
                   <p className="mt-4">Loading your tracks...</p>
               </div>
-            ) : displayTracks.length > 0 ? (
+            ) : finalTracks.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -180,7 +187,7 @@ export function DashboardClient() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {displayTracks.map((track) => {
+                  {finalTracks.map((track) => {
                     const daysLeft = getDaysLeft(track.createdAt);
                     return (
                       <TableRow key={track.id}>
