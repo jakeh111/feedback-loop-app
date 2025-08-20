@@ -10,16 +10,6 @@ import { storage, firestore, auth } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Progress } from './ui/progress';
-import encode from 'audio-encoder';
-
-const wavToMp3 = async (file: File): Promise<Blob> => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const arrayBuffer = await file.arrayBuffer();
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    const mp3Blob = await encode(audioBuffer, { bitRate: 128 });
-    return mp3Blob;
-};
-
 
 const generateWaveformData = async (file: File): Promise<number[]> => {
     return new Promise((resolve, reject) => {
@@ -72,15 +62,17 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     const acceptedTypes = ['audio/mpeg', 'audio/wav', 'audio/wave'];
-    if (file && acceptedTypes.includes(file.type)) {
-      setSelectedFile(file);
-    } else {
-      setSelectedFile(null);
-      toast({
-        variant: "destructive",
-        title: "Invalid File Type",
-        description: "Please select an MP3 or WAV file.",
-      });
+    if (file) {
+      if (acceptedTypes.includes(file.type)) {
+        setSelectedFile(file);
+      } else {
+        setSelectedFile(null);
+        toast({
+          variant: "destructive",
+          title: "Invalid File Type",
+          description: "Please select an MP3 or WAV file.",
+        });
+      }
     }
   };
 
@@ -94,8 +86,17 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     }
 
     if (!selectedFile) {
-       toast({ variant: "destructive", title: "No file selected", description: "Please select an MP3 or WAV file to upload." });
+       toast({ variant: "destructive", title: "No file selected", description: "Please select a file to upload." });
       return;
+    }
+
+    if (selectedFile.type === 'audio/wav' || selectedFile.type === 'audio/wave') {
+        toast({
+            variant: "destructive",
+            title: "WAV format temporarily unsupported",
+            description: "Please upload an MP3 file while we fix an issue with WAV processing.",
+        });
+        return;
     }
     
     setIsProcessing(true);
@@ -105,16 +106,9 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
       const waveform = await generateWaveformData(selectedFile);
       
       let fileToUpload: File | Blob = selectedFile;
-      let finalFileName = selectedFile.name;
       
-      if (selectedFile.type === 'audio/wav' || selectedFile.type === 'audio/wave') {
-          setStatusText("Converting WAV to MP3...");
-          finalFileName = selectedFile.name.replace(/\.(wav|wave)$/i, '.mp3');
-          fileToUpload = await wavToMp3(selectedFile);
-      }
-
       setStatusText("Uploading file...");
-      const storageRef = ref(storage, `tracks/${user.uid}/${Date.now()}-${finalFileName}`);
+      const storageRef = ref(storage, `tracks/${user.uid}/${Date.now()}-${fileToUpload.name}`);
       const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
 
       uploadTask.on('state_changed',
