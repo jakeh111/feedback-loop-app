@@ -89,15 +89,6 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
        toast({ variant: "destructive", title: "No file selected", description: "Please select a file to upload." });
       return;
     }
-
-    if (selectedFile.type === 'audio/wav' || selectedFile.type === 'audio/wave') {
-        toast({
-            variant: "destructive",
-            title: "WAV format temporarily unsupported",
-            description: "Please upload an MP3 file while we fix an issue with WAV processing.",
-        });
-        return;
-    }
     
     setIsProcessing(true);
     
