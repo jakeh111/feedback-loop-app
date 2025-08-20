@@ -101,19 +101,6 @@ export async function deleteTrack(trackId: string): Promise<void> {
         }
     }
 
-    // Also delete the original wav if it exists
-     const originalStoragePath = trackData?.originalStoragePath;
-    if (originalStoragePath && originalStoragePath !== storagePath) {
-        try {
-            await storage.bucket().file(originalStoragePath).delete();
-        } catch (storageError: any) {
-            if (storageError.code !== 404) {
-                console.error("Could not delete original file:", storageError);
-            }
-        }
-    }
-
-
     // Finally, delete the Firestore document
     await trackDocRef.delete();
     

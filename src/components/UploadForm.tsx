@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { storage, firestore, auth } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { addDoc, collection, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Progress } from './ui/progress';
 import * as lamejs from 'lamejs';
 
@@ -78,9 +78,8 @@ const parseWav = (wav: ArrayBuffer): { channels: number, sampleRate: number, sam
     }
     dataOffset += 8;
     
-    const pcmData = new Int16Array(wav.slice(dataOffset));
-
     if (format === 1) { // 16-bit integer PCM
+       const pcmData = new Int16Array(wav.slice(dataOffset));
        return { channels, sampleRate, samples: pcmData };
     }
     
