@@ -74,12 +74,12 @@ const wavToMp3 = (wavFile: File): Promise<Blob> => {
             const sampleChunk = pcmData.subarray(i, i + sampleBlockSize);
             const mp3buf = mp3encoder.encodeBuffer(sampleChunk);
             if (mp3buf.length > 0) {
-                mp3Data.push(mp3buf);
+                mp3Data.push(new Int8Array(mp3buf));
             }
         }
         const mp3buf = mp3encoder.flush();
         if (mp3buf.length > 0) {
-            mp3Data.push(mp3buf);
+            mp3Data.push(new Int8Array(mp3buf));
         }
         
         const blob = new Blob(mp3Data, {type: 'audio/mpeg'});
@@ -94,35 +94,48 @@ const wavToMp3 = (wavFile: File): Promise<Blob> => {
   });
 };
 
-// Browser-compatible WAV parser
 function parseWav(arrayBuffer: ArrayBuffer) {
   const view = new DataView(arrayBuffer);
-  
+
   // Check RIFF header
   if (view.getUint32(0, false) !== 0x52494646) throw new Error("Not a valid RIFF file");
   if (view.getUint32(8, false) !== 0x57415645) throw new Error("Not a valid WAVE file");
-
-  // Check format chunk
   if (view.getUint32(12, false) !== 0x666d7420) throw new Error("Invalid 'fmt ' chunk");
-
+  
+  const audioFormat = view.getUint16(20, true);
   const channels = view.getUint16(22, true);
   const sampleRate = view.getUint32(24, true);
   const bitsPerSample = view.getUint16(34, true);
 
-  if (view.getUint16(20, true) !== 1) throw new Error("Only PCM format is supported");
-
-  let dataOffset = 12;
-  while(view.getUint32(dataOffset, false) !== 0x64617461) {
-    dataOffset += 8 + view.getUint32(dataOffset + 4, true);
-    if (dataOffset >= view.byteLength) throw new Error("Could not find 'data' chunk");
+  if (audioFormat !== 1 && audioFormat !== 3) {
+      throw new Error("Only PCM and IEEE Float formats are supported");
   }
 
+  let dataOffset = 12;
+  while (dataOffset < view.byteLength && view.getUint32(dataOffset, false) !== 0x64617461) {
+      dataOffset += 8 + view.getUint32(dataOffset + 4, true);
+  }
+  if (dataOffset >= view.byteLength) throw new Error("Could not find 'data' chunk");
+  
   const dataSize = view.getUint32(dataOffset + 4, true);
   const pcmOffset = dataOffset + 8;
   
-  if (bitsPerSample !== 16) throw new Error("Only 16-bit WAV files are supported");
-  
-  const samples = new Int16Array(arrayBuffer, pcmOffset, dataSize / 2);
+  let samples;
+  if (audioFormat === 1) { // 16-bit Integer PCM
+    if (bitsPerSample !== 16) throw new Error("Only 16-bit integer PCM is supported");
+    samples = new Int16Array(arrayBuffer, pcmOffset, dataSize / 2);
+  } else if (audioFormat === 3) { // 32-bit Float PCM
+    if (bitsPerSample !== 32) throw new Error("Only 32-bit float PCM is supported");
+    const floatSamples = new Float32Array(arrayBuffer, pcmOffset, dataSize / 4);
+    samples = new Int16Array(floatSamples.length);
+    for(let i = 0; i < floatSamples.length; i++) {
+        // Convert float from [-1.0, 1.0] to 16-bit integer [-32768, 32767]
+        samples[i] = Math.max(-32768, Math.min(32767, floatSamples[i] * 32767));
+    }
+  } else {
+     throw new Error("Unsupported audio format.");
+  }
+
 
   return { channels, sampleRate, samples };
 }
@@ -268,3 +281,5 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     </form>
   );
 }
+
+    
