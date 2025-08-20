@@ -5,7 +5,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Zap } from 'lucide-react';
 import { UploadDialog } from '@/components/UploadDialog';
 import { Button } from '@/components/ui/button';
 
@@ -41,8 +41,8 @@ export default function Home() {
         </div>
       </div>
       <div className="container mx-auto px-4 py-12 md:py-20 -mt-24 relative z-20">
-        <div className="grid md:grid-cols-2 gap-12 items-start">
-          <Card className="h-full drop-shadow-custom-md">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+          <Card className="h-full drop-shadow-custom-md lg:col-span-2">
             <CardHeader>
               <CardTitle>Precise, Collaborative Feedback</CardTitle>
               <CardDescription>One central place for contextual audio feedback.</CardDescription>
@@ -71,17 +71,45 @@ export default function Home() {
               </ul>
             </CardContent>
           </Card>
-          <Card className="h-fit drop-shadow-custom-md">
-             <CardHeader>
-              <CardTitle>Get Started</CardTitle>
-              <CardDescription>Upload an MP3 or WAV to create your feedback session.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <UploadDialog>
-                    <Button className="w-full">Upload Your First Track</Button>
-                </UploadDialog>
-            </CardContent>
-          </Card>
+          <div className="space-y-8">
+            <Card className="h-fit drop-shadow-custom-md">
+               <CardHeader>
+                <CardTitle>Get Started For Free</CardTitle>
+                <CardDescription>Upload an MP3 or WAV to create your feedback session.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                  <UploadDialog>
+                      <Button className="w-full">Upload Your First Track</Button>
+                  </UploadDialog>
+              </CardContent>
+            </Card>
+             <Card className="drop-shadow-custom-md bg-gradient-to-br from-primary/10 to-background">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Zap className="text-primary"/>
+                        Go Pro
+                    </CardTitle>
+                    <CardDescription>Unlock powerful features to enhance your workflow.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <ul className="space-y-3 text-sm">
+                        <li className="flex items-start gap-3">
+                            <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
+                            <span><span className="font-semibold">Permanent Track Storage</span></span>
+                        </li>
+                         <li className="flex items-start gap-3">
+                            <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
+                            <span><span className="font-semibold">Unlimited Uploads</span></span>
+                        </li>
+                         <li className="flex items-start gap-3">
+                            <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
+                           <span><span className="font-semibold">Advanced AI Analysis</span></span>
+                        </li>
+                    </ul>
+                    <Button className="w-full" disabled>Learn More (Coming Soon)</Button>
+                </CardContent>
+            </Card>
+          </div>
         </div>
          <div className="mt-20 text-center">
             <h2 className="text-3xl font-bold tracking-tighter font-headline mb-4">How It Works</h2>
