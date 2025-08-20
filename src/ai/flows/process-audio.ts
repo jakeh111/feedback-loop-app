@@ -34,7 +34,6 @@ const processAudioFlow = ai.defineFlow(
     // For now, we assume a standard format that lamejs can handle.
     // This will likely fail on MP3 inputs, as we're not decoding them to PCM first.
     // The goal here is to handle the common case of WAV upload for compression.
-    const Lame = require('lamejs');
 
     let pcmData;
     let sampleRate;
@@ -88,7 +87,7 @@ const processAudioFlow = ai.defineFlow(
          throw new Error("Could not extract PCM data or format from the audio buffer.");
     }
     
-    const mp3encoder = new Lame.Mp3Encoder(channels, sampleRate, 128); // 128 kbps
+    const mp3encoder = new Mp3Encoder(channels, sampleRate, 128); // 128 kbps
     const mp3Data = [];
 
     const sampleBlockSize = 1152; //can be anything but make it a multiple of 576 to make encoders life easier
