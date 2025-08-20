@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
@@ -102,7 +103,7 @@ export const AudioPlayer = forwardRef<HTMLAudioElement, AudioPlayerProps>(({ tra
 
   return (
     <div className="bg-card p-4 rounded-lg border drop-shadow-custom-md">
-      <audio ref={internalAudioRef} src={track.audioUrl} preload="metadata" />
+      {track.audioUrl && <audio ref={internalAudioRef} src={track.audioUrl} preload="metadata" />}
       <Waveform
         data={track.waveform}
         currentTime={currentTime}
