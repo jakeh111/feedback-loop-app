@@ -45,6 +45,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Intel+One+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+        <script src="/lame.min.js"></script>
       </head>
       <body className="font-body antialiased">
           <div className="relative flex flex-col min-h-screen">
@@ -55,7 +56,6 @@ export default function RootLayout({
             <Footer />
           </div>
           <Toaster />
-          <Script src="/lame.min.js" strategy="beforeInteractive" />
       </body>
     </html>
   );
