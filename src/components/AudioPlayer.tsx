@@ -47,8 +47,9 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
     }
 
     const setAudioTime = () => {
-        setCurrentTime(audio.currentTime);
-        onTimeUpdate(audio.currentTime);
+        const_currentTime = audio.currentTime;
+        setCurrentTime(const_currentTime);
+        onTimeUpdate(const_currentTime);
     }
 
     const handlePlay = () => setIsPlaying(true);
@@ -59,15 +60,17 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
 
+    // This is important to ensure volume is set correctly on mount
     audio.volume = isMuted ? 0 : volume;
 
+    // When the component unmounts, remove the event listeners
     return () => {
       audio.removeEventListener('loadeddata', setAudioData);
       audio.removeEventListener('timeupdate', setAudioTime);
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
     }
-  }, [ref, volume, isMuted, onTimeUpdate]);
+  }, [track.audioUrl, volume, isMuted, onTimeUpdate]); // Depend on track.audioUrl to re-run if it changes
 
   const togglePlayPause = () => {
     const audio = audioRef.current;
@@ -82,7 +85,7 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
 
   const handleManualSeek = (time: number) => {
     const audio = audioRef.current;
-    if (audio) {
+    if (audio && isFinite(time)) {
         audio.currentTime = time;
         setCurrentTime(time);
         onTimeUpdate(time);
@@ -100,14 +103,19 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
   };
 
   const toggleMute = () => {
-    setIsMuted(!isMuted);
     const audio = audioRef.current;
-    if(audio) {
-      audio.volume = !isMuted ? 0 : volume;
+    if (!audio) return;
+    if (isMuted) {
+      setIsMuted(false);
+      audio.volume = volume;
+    } else {
+      setIsMuted(true);
+      audio.volume = 0;
     }
   }
 
   const formatTime = (time: number) => {
+    if (isNaN(time) || !isFinite(time)) return '0:00';
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;

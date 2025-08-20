@@ -97,7 +97,7 @@ export function TrackPageClient({ track }: { track: Track }) {
           setAuthorName(guestName);
         } else {
           // Only open prompt if auth is resolved and user is not logged in
-          if (unsubscribe) { // check if auth listener is active
+          if (auth.app.name) { // check if auth is initialized
              setTimeout(() => setIsGuestPromptOpen(true), 100);
           }
         }
@@ -200,7 +200,7 @@ export function TrackPageClient({ track }: { track: Track }) {
         </div>
       </div>
 
-      <AudioPlayer ref={audioPlayerRef} track={track} onTimeUpdate={handleTimeUpdate} comments={comments} />
+      <AudioPlayer key={track.id} ref={audioPlayerRef} track={track} onTimeUpdate={handleTimeUpdate} comments={comments} />
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
