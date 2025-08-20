@@ -1,12 +1,4 @@
-I0818 16:51:09.007735     675 load.go:37] Reloading schema and connectors...
-I0818 16:51:09.183670     675 control.go:84] [/emulator/audiomarker c188] UpdateResources(): done
+I0820 14:46:30.534720     520 load.go:37] Reloading schema and connectors...
+I0820 14:46:30.748101     520 control.go:84] [/emulator/audiomarker ae15] UpdateResources(): done
 Schema: sources: schema/schema.gql [793B] 
-Connector "default": sources: connector/queries.gql [1947B] connector/mutations.gql [1301B] 
-I0818 16:51:09.256800     675 codegen.go:82] [connector "default" javascriptSdk] Generating sources into "/home/user/studio/dataconnect-generated/js/default-connector"
-I0818 16:51:09.283821     675 collector.go:107] schema extensions wrote into "/home/user/studio/dataconnect/.dataconnect/schema"
-Generated sources: prelude.gql [73172B] main/implicit.gql [3456B] main/input.gql [57992B] main/relation.gql [29046B] main/query.gql [7553B] main/mutation.gql [20335B] 
-I0818 16:51:09.290725     675 collector.go:107] connector "default" javascriptSdk wrote into "/home/user/studio/dataconnect-generated/js/default-connector"
-Generated sources: index.cjs.js [149B] README.md [2896B] react/esm/package.json [17B] react/esm/index.esm.js [0B] package.json [860B] react/index.d.ts [228B] react/package.json [468B] react/index.cjs.js [0B] react/README.md [5474B] index.d.ts [740B] esm/index.esm.js [114B] esm/package.json [17B] 
-I0818 16:51:09.297241     675 installsdk.go:55] Package @firebasegen/default-connector is already installed. Skipping installation
-I0818 16:51:09.297316     675 load.go:115] Finished reloading
-I0818 16:51:09.306702     675 dev.go:95] Listening on address (HTTP + gRPC): 127.0.0.1:9398
+Connector "default": sources: connector/mutations.gql [1301B] connector/queries.gql [1947B] 

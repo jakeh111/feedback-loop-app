@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusCircle, Music, MessageSquare, ListMusic, Loader2, Trash2, Clock, User as UserIcon, CreditCard } from "lucide-react";
+import { PlusCircle, Music, MessageSquare, ListMusic, Loader2, Trash2, Clock, User as UserIcon, CreditCard, Zap, CheckCircle } from "lucide-react";
 import { UploadDialog } from "@/components/UploadDialog";
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth, firestore } from '@/lib/firebase';
@@ -198,7 +198,7 @@ export function DashboardClient() {
       }
   }
 
-  const showSampleTrack = user && tracks.length === 0;
+  const showSampleTrack = !isLoading && user && tracks.length === 0;
   const displayTracks = showSampleTrack ? [sampleTrack] : tracks;
   const finalTracks = user ? displayTracks : [];
 
@@ -219,7 +219,8 @@ export function DashboardClient() {
         </div>
 
         {user && (
-           <Card className="mb-6 drop-shadow-custom-md">
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+           <Card className="drop-shadow-custom-md">
               <CardHeader>
                 <CardTitle>My Account</CardTitle>
                 <CardDescription>View your account details and manage your subscription.</CardDescription>
@@ -249,6 +250,33 @@ export function DashboardClient() {
                  </div>
               </CardContent>
             </Card>
+            <Card className="drop-shadow-custom-md bg-gradient-to-br from-primary/10 to-background">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Zap className="text-primary"/>
+                        Upgrade to Pro
+                    </CardTitle>
+                    <CardDescription>Unlock powerful features to enhance your feedback workflow.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <ul className="space-y-3 text-sm">
+                        <li className="flex items-start gap-3">
+                            <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
+                            <span><span className="font-semibold">Permanent Track Storage:</span> Never lose a track or comment again. All your uploads are stored forever.</span>
+                        </li>
+                         <li className="flex items-start gap-3">
+                            <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
+                            <span><span className="font-semibold">Unlimited Uploads:</span> No limits on the number of tracks you can upload and manage.</span>
+                        </li>
+                         <li className="flex items-start gap-3">
+                            <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
+                           <span><span className="font-semibold">Advanced AI Analysis:</span> Get deeper insights with comment categorization and tonal analysis.</span>
+                        </li>
+                    </ul>
+                    <Button className="w-full" disabled>Upgrade Now (Coming Soon)</Button>
+                </CardContent>
+            </Card>
+          </div>
         )}
 
         <Card className="drop-shadow-custom-md">
@@ -356,3 +384,5 @@ export function DashboardClient() {
     </>
   );
 }
+
+    
