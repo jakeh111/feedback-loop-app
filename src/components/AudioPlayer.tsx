@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useRef, forwardRef } from 'react';
 import type { Track, Comment } from '@/lib/types';
 import { Waveform } from './Waveform';
 import { Button } from './ui/button';
@@ -15,17 +14,23 @@ interface AudioPlayerProps {
 }
 
 export const AudioPlayer = forwardRef<HTMLAudioElement, AudioPlayerProps>(({ track, onSeek, comments = [] }, ref) => {
-  const internalAudioRef = useRef<HTMLAudioElement>(null);
-  useImperativeHandle(ref, () => internalAudioRef.current!, []);
-  
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.75);
   const [isMuted, setIsMuted] = useState(false);
 
+  // This function allows us to get the audio element from the ref
+  const getAudioElement = (): HTMLAudioElement | null => {
+    if (ref && 'current' in ref) {
+      return ref.current;
+    }
+    return null;
+  };
+
+
   useEffect(() => {
-    const audio = internalAudioRef.current;
+    const audio = getAudioElement();
     if (!audio) return;
     
     const setAudioData = () => {
@@ -51,10 +56,10 @@ export const AudioPlayer = forwardRef<HTMLAudioElement, AudioPlayerProps>(({ tra
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
     }
-  }, [volume, isMuted]);
+  }, [ref, volume, isMuted]);
 
   const togglePlayPause = () => {
-    const audio = internalAudioRef.current;
+    const audio = getAudioElement();
     if (audio) {
       if (isPlaying) {
         audio.pause();
@@ -65,8 +70,9 @@ export const AudioPlayer = forwardRef<HTMLAudioElement, AudioPlayerProps>(({ tra
   };
 
   const handleSeek = (time: number) => {
-    if (internalAudioRef.current) {
-        internalAudioRef.current.currentTime = time;
+    const audio = getAudioElement();
+    if (audio) {
+        audio.currentTime = time;
         setCurrentTime(time);
         onSeek(time);
     }
@@ -76,15 +82,17 @@ export const AudioPlayer = forwardRef<HTMLAudioElement, AudioPlayerProps>(({ tra
     const newVolume = value[0];
     setVolume(newVolume);
     setIsMuted(newVolume === 0);
-    if(internalAudioRef.current) {
-      internalAudioRef.current.volume = newVolume;
+    const audio = getAudioElement();
+    if(audio) {
+      audio.volume = newVolume;
     }
   };
 
   const toggleMute = () => {
     setIsMuted(!isMuted);
-    if(internalAudioRef.current) {
-      internalAudioRef.current.volume = !isMuted ? 0 : volume;
+    const audio = getAudioElement();
+    if(audio) {
+      audio.volume = !isMuted ? 0 : volume;
     }
   }
 
@@ -95,15 +103,16 @@ export const AudioPlayer = forwardRef<HTMLAudioElement, AudioPlayerProps>(({ tra
   };
 
   const seek = (amount: number) => {
-    if (internalAudioRef.current) {
-        const newTime = internalAudioRef.current.currentTime + amount;
+    const audio = getAudioElement();
+    if (audio) {
+        const newTime = audio.currentTime + amount;
         handleSeek(Math.max(0, Math.min(duration, newTime)));
     }
   }
 
   return (
     <div className="bg-card p-4 rounded-lg border drop-shadow-custom-md">
-      {track.audioUrl && <audio ref={internalAudioRef} src={track.audioUrl} preload="metadata" />}
+      {track.audioUrl && <audio ref={ref} src={track.audioUrl} preload="metadata" />}
       <Waveform
         data={track.waveform}
         currentTime={currentTime}
