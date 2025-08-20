@@ -10,7 +10,7 @@ import { storage, firestore, auth } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Progress } from './ui/progress';
-import lamejs from 'lamejs';
+import * as lamejs from 'lamejs';
 
 interface UploadFormProps {
   onUploadComplete: (trackId: string) => void;
