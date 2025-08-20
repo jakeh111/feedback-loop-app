@@ -10,17 +10,17 @@ import { storage, firestore, auth } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Progress } from './ui/progress';
-import * as lamejs from 'lamejs';
 
-interface UploadFormProps {
-  onUploadComplete: (trackId: string) => void;
+declare global {
+    interface Window {
+        lamejs: any;
+    }
 }
-
 
 const wavToMp3 = (file: File): Promise<Blob> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = async (event) => {
             if (!event.target?.result) {
                 return reject(new Error("Failed to read WAV file."));
             }
@@ -28,7 +28,7 @@ const wavToMp3 = (file: File): Promise<Blob> => {
                 const wavData = parseWav(event.target.result as ArrayBuffer);
                 const pcmData = wavData.samples;
                 
-                const mp3encoder = new lamejs.Mp3Encoder(wavData.channels, wavData.sampleRate, 128); // 128 kbps
+                const mp3encoder = new window.lamejs.Mp3Encoder(wavData.channels, wavData.sampleRate, 128); // 128 kbps
                 const mp3Data = [];
                 const sampleBlockSize = 1152; 
 
@@ -36,15 +36,15 @@ const wavToMp3 = (file: File): Promise<Blob> => {
                     const sampleChunk = pcmData.subarray(i, i + sampleBlockSize);
                     const mp3buf = mp3encoder.encodeBuffer(sampleChunk);
                     if (mp3buf.length > 0) {
-                        mp3Data.push(new Int8Array(mp3buf));
+                        mp3Data.push(mp3buf);
                     }
                 }
                 const mp3buf = mp3encoder.flush();
                 if (mp3buf.length > 0) {
-                    mp3Data.push(new Int8Array(mp3buf));
+                    mp3Data.push(mp3buf);
                 }
 
-                const blob = new Blob(mp3Data, { type: 'audio/mpeg' });
+                const blob = new Blob(mp3Data.map(b => new Uint8Array(b)), {type: 'audio/mpeg'});
                 resolve(blob);
 
             } catch (error) {
@@ -59,42 +59,43 @@ const wavToMp3 = (file: File): Promise<Blob> => {
 };
 
 
-const parseWav = (wav: ArrayBuffer): { channels: number, sampleRate: number, samples: Int16Array } => {
-    const view = new DataView(wav);
+const parseWav = (wav: ArrayBuffer): { channels: number; sampleRate: number; samples: Int16Array } => {
+  const view = new DataView(wav);
 
-    if (view.getUint32(0, false) !== 0x52494646) throw new Error("Invalid RIFF header"); // "RIFF"
-    if (view.getUint32(8, false) !== 0x57415645) throw new Error("Invalid WAVE header"); // "WAVE"
-    if (view.getUint32(12, false) !== 0x666d7420) throw new Error("Invalid fmt chunk"); // "fmt "
+  const format = view.getUint16(20, true);
+  if (format !== 1 && format !== 3) {
+      throw new Error("Only PCM and Float32 formats are supported");
+  }
 
-    const format = view.getUint16(20, true); // 1 = PCM, 3 = IEEE float
-    const channels = view.getUint16(22, true);
-    const sampleRate = view.getUint32(24, true);
-    const bitsPerSample = view.getUint16(34, true);
+  const channels = view.getUint16(22, true);
+  const sampleRate = view.getUint32(24, true);
+  const bitDepth = view.getUint16(34, true);
 
-    let dataOffset = 12;
-    while(view.getUint32(dataOffset, false) !== 0x64617461) { // "data"
+  let dataOffset = 12;
+  while (view.getUint32(dataOffset, false) !== 0x64617461) {
       dataOffset++;
-      if (dataOffset > view.byteLength) throw new Error("Could not find data chunk");
-    }
-    dataOffset += 8;
-    
-    if (format === 1) { // 16-bit integer PCM
-       const pcmData = new Int16Array(wav.slice(dataOffset));
-       return { channels, sampleRate, samples: pcmData };
-    }
-    
-    if (format === 3) { // 32-bit float PCM
-       const floatData = new Float32Array(wav.slice(dataOffset));
-       const int16Data = new Int16Array(floatData.length);
-       for (let i = 0; i < floatData.length; i++) {
-           int16Data[i] = Math.max(-1, Math.min(1, floatData[i])) * 32767;
-       }
-       return { channels, sampleRate, samples: int16Data };
-    }
+      if (dataOffset > view.byteLength) {
+          throw new Error("Invalid WAV file: 'data' chunk not found");
+      }
+  }
+  const dataSize = view.getUint32(dataOffset + 4, true);
+  const pcmOffset = dataOffset + 8;
 
-    throw new Error(`Unsupported WAV format: ${format}. Only 16-bit integer and 32-bit float PCM are supported.`);
+  let samples;
+  if (format === 1) { // 16-bit integer PCM
+      if (bitDepth !== 16) throw new Error("Only 16-bit integer PCM is supported");
+      samples = new Int16Array(wav, pcmOffset, dataSize / 2);
+  } else { // 32-bit float PCM
+      if (bitDepth !== 32) throw new Error("Only 32-bit float PCM is supported");
+      const floatSamples = new Float32Array(wav, pcmOffset, dataSize / 4);
+      samples = new Int16Array(floatSamples.length);
+      for (let i = 0; i < floatSamples.length; i++) {
+          samples[i] = floatSamples[i] * 32767;
+      }
+  }
+
+  return { channels, sampleRate, samples };
 };
-
 
 const generateWaveformData = async (file: File): Promise<number[]> => {
     return new Promise((resolve, reject) => {
@@ -180,7 +181,7 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
       
       if (selectedFile.type === 'audio/wav' || selectedFile.type === 'audio/wave') {
           setStatusText("Converting WAV to MP3...");
-          finalFileName = selectedFile.name.replace(/\.wav$/i, '.mp3');
+          finalFileName = selectedFile.name.replace(/\.(wav|wave)$/i, '.mp3');
           fileToUpload = await wavToMp3(selectedFile);
       }
 

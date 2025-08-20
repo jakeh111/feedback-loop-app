@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: {
@@ -54,6 +55,7 @@ export default function RootLayout({
             <Footer />
           </div>
           <Toaster />
+          <Script src="/lame.min.js" strategy="beforeInteractive" />
       </body>
     </html>
   );
