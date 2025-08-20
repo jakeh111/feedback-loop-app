@@ -134,6 +134,10 @@ const generateWaveformData = async (file: File): Promise<number[]> => {
     });
 };
 
+interface UploadFormProps {
+  onUploadComplete: (trackId: string) => void;
+}
+
 export function UploadForm({ onUploadComplete }: UploadFormProps) {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
