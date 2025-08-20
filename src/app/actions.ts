@@ -2,8 +2,6 @@
 'use server';
 
 import { summarizeFeedback, SummarizeFeedbackInput, SummarizeFeedbackOutput } from "@/ai/flows/summarize-feedback";
-import { processAudio } from "@/ai/flows/process-audio";
-import { ProcessAudioInput, ProcessAudioOutput } from "@/lib/types";
 import { firestore, storage } from '@/lib/firebase-admin';
 import { FieldValue, collection, getDocs, writeBatch, query, where, doc, updateDoc } from "firebase-admin/firestore";
 
@@ -112,18 +110,6 @@ export async function deleteTrack(trackId: string): Promise<void> {
        throw new Error(error.message);
     }
     throw error;
-  }
-}
-
-export async function processAudioAction(input: ProcessAudioInput): Promise<ProcessAudioOutput> {
-  try {
-    return await processAudio(input);
-  } catch (error) {
-    console.error("Error processing audio:", error);
-    if (error instanceof Error) {
-      throw new Error(`Audio processing failed: ${error.message}`);
-    }
-    throw new Error("An unknown error occurred during audio processing.");
   }
 }
 

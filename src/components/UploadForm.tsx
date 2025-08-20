@@ -7,10 +7,11 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { storage, firestore, auth } from '@/lib/firebase';
-import { ref, uploadBytesResumable, getDownloadURL, uploadString } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Progress } from './ui/progress';
-import { processAudioAction } from '@/app/actions';
+import { Mp3Encoder } from 'lamejs';
+import wav from 'wav';
 
 interface UploadFormProps {
   onUploadComplete: (trackId: string) => void;
@@ -24,6 +25,22 @@ const fileToDataUri = (file: File): Promise<string> => {
         reader.readAsDataURL(file);
     });
 }
+
+const fileToArrayBuffer = (file: File): Promise<ArrayBuffer> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if (e.target?.result) {
+                resolve(e.target.result as ArrayBuffer);
+            } else {
+                reject(new Error("Failed to read file as ArrayBuffer"));
+            }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    });
+};
+
 
 const dataUriToBlob = (dataUri: string): Blob => {
     const [meta, base64] = dataUri.split(',');
@@ -78,6 +95,78 @@ const generateWaveformData = async (file: File): Promise<number[]> => {
     });
 };
 
+const wavToMp3 = async (wavFile: File): Promise<Blob> => {
+    return new Promise(async (resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            if (!e.target?.result) {
+                return reject(new Error("Failed to read file"));
+            }
+            try {
+                const wavReader = new wav.Reader();
+                const samplesPromise = new Promise<{ pcmData: Int16Array, format: any }>((res, rej) => {
+                    let pcmData: Int16Array | undefined;
+                    let format: any | undefined;
+
+                    wavReader.on('format', (f) => {
+                        format = f;
+                    });
+                    
+                    let dataChunks: Buffer[] = [];
+                    wavReader.on('data', (chunk) => {
+                         dataChunks.push(chunk);
+                    });
+
+                    wavReader.on('end', () => {
+                        const audioDataBuffer = Buffer.concat(dataChunks);
+                        const int16Pcm = new Int16Array(audioDataBuffer.buffer, audioDataBuffer.byteOffset, audioDataBuffer.length / 2);
+
+                        if (int16Pcm.length > 0) {
+                            pcmData = int16Pcm;
+                            res({ pcmData, format });
+                        } else {
+                            rej(new Error("No PCM data was extracted from WAV file."));
+                        }
+                    });
+
+                    wavReader.on('error', rej);
+                    wavReader.end(Buffer.from(e.target!.result as ArrayBuffer));
+                });
+                
+                samplesPromise.then(({ pcmData, format }) => {
+                    const mp3encoder = new Mp3Encoder(format.channels, format.sampleRate, 128); // 128 kbps
+                    const mp3Data = [];
+
+                    const sampleBlockSize = 1152; 
+
+                    for (let i = 0; i < pcmData.length; i += sampleBlockSize) {
+                        const sampleChunk = pcmData.subarray(i, i + sampleBlockSize);
+                        const mp3buf = mp3encoder.encodeBuffer(sampleChunk);
+                        if (mp3buf.length > 0) {
+                            mp3Data.push(mp3buf);
+                        }
+                    }
+                    const mp3buf = mp3encoder.flush();
+
+                    if (mp3buf.length > 0) {
+                        mp3Data.push(mp3buf);
+                    }
+                    
+                    const blob = new Blob(mp3Data, {type: 'audio/mpeg'});
+                    resolve(blob);
+                }).catch(reject);
+
+            } catch(err) {
+                reject(err);
+            }
+        };
+        
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(wavFile);
+    });
+};
+
 export function UploadForm({ onUploadComplete }: UploadFormProps) {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -121,13 +210,16 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
       setStatusText("Generating waveform...");
       const waveform = await generateWaveformData(originalFile);
       
-      setStatusText("Processing audio on server...");
-      const audioDataUri = await fileToDataUri(originalFile);
-      const { processedAudioDataUri } = await processAudioAction({ audioDataUri });
+      let finalAudioBlob: Blob;
+      if (originalFile.type === 'audio/wav' || originalFile.type === 'audio/wave') {
+          setStatusText("Converting WAV to MP3...");
+          finalAudioBlob = await wavToMp3(originalFile);
+      } else {
+          finalAudioBlob = originalFile;
+      }
       
       setStatusText("Uploading file...");
       
-      const finalAudioBlob = dataUriToBlob(processedAudioDataUri);
       const storageRef = ref(storage, `tracks/${user.uid}/${Date.now()}-${originalFile.name.replace(/\.[^/.]+$/, '.mp3')}`);
       const uploadTask = uploadBytesResumable(storageRef, finalAudioBlob);
 
