@@ -10,7 +10,7 @@ import { storage, firestore, auth } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Progress } from './ui/progress';
-import * as lamejs from 'lamejs';
+import { processWavToMp3 } from '@/app/actions';
 
 interface UploadFormProps {
   onUploadComplete: (trackId: string) => void;
@@ -52,94 +52,6 @@ const generateWaveformData = async (file: File): Promise<number[]> => {
         reader.readAsArrayBuffer(file);
     });
 };
-
-const wavToMp3 = (wavFile: File): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      if (!e.target?.result) {
-        return reject(new Error("Failed to read file"));
-      }
-      try {
-        const arrayBuffer = e.target.result as ArrayBuffer;
-        const wavData = parseWav(arrayBuffer);
-        const pcmData = wavData.samples;
-
-        const mp3encoder = new lamejs.Mp3Encoder(wavData.channels, wavData.sampleRate, 128); // 128 kbps
-        const mp3Data = [];
-        const sampleBlockSize = 1152;
-
-        for (let i = 0; i < pcmData.length; i += sampleBlockSize) {
-            const sampleChunk = pcmData.subarray(i, i + sampleBlockSize);
-            const mp3buf = mp3encoder.encodeBuffer(sampleChunk);
-            if (mp3buf.length > 0) {
-                mp3Data.push(new Int8Array(mp3buf));
-            }
-        }
-        const mp3buf = mp3encoder.flush();
-        if (mp3buf.length > 0) {
-            mp3Data.push(new Int8Array(mp3buf));
-        }
-        
-        const blob = new Blob(mp3Data, {type: 'audio/mpeg'});
-        resolve(blob);
-      } catch (err) {
-        reject(err);
-      }
-    };
-    
-    reader.onerror = reject;
-    reader.readAsArrayBuffer(wavFile);
-  });
-};
-
-function parseWav(arrayBuffer: ArrayBuffer) {
-  const view = new DataView(arrayBuffer);
-
-  // Check RIFF header
-  if (view.getUint32(0, false) !== 0x52494646) throw new Error("Not a valid RIFF file");
-  if (view.getUint32(8, false) !== 0x57415645) throw new Error("Not a valid WAVE file");
-  if (view.getUint32(12, false) !== 0x666d7420) throw new Error("Invalid 'fmt ' chunk");
-  
-  const audioFormat = view.getUint16(20, true);
-  const channels = view.getUint16(22, true);
-  const sampleRate = view.getUint32(24, true);
-  const bitsPerSample = view.getUint16(34, true);
-
-  if (audioFormat !== 1 && audioFormat !== 3) {
-      throw new Error("Only PCM and IEEE Float formats are supported");
-  }
-
-  let dataOffset = 12;
-  while (dataOffset < view.byteLength && view.getUint32(dataOffset, false) !== 0x64617461) {
-      dataOffset += 8 + view.getUint32(dataOffset + 4, true);
-  }
-  if (dataOffset >= view.byteLength) throw new Error("Could not find 'data' chunk");
-  
-  const dataSize = view.getUint32(dataOffset + 4, true);
-  const pcmOffset = dataOffset + 8;
-  
-  let samples;
-  if (audioFormat === 1) { // 16-bit Integer PCM
-    if (bitsPerSample !== 16) throw new Error("Only 16-bit integer PCM is supported");
-    samples = new Int16Array(arrayBuffer, pcmOffset, dataSize / 2);
-  } else if (audioFormat === 3) { // 32-bit Float PCM
-    if (bitsPerSample !== 32) throw new Error("Only 32-bit float PCM is supported");
-    const floatSamples = new Float32Array(arrayBuffer, pcmOffset, dataSize / 4);
-    samples = new Int16Array(floatSamples.length);
-    for(let i = 0; i < floatSamples.length; i++) {
-        // Convert float from [-1.0, 1.0] to 16-bit integer [-32768, 32767]
-        samples[i] = Math.max(-32768, Math.min(32767, floatSamples[i] * 32767));
-    }
-  } else {
-     throw new Error("Unsupported audio format.");
-  }
-
-
-  return { channels, sampleRate, samples };
-}
-
 
 export function UploadForm({ onUploadComplete }: UploadFormProps) {
   const { toast } = useToast();
@@ -184,18 +96,12 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
       setStatusText("Generating waveform...");
       const waveform = await generateWaveformData(originalFile);
       
-      let finalAudioBlob: Blob;
-      if (originalFile.type === 'audio/wav' || originalFile.type === 'audio/wave') {
-          setStatusText("Converting WAV to MP3...");
-          finalAudioBlob = await wavToMp3(originalFile);
-      } else {
-          finalAudioBlob = originalFile;
-      }
-      
       setStatusText("Uploading file...");
       
-      const storageRef = ref(storage, `tracks/${user.uid}/${Date.now()}-${originalFile.name.replace(/\.[^/.]+$/, '.mp3')}`);
-      const uploadTask = uploadBytesResumable(storageRef, finalAudioBlob);
+      // Use original file name for storage path, but the final extension might change
+      const fileExtension = originalFile.name.split('.').pop();
+      const storageRef = ref(storage, `tracks/${user.uid}/${Date.now()}-${originalFile.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, originalFile);
 
       uploadTask.on('state_changed',
         (snapshot) => {
@@ -211,25 +117,42 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
         },
         async () => {
           try {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            let downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            let finalStoragePath = uploadTask.snapshot.ref.fullPath;
             const trackTitle = originalFile.name.replace(/\.[^/.]+$/, "");
 
+            // Create the document first to get an ID
             const trackDocRef = await addDoc(collection(firestore, 'tracks'), {
               title: trackTitle,
               artist: user.displayName || 'Unknown Artist',
-              audioUrl: downloadURL,
-              storagePath: uploadTask.snapshot.ref.fullPath,
+              audioUrl: '', // Will be updated
+              storagePath: '', // Will be updated
               waveform: waveform,
               userId: user.uid,
               createdAt: serverTimestamp(),
               commentCount: 0,
             });
 
+            if (fileExtension?.toLowerCase() === 'wav') {
+                setStatusText("Converting WAV to MP3...");
+                setUploadProgress(0); // Reset progress for the conversion step
+                const { downloadURL: newUrl, newStoragePath } = await processWavToMp3(finalStoragePath, trackDocRef.id);
+                downloadURL = newUrl;
+                finalStoragePath = newStoragePath;
+            } else {
+                // If it's already an MP3, just update the doc with final URLs
+                await firestore.collection('tracks').doc(trackDocRef.id).update({
+                    audioUrl: downloadURL,
+                    storagePath: finalStoragePath
+                });
+            }
+
             toast({ title: "Upload Successful", description: "Your track is ready and saved to your dashboard." });
             onUploadComplete(trackDocRef.id);
           } catch (error) {
-            console.error("Error creating track document:", error);
-            toast({ variant: "destructive", title: "Error Saving Track", description: "Your file was uploaded, but we couldn't save it to your dashboard. Please contact support." });
+            console.error("Error processing track:", error);
+            const errorMessage = error instanceof Error ? error.message : "Please contact support.";
+            toast({ variant: "destructive", title: "Error Processing Track", description: `Your file was uploaded, but we couldn't process it. ${errorMessage}` });
           } finally {
             setIsProcessing(false);
             setStatusText("");
@@ -257,7 +180,7 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
                 <p className="mb-2 text-sm text-muted-foreground">
                   <span className="font-semibold">Click to upload</span> or drag and drop
                 </p>
-                <p className="text-xs text-muted-foreground">MP3 or WAV (MAX. 80MB)</p>
+                <p className="text-xs text-muted-foreground">MP3 or WAV</p>
             </div>
             <Input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} accept=".mp3,.wav,audio/mpeg,audio/wave" disabled={isProcessing} />
         </label>
@@ -271,7 +194,7 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
               <Loader2 className="w-4 h-4 animate-spin"/>
               {statusText}
             </p>
-            {statusText === 'Uploading file...' && <Progress value={uploadProgress} />}
+            {(statusText === 'Uploading file...') && <Progress value={uploadProgress} />}
         </div>
       )}
 
