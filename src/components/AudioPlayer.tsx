@@ -47,9 +47,9 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
     }
 
     const setAudioTime = () => {
-        const_currentTime = audio.currentTime;
-        setCurrentTime(const_currentTime);
-        onTimeUpdate(const_currentTime);
+        const currentTime = audio.currentTime;
+        setCurrentTime(currentTime);
+        onTimeUpdate(currentTime);
     }
 
     const handlePlay = () => setIsPlaying(true);
