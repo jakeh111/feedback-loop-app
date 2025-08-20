@@ -11,52 +11,10 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Progress } from './ui/progress';
 import { Mp3Encoder } from 'lamejs';
-import wav from 'wav';
 
 interface UploadFormProps {
   onUploadComplete: (trackId: string) => void;
 }
-
-const fileToDataUri = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
-
-const fileToArrayBuffer = (file: File): Promise<ArrayBuffer> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            if (e.target?.result) {
-                resolve(e.target.result as ArrayBuffer);
-            } else {
-                reject(new Error("Failed to read file as ArrayBuffer"));
-            }
-        };
-        reader.onerror = reject;
-        reader.readAsArrayBuffer(file);
-    });
-};
-
-
-const dataUriToBlob = (dataUri: string): Blob => {
-    const [meta, base64] = dataUri.split(',');
-    const mime = meta.match(/:(.*?);/)?.[1];
-    if (!mime || !base64) {
-        throw new Error("Invalid data URI");
-    }
-    const byteString = atob(base64);
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-    }
-    return new Blob([ab], { type: mime });
-}
-
 
 const generateWaveformData = async (file: File): Promise<number[]> => {
     return new Promise((resolve, reject) => {
@@ -95,77 +53,80 @@ const generateWaveformData = async (file: File): Promise<number[]> => {
     });
 };
 
-const wavToMp3 = async (wavFile: File): Promise<Blob> => {
-    return new Promise(async (resolve, reject) => {
-        const reader = new FileReader();
+const wavToMp3 = (wavFile: File): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
 
-        reader.onload = (e) => {
-            if (!e.target?.result) {
-                return reject(new Error("Failed to read file"));
+    reader.onload = (e) => {
+      if (!e.target?.result) {
+        return reject(new Error("Failed to read file"));
+      }
+      try {
+        const arrayBuffer = e.target.result as ArrayBuffer;
+        const wavData = parseWav(arrayBuffer);
+        const pcmData = wavData.samples;
+
+        const mp3encoder = new Mp3Encoder(wavData.channels, wavData.sampleRate, 128); // 128 kbps
+        const mp3Data = [];
+        const sampleBlockSize = 1152;
+
+        for (let i = 0; i < pcmData.length; i += sampleBlockSize) {
+            const sampleChunk = pcmData.subarray(i, i + sampleBlockSize);
+            const mp3buf = mp3encoder.encodeBuffer(sampleChunk);
+            if (mp3buf.length > 0) {
+                mp3Data.push(mp3buf);
             }
-            try {
-                const wavReader = new wav.Reader();
-                const samplesPromise = new Promise<{ pcmData: Int16Array, format: any }>((res, rej) => {
-                    let pcmData: Int16Array | undefined;
-                    let format: any | undefined;
-
-                    wavReader.on('format', (f) => {
-                        format = f;
-                    });
-                    
-                    let dataChunks: Buffer[] = [];
-                    wavReader.on('data', (chunk) => {
-                         dataChunks.push(chunk);
-                    });
-
-                    wavReader.on('end', () => {
-                        const audioDataBuffer = Buffer.concat(dataChunks);
-                        const int16Pcm = new Int16Array(audioDataBuffer.buffer, audioDataBuffer.byteOffset, audioDataBuffer.length / 2);
-
-                        if (int16Pcm.length > 0) {
-                            pcmData = int16Pcm;
-                            res({ pcmData, format });
-                        } else {
-                            rej(new Error("No PCM data was extracted from WAV file."));
-                        }
-                    });
-
-                    wavReader.on('error', rej);
-                    wavReader.end(Buffer.from(e.target!.result as ArrayBuffer));
-                });
-                
-                samplesPromise.then(({ pcmData, format }) => {
-                    const mp3encoder = new Mp3Encoder(format.channels, format.sampleRate, 128); // 128 kbps
-                    const mp3Data = [];
-
-                    const sampleBlockSize = 1152; 
-
-                    for (let i = 0; i < pcmData.length; i += sampleBlockSize) {
-                        const sampleChunk = pcmData.subarray(i, i + sampleBlockSize);
-                        const mp3buf = mp3encoder.encodeBuffer(sampleChunk);
-                        if (mp3buf.length > 0) {
-                            mp3Data.push(mp3buf);
-                        }
-                    }
-                    const mp3buf = mp3encoder.flush();
-
-                    if (mp3buf.length > 0) {
-                        mp3Data.push(mp3buf);
-                    }
-                    
-                    const blob = new Blob(mp3Data, {type: 'audio/mpeg'});
-                    resolve(blob);
-                }).catch(reject);
-
-            } catch(err) {
-                reject(err);
-            }
-        };
+        }
+        const mp3buf = mp3encoder.flush();
+        if (mp3buf.length > 0) {
+            mp3Data.push(mp3buf);
+        }
         
-        reader.onerror = reject;
-        reader.readAsArrayBuffer(wavFile);
-    });
+        const blob = new Blob(mp3Data, {type: 'audio/mpeg'});
+        resolve(blob);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(wavFile);
+  });
 };
+
+// Browser-compatible WAV parser
+function parseWav(arrayBuffer: ArrayBuffer) {
+  const view = new DataView(arrayBuffer);
+  
+  // Check RIFF header
+  if (view.getUint32(0, false) !== 0x52494646) throw new Error("Not a valid RIFF file");
+  if (view.getUint32(8, false) !== 0x57415645) throw new Error("Not a valid WAVE file");
+
+  // Check format chunk
+  if (view.getUint32(12, false) !== 0x666d7420) throw new Error("Invalid 'fmt ' chunk");
+
+  const channels = view.getUint16(22, true);
+  const sampleRate = view.getUint32(24, true);
+  const bitsPerSample = view.getUint16(34, true);
+
+  if (view.getUint16(20, true) !== 1) throw new Error("Only PCM format is supported");
+
+  let dataOffset = 12;
+  while(view.getUint32(dataOffset, false) !== 0x64617461) {
+    dataOffset += 8 + view.getUint32(dataOffset + 4, true);
+    if (dataOffset >= view.byteLength) throw new Error("Could not find 'data' chunk");
+  }
+
+  const dataSize = view.getUint32(dataOffset + 4, true);
+  const pcmOffset = dataOffset + 8;
+  
+  if (bitsPerSample !== 16) throw new Error("Only 16-bit WAV files are supported");
+  
+  const samples = new Int16Array(arrayBuffer, pcmOffset, dataSize / 2);
+
+  return { channels, sampleRate, samples };
+}
+
 
 export function UploadForm({ onUploadComplete }: UploadFormProps) {
   const { toast } = useToast();
