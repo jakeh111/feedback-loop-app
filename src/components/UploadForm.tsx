@@ -10,47 +10,14 @@ import { storage, firestore, auth } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Progress } from './ui/progress';
-import * as lamejs from 'lamejs';
+import encode from 'audio-encoder';
 
-const wavToMp3 = (file: File): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            if (!event.target?.result) {
-                return reject(new Error("Failed to read WAV file."));
-            }
-            try {
-                const wav = lamejs.WavHeader.readHeader(new DataView(event.target.result as ArrayBuffer));
-                const pcmData = new Int16Array(event.target.result as ArrayBuffer, wav.dataOffset, wav.dataLen / 2);
-                
-                const mp3encoder = new lamejs.Mp3Encoder(wav.channels, wav.sampleRate, 128); // 128 kbps
-                const mp3Data = [];
-                const sampleBlockSize = 1152; 
-
-                for (let i = 0; i < pcmData.length; i += sampleBlockSize) {
-                    const sampleChunk = pcmData.subarray(i, i + sampleBlockSize);
-                    const mp3buf = mp3encoder.encodeBuffer(sampleChunk);
-                    if (mp3buf.length > 0) {
-                        mp3Data.push(mp3buf);
-                    }
-                }
-                const mp3buf = mp3encoder.flush();
-                if (mp3buf.length > 0) {
-                    mp3Data.push(mp3buf);
-                }
-
-                const blob = new Blob(mp3Data.map(b => new Uint8Array(b)), {type: 'audio/mpeg'});
-                resolve(blob);
-
-            } catch (error) {
-                reject(error);
-            }
-        };
-        reader.onerror = (error) => {
-            reject(error);
-        };
-        reader.readAsArrayBuffer(file);
-    });
+const wavToMp3 = async (file: File): Promise<Blob> => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const arrayBuffer = await file.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    const mp3Blob = await encode(audioBuffer, { bitRate: 128 });
+    return mp3Blob;
 };
 
 
