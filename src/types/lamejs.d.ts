@@ -5,4 +5,13 @@ declare module 'lamejs' {
     encodeBuffer(pcm: Int16Array): Int8Array;
     flush(): Int8Array;
   }
+  
+  export class WavHeader {
+    static readHeader(dataView: DataView): {
+        channels: number;
+        sampleRate: number;
+        dataOffset: number;
+        dataLen: number;
+    };
+  }
 }
