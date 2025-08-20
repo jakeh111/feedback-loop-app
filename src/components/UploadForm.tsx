@@ -10,7 +10,7 @@ import { storage, firestore, auth } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Progress } from './ui/progress';
-import { Mp3Encoder } from 'lamejs';
+import lamejs from 'lamejs';
 
 interface UploadFormProps {
   onUploadComplete: (trackId: string) => void;
@@ -66,7 +66,7 @@ const wavToMp3 = (wavFile: File): Promise<Blob> => {
         const wavData = parseWav(arrayBuffer);
         const pcmData = wavData.samples;
 
-        const mp3encoder = new Mp3Encoder(wavData.channels, wavData.sampleRate, 128); // 128 kbps
+        const mp3encoder = new lamejs.Mp3Encoder(wavData.channels, wavData.sampleRate, 128); // 128 kbps
         const mp3Data = [];
         const sampleBlockSize = 1152;
 
@@ -281,5 +281,3 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     </form>
   );
 }
-
-    
