@@ -8,13 +8,94 @@ import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { storage, firestore, auth } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { Progress } from './ui/progress';
-import { processWavToMp3 } from '@/app/actions';
+import * as lamejs from 'lamejs';
 
 interface UploadFormProps {
   onUploadComplete: (trackId: string) => void;
 }
+
+
+const wavToMp3 = (file: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            if (!event.target?.result) {
+                return reject(new Error("Failed to read WAV file."));
+            }
+            try {
+                const wavData = parseWav(event.target.result as ArrayBuffer);
+                const pcmData = wavData.samples;
+                
+                const mp3encoder = new lamejs.Mp3Encoder(wavData.channels, wavData.sampleRate, 128); // 128 kbps
+                const mp3Data = [];
+                const sampleBlockSize = 1152; 
+
+                for (let i = 0; i < pcmData.length; i += sampleBlockSize) {
+                    const sampleChunk = pcmData.subarray(i, i + sampleBlockSize);
+                    const mp3buf = mp3encoder.encodeBuffer(sampleChunk);
+                    if (mp3buf.length > 0) {
+                        mp3Data.push(new Int8Array(mp3buf));
+                    }
+                }
+                const mp3buf = mp3encoder.flush();
+                if (mp3buf.length > 0) {
+                    mp3Data.push(new Int8Array(mp3buf));
+                }
+
+                const blob = new Blob(mp3Data, { type: 'audio/mpeg' });
+                resolve(blob);
+
+            } catch (error) {
+                reject(error);
+            }
+        };
+        reader.onerror = (error) => {
+            reject(error);
+        };
+        reader.readAsArrayBuffer(file);
+    });
+};
+
+
+const parseWav = (wav: ArrayBuffer): { channels: number, sampleRate: number, samples: Int16Array } => {
+    const view = new DataView(wav);
+
+    if (view.getUint32(0, false) !== 0x52494646) throw new Error("Invalid RIFF header"); // "RIFF"
+    if (view.getUint32(8, false) !== 0x57415645) throw new Error("Invalid WAVE header"); // "WAVE"
+    if (view.getUint32(12, false) !== 0x666d7420) throw new Error("Invalid fmt chunk"); // "fmt "
+
+    const format = view.getUint16(20, true); // 1 = PCM, 3 = IEEE float
+    const channels = view.getUint16(22, true);
+    const sampleRate = view.getUint32(24, true);
+    const bitsPerSample = view.getUint16(34, true);
+
+    let dataOffset = 12;
+    while(view.getUint32(dataOffset, false) !== 0x64617461) { // "data"
+      dataOffset++;
+      if (dataOffset > view.byteLength) throw new Error("Could not find data chunk");
+    }
+    dataOffset += 8;
+    
+    const pcmData = new Int16Array(wav.slice(dataOffset));
+
+    if (format === 1) { // 16-bit integer PCM
+       return { channels, sampleRate, samples: pcmData };
+    }
+    
+    if (format === 3) { // 32-bit float PCM
+       const floatData = new Float32Array(wav.slice(dataOffset));
+       const int16Data = new Int16Array(floatData.length);
+       for (let i = 0; i < floatData.length; i++) {
+           int16Data[i] = Math.max(-1, Math.min(1, floatData[i])) * 32767;
+       }
+       return { channels, sampleRate, samples: int16Data };
+    }
+
+    throw new Error(`Unsupported WAV format: ${format}. Only 16-bit integer and 32-bit float PCM are supported.`);
+};
+
 
 const generateWaveformData = async (file: File): Promise<number[]> => {
     return new Promise((resolve, reject) => {
@@ -90,18 +171,23 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     }
     
     setIsProcessing(true);
-    const originalFile = selectedFile;
-
+    
     try {
       setStatusText("Generating waveform...");
-      const waveform = await generateWaveformData(originalFile);
+      const waveform = await generateWaveformData(selectedFile);
       
+      let fileToUpload: File | Blob = selectedFile;
+      let finalFileName = selectedFile.name;
+      
+      if (selectedFile.type === 'audio/wav' || selectedFile.type === 'audio/wave') {
+          setStatusText("Converting WAV to MP3...");
+          finalFileName = selectedFile.name.replace(/\.wav$/i, '.mp3');
+          fileToUpload = await wavToMp3(selectedFile);
+      }
+
       setStatusText("Uploading file...");
-      
-      // Use original file name for storage path, but the final extension might change
-      const fileExtension = originalFile.name.split('.').pop();
-      const storageRef = ref(storage, `tracks/${user.uid}/${Date.now()}-${originalFile.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, originalFile);
+      const storageRef = ref(storage, `tracks/${user.uid}/${Date.now()}-${finalFileName}`);
+      const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
 
       uploadTask.on('state_changed',
         (snapshot) => {
@@ -117,42 +203,26 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
         },
         async () => {
           try {
-            let downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            let finalStoragePath = uploadTask.snapshot.ref.fullPath;
-            const trackTitle = originalFile.name.replace(/\.[^/.]+$/, "");
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            const finalStoragePath = uploadTask.snapshot.ref.fullPath;
+            const trackTitle = selectedFile.name.replace(/\.[^/.]+$/, "");
 
-            // Create the document first to get an ID
             const trackDocRef = await addDoc(collection(firestore, 'tracks'), {
               title: trackTitle,
               artist: user.displayName || 'Unknown Artist',
-              audioUrl: '', // Will be updated
-              storagePath: '', // Will be updated
+              audioUrl: downloadURL,
+              storagePath: finalStoragePath,
               waveform: waveform,
               userId: user.uid,
               createdAt: serverTimestamp(),
               commentCount: 0,
             });
 
-            if (fileExtension?.toLowerCase() === 'wav') {
-                setStatusText("Converting WAV to MP3...");
-                setUploadProgress(0); // Reset progress for the conversion step
-                const { downloadURL: newUrl, newStoragePath } = await processWavToMp3(finalStoragePath, trackDocRef.id);
-                downloadURL = newUrl;
-                finalStoragePath = newStoragePath;
-            } else {
-                // If it's already an MP3, just update the doc with final URLs
-                await firestore.collection('tracks').doc(trackDocRef.id).update({
-                    audioUrl: downloadURL,
-                    storagePath: finalStoragePath
-                });
-            }
-
             toast({ title: "Upload Successful", description: "Your track is ready and saved to your dashboard." });
             onUploadComplete(trackDocRef.id);
           } catch (error) {
-            console.error("Error processing track:", error);
-            const errorMessage = error instanceof Error ? error.message : "Please contact support.";
-            toast({ variant: "destructive", title: "Error Processing Track", description: `Your file was uploaded, but we couldn't process it. ${errorMessage}` });
+            console.error("Error creating Firestore document:", error);
+            toast({ variant: "destructive", title: "Error Saving Track", description: `Your file was uploaded, but we couldn't save it.` });
           } finally {
             setIsProcessing(false);
             setStatusText("");
