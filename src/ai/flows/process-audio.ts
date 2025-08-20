@@ -27,22 +27,21 @@ const processAudioFlow = ai.defineFlow(
   async (input) => {
     
     const [meta, base64Data] = input.audioDataUri.split(',');
+    if (!meta.includes('wav')) {
+        // If it's not a WAV file (e.g., it's already an MP3), just pass it through.
+        return { processedAudioDataUri: input.audioDataUri };
+    }
+    
     const audioBuffer = Buffer.from(base64Data, 'base64');
 
-    // This is a simplified path for WAV files. A robust solution would properly
-    // parse the WAV header to get channels, sample rate, etc.
-    // For now, we assume a standard format that lamejs can handle.
-    // This will likely fail on MP3 inputs, as we're not decoding them to PCM first.
-    // The goal here is to handle the common case of WAV upload for compression.
-
-    let pcmData;
-    let sampleRate;
-    let channels;
+    let pcmData: Int16Array | undefined;
+    let sampleRate: number | undefined;
+    let channels: number | undefined;
 
     try {
         const reader = new wav.Reader();
         
-        const samplesPromise = new Promise<Int16Array>((resolve, reject) => {
+        const samplesPromise = new Promise<void>((resolve, reject) => {
             reader.on('format', (format) => {
                 channels = format.channels;
                 sampleRate = format.sampleRate;
@@ -54,16 +53,16 @@ const processAudioFlow = ai.defineFlow(
             });
 
             reader.on('end', () => {
-                const audioBuffer = Buffer.concat(dataChunks);
+                const audioDataBuffer = Buffer.concat(dataChunks);
                 // lamejs expects Int16Array, so we need to convert.
                 // This assumes 16-bit audio from the WAV.
-                const int16Pcm = new Int16Array(audioBuffer.buffer, audioBuffer.byteOffset, audioBuffer.length / 2);
+                const int16Pcm = new Int16Array(audioDataBuffer.buffer, audioDataBuffer.byteOffset, audioDataBuffer.length / 2);
 
                 if (int16Pcm.length > 0) {
                     pcmData = int16Pcm;
-                    resolve(int16Pcm);
+                    resolve();
                 } else {
-                    reject(new Error("No PCM data was extracted."));
+                    reject(new Error("No PCM data was extracted from WAV file."));
                 }
             });
 
@@ -75,11 +74,7 @@ const processAudioFlow = ai.defineFlow(
         await samplesPromise;
 
     } catch(e) {
-        // This is not a WAV file, or it's a format we don't recognize.
-        // For this example, we'll throw an error. A more complex app might
-        // try to use a different decoder for MP3s to convert to PCM first.
-        console.warn("Could not parse as WAV, this is likely an MP3. Re-encoding MP3s is not yet supported in this flow.", e);
-        // For now, we just pass through the original data if it's not a WAV
+        console.warn("Could not parse as WAV, passing through original data.", e);
         return { processedAudioDataUri: input.audioDataUri };
     }
     
@@ -90,7 +85,7 @@ const processAudioFlow = ai.defineFlow(
     const mp3encoder = new Mp3Encoder(channels, sampleRate, 128); // 128 kbps
     const mp3Data = [];
 
-    const sampleBlockSize = 1152; //can be anything but make it a multiple of 576 to make encoders life easier
+    const sampleBlockSize = 1152; 
 
     for (let i = 0; i < pcmData.length; i += sampleBlockSize) {
         const sampleChunk = pcmData.subarray(i, i + sampleBlockSize);
@@ -99,13 +94,12 @@ const processAudioFlow = ai.defineFlow(
             mp3Data.push(mp3buf);
         }
     }
-    const mp3buf = mp3encoder.flush();   //finish writing mp3
+    const mp3buf = mp3encoder.flush();
 
     if (mp3buf.length > 0) {
         mp3Data.push(mp3buf);
     }
     
-    // The mp3Data is an array of Uint8Arrays, we need to concat them.
     const totalLength = mp3Data.reduce((acc, buf) => acc + buf.length, 0);
     const concatenatedMp3 = new Uint8Array(totalLength);
     let offset = 0;
