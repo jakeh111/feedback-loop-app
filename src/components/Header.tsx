@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { LogIn, UserPlus, Menu, LogOut, User } from "lucide-react";
 import { Button } from "./ui/button";
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from "./ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle, SheetDescription } from "./ui/sheet";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, signOut, type User as FirebaseUser } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -94,6 +94,8 @@ export function Header() {
                     </Button>
                 </SheetTrigger>
                 <SheetContent>
+                    <SheetTitle className="sr-only">Menu</SheetTitle>
+                    <SheetDescription className="sr-only">Main navigation menu</SheetDescription>
                     <div className="flex flex-col gap-4 py-8">
                       {isLoading ? (
                          <div className="h-8 w-full bg-muted rounded-md animate-pulse" />
