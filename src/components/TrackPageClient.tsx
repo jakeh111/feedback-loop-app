@@ -3,7 +3,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import type { Track, Comment } from '@/lib/types';
-import { AudioPlayer } from '@/components/AudioPlayer';
+import { AudioPlayer, type AudioPlayerRef } from '@/components/AudioPlayer';
 import { CommentList } from '@/components/CommentList';
 import { AddCommentForm } from '@/components/AddCommentForm';
 import { SummarizeButton } from '@/components/SummarizeButton';
@@ -42,7 +42,7 @@ const sampleComments: Comment[] = [
 export function TrackPageClient({ track }: { track: Track }) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(true);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioPlayerRef = useRef<AudioPlayerRef>(null);
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [authorName, setAuthorName] = useState("");
@@ -163,14 +163,15 @@ export function TrackPageClient({ track }: { track: Track }) {
   };
 
   const handleSeekTo = useCallback((time: number) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = time;
-      if (audioRef.current.paused) {
-        audioRef.current.play();
-      }
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.seekTo(time);
     }
-    setSelectedTime(time);
   }, []);
+  
+  const handleTimeUpdate = (time: number) => {
+    setSelectedTime(time);
+  };
+
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -199,7 +200,7 @@ export function TrackPageClient({ track }: { track: Track }) {
         </div>
       </div>
 
-      <AudioPlayer ref={audioRef} track={track} onSeek={handleSeekTo} comments={comments} />
+      <AudioPlayer ref={audioPlayerRef} track={track} onTimeUpdate={handleTimeUpdate} comments={comments} />
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
@@ -215,7 +216,7 @@ export function TrackPageClient({ track }: { track: Track }) {
         </div>
         <div>
             <h2 className="text-2xl font-bold font-headline mb-4">Leave Feedback {authorName && <span className="text-sm text-muted-foreground font-normal">as {authorName}</span>}</h2>
-            <AddCommentForm onAddComment={handleAddComment} audioRef={audioRef} isCommentingEnabled={isCommentingEnabled} selectedTime={selectedTime} />
+            <AddCommentForm onAddComment={handleAddComment} audioPlayerRef={audioPlayerRef} isCommentingEnabled={isCommentingEnabled} selectedTime={selectedTime} />
         </div>
       </div>
     </div>

@@ -9,15 +9,16 @@ import { Clock, Check, X, GitCommitHorizontal, Youtube, Link, Pin } from 'lucide
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Separator } from './ui/separator';
+import type { AudioPlayerRef } from './AudioPlayer';
 
 interface AddCommentFormProps {
   onAddComment: (text: string, startTime: number, endTime?: number, youtubeUrl?: string, youtubeTimestamp?: number) => void;
-  audioRef: React.RefObject<HTMLAudioElement>;
+  audioPlayerRef: React.RefObject<AudioPlayerRef>;
   isCommentingEnabled: boolean;
   selectedTime: number;
 }
 
-export function AddCommentForm({ onAddComment, audioRef, isCommentingEnabled, selectedTime }: AddCommentFormProps) {
+export function AddCommentForm({ onAddComment, audioPlayerRef, isCommentingEnabled, selectedTime }: AddCommentFormProps) {
   const [text, setText] = useState('');
   const [isRangeSelection, setIsRangeSelection] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -42,17 +43,14 @@ export function AddCommentForm({ onAddComment, audioRef, isCommentingEnabled, se
   }
 
   const handleSetStartTime = () => {
-    if (audioRef.current) {
-      setStartTime(audioRef.current.currentTime);
+      setStartTime(selectedTime);
       setEndTime(null);
-    }
   };
 
   const handleSetEndTime = () => {
-    if (audioRef.current && startTime !== null) {
-      const currentTime = audioRef.current.currentTime;
-      if (currentTime > startTime) {
-        setEndTime(currentTime);
+    if (startTime !== null) {
+      if (selectedTime > startTime) {
+        setEndTime(selectedTime);
       }
     }
   };
@@ -79,7 +77,7 @@ export function AddCommentForm({ onAddComment, audioRef, isCommentingEnabled, se
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (text.trim() && audioRef.current) {
+    if (text.trim()) {
       const finalYoutubeTimestamp = showYoutube ? parseYoutubeTime(youtubeTime) : undefined;
       const finalYoutubeUrl = showYoutube ? youtubeUrl : undefined;
 
@@ -128,6 +126,7 @@ export function AddCommentForm({ onAddComment, audioRef, isCommentingEnabled, se
           {isRangeSelection && (
             <div className="p-3 bg-muted/50 rounded-lg space-y-3">
               <div className="text-sm font-medium">Select Time Range:</div>
+              <div className="text-sm text-muted-foreground">Seek in the waveform and use the buttons below.</div>
               <div className="flex gap-2">
                 <Button type="button" variant="outline" onClick={handleSetStartTime} className="w-full">
                   Set Start
