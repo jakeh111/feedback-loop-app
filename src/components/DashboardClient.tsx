@@ -291,7 +291,64 @@ export function DashboardClient() {
                   <p className="mt-4">Loading your tracks...</p>
               </div>
             ) : finalTracks.length > 0 ? (
-              <Table>
+              <div className="space-y-4 md:hidden">
+                {finalTracks.map((track) => {
+                  const daysLeft = getDaysLeft(track.createdAt);
+                  const isEditing = editingTrackId === track.id;
+                  return (
+                    <div key={track.id} className="border rounded-lg p-4 flex flex-col gap-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="font-medium flex items-center gap-2 flex-1 min-w-0">
+                           <Music className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                           {isEditing ? (
+                               <Input
+                                  ref={inputRef}
+                                  value={editingTitle}
+                                  onChange={(e) => setEditingTitle(e.target.value)}
+                                  onBlur={() => handleRename(track.id)}
+                                  onKeyDown={(e) => handleRenameKeyDown(e, track.id)}
+                                  className="h-8"
+                                />
+                           ) : (
+                               <span onClick={() => handleTitleClick(track)} className="cursor-pointer hover:underline truncate">
+                                 {track.title}
+                               </span>
+                           )}
+                        </div>
+                         <Button onClick={() => openDeleteDialog(track)} variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 w-8 flex-shrink-0">
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Delete</span>
+                        </Button>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <Link href={`/track/${track.id}`} className="flex items-center gap-2 hover:underline text-muted-foreground">
+                            <MessageSquare className="h-4 w-4" />
+                            {track.comments} Comments
+                        </Link>
+                        <Badge variant={daysLeft < 7 ? "destructive" : "secondary"}>
+                            <Clock className="mr-2 h-4 w-4" />
+                            {daysLeft > 0 ? `${daysLeft} days left` : 'Deleting soon'}
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center text-muted-foreground border-2 border-dashed rounded-lg p-12">
+                <ListMusic className="mx-auto h-12 w-12 text-muted-foreground" />
+                <h3 className="mt-4 text-lg font-semibold">No tracks uploaded</h3>
+                <p className="mt-1 text-sm">Upload your first track to get started.</p>
+                <UploadDialog onUploadComplete={() => {}}>
+                    <Button className="mt-4">
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Upload Track
+                    </Button>
+                </UploadDialog>
+              </div>
+            )}
+             {finalTracks.length > 0 && (
+                <Table className="hidden md:table">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Track Title</TableHead>
@@ -335,8 +392,8 @@ export function DashboardClient() {
                                 {daysLeft > 0 ? `${daysLeft} days left` : 'Deleting soon'}
                             </Badge>
                         </TableCell>
-                        <TableCell className="text-right space-x-2">
-                           <Button onClick={() => openDeleteDialog(track)} variant="outline" size="icon" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+                        <TableCell className="text-right">
+                           <Button onClick={() => openDeleteDialog(track)} variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
                               <Trash2 className="h-4 w-4" />
                               <span className="sr-only">Delete</span>
                           </Button>
@@ -346,19 +403,7 @@ export function DashboardClient() {
                   })}
                 </TableBody>
               </Table>
-            ) : (
-              <div className="text-center text-muted-foreground border-2 border-dashed rounded-lg p-12">
-                <ListMusic className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-semibold">No tracks uploaded</h3>
-                <p className="mt-1 text-sm">Upload your first track to get started.</p>
-                <UploadDialog onUploadComplete={() => {}}>
-                    <Button className="mt-4">
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Upload Track
-                    </Button>
-                </UploadDialog>
-              </div>
-            )}
+             )}
           </CardContent>
         </Card>
       </div>
@@ -384,5 +429,3 @@ export function DashboardClient() {
     </>
   );
 }
-
-    
