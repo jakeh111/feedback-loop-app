@@ -13,7 +13,7 @@ import type { Timestamp } from "firebase/firestore";
 interface CommentListProps {
   comments: Comment[];
   onSeekTo: (time: number) => void;
-  lastViewedAt?: Date | Timestamp;
+  lastViewedAt?: Date;
 }
 
 export function CommentList({ comments, onSeekTo, lastViewedAt }: CommentListProps) {
@@ -47,12 +47,12 @@ export function CommentList({ comments, onSeekTo, lastViewedAt }: CommentListPro
     )
   }
   
-  const lastViewedTime = lastViewedAt ? (lastViewedAt as Date).getTime() : 0;
+  const lastViewedTime = lastViewedAt ? lastViewedAt.getTime() : 0;
 
   return (
     <div className="space-y-4">
-      {[...comments].sort((a,b) => (a.createdAt as Timestamp).toMillis() - (b.createdAt as Timestamp).toMillis()).map((comment) => {
-        const commentTime = (comment.createdAt as Timestamp).toMillis();
+      {[...comments].sort((a,b) => (a.createdAt as Date).getTime() - (b.createdAt as Date).getTime()).map((comment) => {
+        const commentTime = (comment.createdAt as Date).getTime();
         const isNew = lastViewedTime > 0 && commentTime > lastViewedTime;
         
         return (
