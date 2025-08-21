@@ -120,18 +120,7 @@ export default function Home() {
             <div className="grid md:grid-cols-3 gap-8 text-left">
               <Card className="drop-shadow-custom-md">
                 <CardHeader>
-                    <div className="flex items-center gap-4">
-                      <svg width="48" height="48" viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
-                        <g fill="hsl(var(--primary))">
-                          <path d="M34.9349 119.313C31.6224 118.559 28.7899 117.043 26.2108 114.642C23.3829 112.009 21.9533 109.74 21.065 101.571C20.4306 99.2384 20.4033 98.0469 20.4033 72.7511C20.4033 47.4554 20.4306 46.2638 21.065 43.9312C21.4289 42.5929 22.2051 40.7013 22.79 39.7277C24.3136 37.1906 28.0974 33.7848 30.753 32.5593C35.2887 30.4678 26.233 30.6001 95.3993 30.595C152.829 30.5905 161.426 30.7013 165.669 32.222C169.143 33.4575 171.556 34.8021 174.355 37.4617C176.958 39.9355 178.521 42.554 179.337 45.8084C180.095 48.8327 180.095 100.932 179.337 103.956C178.521 107.21 176.958 109.829 174.355 112.488C171.556 115.148 169.143 116.492 165.669 117.728C163.129 118.339 161.832 118.35 95.3993 118.328C38.9666 118.306 38.2473 118.387 36.4907 118.84C34.9349 119.313 34.9349 119.313 34.9349 119.313Z" stroke="hsl(var(--primary))" strokeWidth="0.323219" />
-                          <rect x="76.1623" y="47.4559" width="102.352" height="4.0881" rx="2.04405" stroke="hsl(var(--primary))" strokeWidth="0.224811" />
-                          <rect x="29.4652" y="65.1641" width="148.27" height="6.57891" rx="2.78338" stroke="hsl(var(--primary))" strokeWidth="0.310212" />
-                          <rect x="29.3975" y="79.8176" width="49.0377" height="5.61016" rx="2.05706" stroke="hsl(var(--primary))" strokeWidth="0.174866" />
-                          <rect x="154.241" y="75.8507" width="21.2726" height="34.8897" rx="3.36228" stroke="hsl(var(--primary))" strokeWidth="0.337683" />
-                        </g>
-                      </svg>
-                      <CardTitle>1. Upload Your Audio</CardTitle>
-                    </div>
+                  <CardTitle>1. Upload Your Audio</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p>Drag and drop your MP3 file. Pro users can upload WAV files for automatic conversion.</p>
@@ -139,19 +128,7 @@ export default function Home() {
               </Card>
               <Card className="drop-shadow-custom-md">
                 <CardHeader>
-                    <div className="flex items-center gap-4">
-                         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-                            <circle cx="7" cy="6" r="2"/>
-                            <path d="M7 8v6"/>
-                            <path d="M9 14h2"/>
-                            <path d="M12 14v-4"/>
-                            <path d="M11 6h1.5a1.5 1.5 0 0 1 0 3H11"/>
-                            <circle cx="17" cy="6" r="2"/>
-                            <path d="M17 8v6"/>
-                            <path d="M15 14h4"/>
-                         </svg>
-                         <CardTitle>2. Share the Link</CardTitle>
-                    </div>
+                  <CardTitle>2. Share the Link</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p>Grab the unique link and send it to your clients or team. No sign-up required for them to leave comments.</p>
@@ -159,19 +136,7 @@ export default function Home() {
               </Card>
               <Card className="drop-shadow-custom-md">
                 <CardHeader>
-                    <div className="flex items-center gap-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-                            <path d="M7.9 20A9 9 0 0 0 12 21a9 9 0 0 0 4.1-1"/>
-                            <path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
-                            <path d="M16 18H8a4 4 0 0 0-4 4h16a4 4 0 0 0-4-4z"/>
-                            <path d="M18 10h2.5a2 2 0 0 1 2 1.5v1a2 2 0 0 1-2 2.5H18"/>
-                            <path d="M20.5 13H21a1 1 0 0 1 1 1v2"/>
-                            <path d="M20 9.5V8a1 1 0 0 0-1-1h-1"/>
-                            <path d="M19 6.5v-1a1 1 0 0 0-1-1h-1.5"/>
-                            <path d="M19 12h.01"/>
-                        </svg>
-                        <CardTitle>3. Get Precise Feedback</CardTitle>
-                    </div>
+                  <CardTitle>3. Get Precise Feedback</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p>Collaborators can add comments to a specific timestamp, highlight a time range, or even reference a YouTube video.</p>
