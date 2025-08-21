@@ -5,7 +5,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle, Zap } from 'lucide-react';
+import { CheckCircle, Zap, MonitorUp } from 'lucide-react';
 import { UploadDialog } from '@/components/UploadDialog';
 import { Button } from '@/components/ui/button';
 
@@ -120,6 +120,7 @@ export default function Home() {
             <div className="grid md:grid-cols-3 gap-8 text-left">
               <Card className="drop-shadow-custom-md">
                 <CardContent className="pt-6 text-center flex flex-col items-center">
+                  <MonitorUp className="w-12 h-12 mb-4 text-primary" />
                   <CardTitle>1. Upload Your Audio</CardTitle>
                   <p className="mt-2">Drag and drop your MP3 file. Pro users can upload WAV files for automatic conversion.</p>
                 </CardContent>
