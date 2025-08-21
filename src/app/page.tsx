@@ -5,7 +5,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle, Zap, MonitorUp } from 'lucide-react';
+import { CheckCircle, Zap, MonitorUp, Share2, MessagesSquare } from 'lucide-react';
 import { UploadDialog } from '@/components/UploadDialog';
 import { Button } from '@/components/ui/button';
 
@@ -127,12 +127,14 @@ export default function Home() {
               </Card>
               <Card className="drop-shadow-custom-md">
                 <CardContent className="pt-6 text-center flex flex-col items-center">
+                  <Share2 className="w-12 h-12 mb-4 text-primary" />
                   <CardTitle>2. Share the Link</CardTitle>
                   <p className="mt-2">Grab the unique link and send it to your clients or team. No sign-up required for them to leave comments.</p>
                 </CardContent>
               </Card>
               <Card className="drop-shadow-custom-md">
                 <CardContent className="pt-6 text-center flex flex-col items-center">
+                  <MessagesSquare className="w-12 h-12 mb-4 text-primary" />
                   <CardTitle>3. Get Precise Feedback</CardTitle>
                   <p className="mt-2">Collaborators can add comments to a specific timestamp, highlight a time range, or even reference a YouTube video.</p>
                 </CardContent>
