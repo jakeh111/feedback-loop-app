@@ -1,35 +1,34 @@
 
 "use client";
 
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
-import type { Track, Comment } from '@/lib/types';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import type { Track } from '@/lib/types';
 import { Button } from './ui/button';
 import { Play, Pause, Volume2, VolumeX, Rewind, FastForward } from 'lucide-react';
 import { Slider } from './ui/slider';
-import WaveSurfer from 'wavesurfer.js';
-import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.js';
+import { WaveformDisplay } from './WaveformDisplay';
+
 
 interface AudioPlayerProps {
   track: Track;
   onTimeUpdate: (time: number) => void;
-  comments?: Comment[];
+  onDurationChange: (duration: number) => void;
 }
 
 export interface AudioPlayerRef {
   seekTo: (time: number) => void;
-  wavesurfer: WaveSurfer | null;
+  audioEl: HTMLAudioElement | null;
 }
 
-export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track, onTimeUpdate, comments = [] }, ref) => {
-  const waveformRef = useRef<HTMLDivElement>(null);
-  const wavesurferRef = useRef<WaveSurfer | null>(null);
-  const regionsRef = useRef<RegionsPlugin | null>(null);
+export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track, onTimeUpdate, onDurationChange }, ref) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.75);
   const [isMuted, setIsMuted] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const formatTime = (time: number) => {
     if (isNaN(time) || !isFinite(time)) return '0:00';
@@ -38,110 +37,67 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // Initialize wavesurfer
   useEffect(() => {
-    if (!waveformRef.current) return;
+    const audio = audioRef.current;
+    if (!audio) return;
 
-    // Destroy previous instance if it exists
-    if (wavesurferRef.current) {
-        wavesurferRef.current.destroy();
-    }
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+      onTimeUpdate(audio.currentTime);
+      setProgress((audio.currentTime / audio.duration) * 100);
+    };
 
-    // Create a new instance of RegionsPlugin
-    regionsRef.current = RegionsPlugin.create();
-
-    const ws = WaveSurfer.create({
-      container: waveformRef.current,
-      waveColor: 'hsl(var(--secondary))',
-      progressColor: 'hsl(var(--primary) / 0.5)',
-      cursorColor: 'hsl(var(--accent))',
-      barWidth: 3,
-      barRadius: 3,
-      barGap: 2,
-      height: 112,
-      url: track.audioUrl,
-      normalize: true,
-      plugins: [
-        regionsRef.current,
-      ],
-    });
-    
-    wavesurferRef.current = ws;
-
-    const subs = [
-      ws.on('play', () => setIsPlaying(true)),
-      ws.on('pause', () => setIsPlaying(false)),
-      ws.on('timeupdate', (time) => {
-        setCurrentTime(time)
-        onTimeUpdate(time);
-      }),
-      ws.on('ready', (d) => {
-        setDuration(d);
-        if (wavesurferRef.current) {
-            wavesurferRef.current.setVolume(isMuted ? 0 : volume);
+    const handleDurationChange = () => {
+        if (isFinite(audio.duration)) {
+            setDuration(audio.duration);
+            onDurationChange(audio.duration);
         }
-      }),
-    ];
+    };
+
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('durationchange', handleDurationChange);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('ended', handlePause);
+
 
     return () => {
-      subs.forEach(unsub => unsub());
-      ws.destroy();
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('durationchange', handleDurationChange);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handlePause);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [track.audioUrl]);
-
-
-  // Add comment regions when comments or wavesurfer instance are ready
-  useEffect(() => {
-    const ws = wavesurferRef.current;
-    const regions = regionsRef.current;
-    if (!ws || !regions) return;
-    
-    const addRegions = () => {
-        regions.clearRegions();
-        comments.forEach(comment => {
-          if (comment.endTimestamp && comment.endTimestamp > comment.timestamp) {
-            regions.addRegion({
-              start: comment.timestamp,
-              end: comment.endTimestamp,
-              content: '',
-              color: 'hsla(var(--accent) / 0.2)',
-              drag: false,
-              resize: false,
-            });
-          }
-        });
-    }
-
-    if (ws.isReady) {
-        addRegions();
-    } else {
-        const readySub = ws.on('ready', addRegions);
-        return () => readySub();
-    }
-
-  }, [comments]);
-
+  }, []);
+  
 
   useImperativeHandle(ref, () => ({
     seekTo(time: number) {
-      if (wavesurferRef.current && wavesurferRef.current.getDuration() > 0) {
-        wavesurferRef.current.seekTo(time / wavesurferRef.current.getDuration());
-        wavesurferRef.current.play();
+      if (audioRef.current) {
+        audioRef.current.currentTime = time;
+        audioRef.current.play();
       }
     },
-    wavesurfer: wavesurferRef.current,
+    audioEl: audioRef.current,
   }));
   
   useEffect(() => {
-     if (wavesurferRef.current) {
-         wavesurferRef.current.setVolume(isMuted ? 0 : volume);
+     if (audioRef.current) {
+         audioRef.current.volume = isMuted ? 0 : volume;
      }
   }, [volume, isMuted])
 
   const togglePlayPause = () => {
-    if (wavesurferRef.current) {
-      wavesurferRef.current.playPause();
+    if (audioRef.current) {
+        if (audioRef.current.paused) {
+            audioRef.current.play();
+        } else {
+            audioRef.current.pause();
+        }
     }
   };
 
@@ -156,15 +112,21 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
   }
 
   const seek = (amount: number) => {
-    if (wavesurferRef.current) {
-       const newTime = wavesurferRef.current.getCurrentTime() + amount;
-       wavesurferRef.current.seekTo(newTime / duration);
+    if (audioRef.current) {
+       audioRef.current.currentTime += amount;
     }
+  }
+
+  const handleWaveformClick = (newProgress: number) => {
+     if (audioRef.current && isFinite(duration)) {
+        audioRef.current.currentTime = duration * newProgress;
+     }
   }
 
   return (
     <div className="bg-card p-4 rounded-lg border drop-shadow-custom-md">
-      <div ref={waveformRef} className="w-full h-28 cursor-pointer" />
+      <audio ref={audioRef} src={track.audioUrl} preload="metadata" />
+      <WaveformDisplay waveformData={track.waveformData || []} progress={progress} onWaveformClick={handleWaveformClick} />
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm font-mono text-muted-foreground w-28">
           {formatTime(currentTime)} / {formatTime(duration)}
@@ -194,3 +156,5 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
 });
 
 AudioPlayer.displayName = 'AudioPlayer';
+
+    

@@ -146,6 +146,75 @@ export async function renameTrack(
   }
 }
 
+async function generateWaveformData(audioBuffer: Buffer): Promise<number[]> {
+  try {
+    // This is a simplified approach that should work on a server.
+    // It assumes 16-bit PCM audio. For MP3s, you'd need a server-side decoding library.
+    // This is a placeholder and might not produce accurate results for all file types.
+    const sampleSize = 200; // Number of points in the waveform
+    const waveform = [];
+
+    // A very basic check for WAV header to find where data starts.
+    // This is NOT a robust parser.
+    const dataChunkIdentifier = 'data';
+    let dataStartIndex = audioBuffer.indexOf(dataChunkIdentifier);
+    if (dataStartIndex === -1) {
+      // Fallback for files without obvious 'data' chunk, like some MP3s.
+      // This is highly unreliable.
+      dataStartIndex = 44; 
+    } else {
+      dataStartIndex += 8; // Move past 'data' and chunk size
+    }
+    dataStartIndex = Math.max(dataStartIndex, 0);
+
+
+    const audioData = audioBuffer.slice(dataStartIndex);
+    const blockSize = Math.floor(audioData.length / sampleSize);
+
+    if (blockSize < 2) {
+       console.warn("Audio buffer is too small for waveform generation. Returning empty array.");
+       return Array(sampleSize).fill(0);
+    }
+    
+    for (let i = 0; i < sampleSize; i++) {
+      const start = i * blockSize;
+      // Ensure we don't read past the end of the buffer
+      const end = Math.min(start + blockSize, audioData.length);
+      
+      let sum = 0;
+      let count = 0;
+      // Iterate by 2 bytes for 16-bit audio
+      for (let j = start; j < end - 1; j += 2) {
+        try {
+            // Using signed 16-bit little-endian format, common for WAV
+            const sample = audioData.readInt16LE(j);
+            sum += Math.abs(sample);
+            count++;
+        } catch (e) {
+            // This can happen if we are not aligned correctly.
+            // We can ignore this sample.
+        }
+      }
+      
+      if (count > 0) {
+          const average = sum / count;
+          // Normalize to a 0-100 scale. 32767 is the max value for 16-bit audio.
+          const normalized = Math.floor((average / 32767) * 100);
+          waveform.push(normalized);
+      } else {
+          waveform.push(0);
+      }
+    }
+    
+    return waveform;
+  } catch (error) {
+    console.error('Error generating waveform:', error);
+    // Return a random waveform as a fallback
+    return Array.from({ length: 200 }, () => Math.floor(Math.random() * 100));
+  }
+}
+
+
 export async function processAndStoreTrack({
   storagePath,
   originalFilename,
@@ -165,6 +234,10 @@ export async function processAndStoreTrack({
             action: 'read',
             expires: '03-09-2491', // Far future expiration
         });
+
+        // Download the file to a buffer to generate waveform
+        const [audioBuffer] = await file.download();
+        const waveformData = await generateWaveformData(audioBuffer);
         
         console.log("Creating Firestore document...");
         const trackTitle = originalFilename.replace(/\.[^/.]+$/, "");
@@ -176,6 +249,7 @@ export async function processAndStoreTrack({
             userId: userId,
             createdAt: FieldValue.serverTimestamp(),
             commentCount: 0,
+            waveformData: waveformData,
         });
 
         return trackDocRef.id;
@@ -186,3 +260,5 @@ export async function processAndStoreTrack({
         throw new Error('Failed to process and store track.');
     }
 }
+
+    

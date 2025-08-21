@@ -52,6 +52,7 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
   const [authorName, setAuthorName] = useState("");
   const [isGuestPromptOpen, setIsGuestPromptOpen] = useState(false);
   const [selectedTime, setSelectedTime] = useState(0);
+  const [trackDuration, setTrackDuration] = useState(0);
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editingTitle, setEditingTitle] = useState(track.title);
@@ -277,7 +278,7 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
         </div>
       </div>
 
-      <AudioPlayer key={track.id} ref={audioPlayerRef} track={track} onTimeUpdate={handleTimeUpdate} comments={comments} />
+      <AudioPlayer key={track.id} ref={audioPlayerRef} track={track} onTimeUpdate={handleTimeUpdate} onDurationChange={setTrackDuration} />
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
@@ -307,3 +308,5 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
     </div>
   );
 }
+
+    
