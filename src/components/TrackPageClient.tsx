@@ -13,9 +13,9 @@ import { Share2, Loader2, Pencil, MessageSquare } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { collection, query, orderBy, onSnapshot, Timestamp, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, Timestamp, doc, setDoc, serverTimestamp, runTransaction } from 'firebase/firestore';
 import { firestore, auth } from '@/lib/firebase';
-import { addComment, renameTrack, toggleCommentCompleted } from '@/app/actions';
+import { addComment, renameTrack, toggleCommentCompleted, addReplyToComment } from '@/app/actions';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 
 const sampleComments: Comment[] = [
@@ -64,7 +64,6 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
   const isProUser = false;
   const isOwner = user?.uid === track.userId;
 
-  // Mark track as viewed by owner
   useEffect(() => {
     if (isOwner && track.id !== 'sample') {
       const trackRef = doc(firestore, 'tracks', track.id);
@@ -95,7 +94,8 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
             return {
               id: doc.id,
               ...data,
-              createdAt: (data.createdAt as Timestamp)?.toDate(), // Convert Firestore Timestamp to Date
+              createdAt: (data.createdAt as Timestamp)?.toDate(),
+              subComments: data.subComments?.map((sc: any) => ({...sc, createdAt: (sc.createdAt as Timestamp)?.toDate() })) || []
             } as Comment;
           });
           setComments(fetchedComments);
@@ -122,13 +122,11 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
         setAuthorName(currentUser.displayName || "Authenticated User");
         setIsGuestPromptOpen(false); // Close prompt if user logs in
       } else {
-        // Defer guest check until auth state is confirmed to be null
         const guestName = sessionStorage.getItem(`guestName-${track.id}`);
         if (guestName) {
           setAuthorName(guestName);
         } else {
-          // Only open prompt if auth is resolved and user is not logged in
-          if (auth.app.name) { // check if auth is initialized
+          if (auth.app.name) { 
              setTimeout(() => setIsGuestPromptOpen(true), 100);
           }
         }
@@ -194,10 +192,34 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
     }
   };
 
+  const handleAddReply = async (commentId: string, replyText: string) => {
+    if (!user || !isOwner) {
+      toast({ variant: 'destructive', title: 'Error', description: 'You must be the track owner to reply.' });
+      return;
+    }
+
+    const replyData = {
+      author: user.displayName || 'Track Owner',
+      text: replyText,
+      avatarUrl: user.photoURL || `https://placehold.co/40x40.png?text=${(user.displayName || 'T').charAt(0).toUpperCase()}`,
+      userId: user.uid
+    };
+
+    try {
+      await addReplyToComment(track.id, commentId, replyData);
+    } catch(error) {
+        console.error("Failed to add reply:", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: `Could not post your reply. ${error instanceof Error ? error.message : ''}`,
+        });
+    }
+  }
+
   const handleToggleComplete = async (commentId: string, currentStatus: boolean) => {
     if (!isOwner || !user) return;
     
-    // Optimistically update UI
     setComments(prev => 
         prev.map(c => c.id === commentId ? { ...c, completed: !currentStatus } : c)
     );
@@ -205,7 +227,6 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
     try {
         await toggleCommentCompleted(track.id, commentId, !currentStatus, user.uid);
     } catch (error) {
-        // Revert UI on failure
         setComments(prev => 
             prev.map(c => c.id === commentId ? { ...c, completed: currentStatus } : c)
         );
@@ -354,6 +375,8 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
                   onSeekTo={handleSeekTo}
                   lastViewedAt={isOwner ? track.lastViewedAt : undefined}
                   onToggleComplete={isOwner ? handleToggleComplete : undefined}
+                  onAddReply={isOwner ? handleAddReply : undefined}
+                  isOwner={isOwner}
                 />
             )}
         </div>

@@ -42,22 +42,20 @@ export async function addComment(
   const commentsRef = trackRef.collection('comments');
 
   try {
-    // In a transaction, add the new comment and increment the comment count
     await firestore.runTransaction(async (transaction) => {
       const trackDoc = await transaction.get(trackRef);
       if (!trackDoc.exists) {
         throw new Error('Track not found.');
       }
 
-      // Add the new comment
       const newCommentRef = commentsRef.doc();
       transaction.set(newCommentRef, {
         ...commentData,
         createdAt: FieldValue.serverTimestamp(),
-        completed: false, // Default to not completed
+        completed: false,
+        subComments: [],
       });
 
-      // Increment the comment count and update last commented timestamp
       transaction.update(trackRef, {
         commentCount: FieldValue.increment(1),
         lastCommentedAt: FieldValue.serverTimestamp(),
@@ -67,6 +65,48 @@ export async function addComment(
     console.error('Error adding comment:', error);
     if (error instanceof Error) {
       throw new Error(error.message);
+    }
+    throw error;
+  }
+}
+
+export async function addReplyToComment(
+  trackId: string,
+  commentId: string,
+  replyData: {
+    author: string;
+    text: string;
+    avatarUrl: string;
+    userId: string;
+  }
+) {
+  if (!trackId || !commentId) {
+    throw new Error('Track ID and Comment ID are required.');
+  }
+  
+  const trackRef = firestore.collection('tracks').doc(trackId);
+  const commentRef = trackRef.collection('comments').doc(commentId);
+
+  try {
+    const trackDoc = await trackRef.get();
+    if (!trackDoc.exists || trackDoc.data()?.userId !== replyData.userId) {
+      throw new Error("You are not authorized to reply to this comment.");
+    }
+    
+    const newReply = {
+      id: new Date().getTime().toString(), // simple unique id
+      ...replyData,
+      createdAt: FieldValue.serverTimestamp(),
+    };
+    
+    await commentRef.update({
+      subComments: FieldValue.arrayUnion(newReply)
+    });
+
+  } catch (error) {
+    console.error("Error adding reply to comment:", error);
+    if (error instanceof Error) {
+        throw new Error(error.message);
     }
     throw error;
   }
@@ -116,7 +156,6 @@ export async function deleteTrack(trackId: string): Promise<void> {
 
     const trackData = trackDoc.data();
 
-    // Delete all comments in the subcollection first
     const commentsQuery = trackDocRef.collection('comments');
     const commentsSnapshot = await commentsQuery.get();
     if (!commentsSnapshot.empty) {
@@ -127,7 +166,6 @@ export async function deleteTrack(trackId: string): Promise<void> {
       await batch.commit();
     }
 
-    // Then, delete the file from Firebase Storage
     const storagePath = trackData?.storagePath;
     if (storagePath) {
       try {
@@ -139,7 +177,6 @@ export async function deleteTrack(trackId: string): Promise<void> {
       }
     }
 
-    // Finally, delete the Firestore document
     await trackDocRef.delete();
   } catch (error) {
     console.error(`Error deleting track ${trackId}:`, error);
@@ -185,7 +222,6 @@ async function generateWaveformData(mp3Buffer: Buffer): Promise<number[]> {
       throw new Error("Failed to decode MP3 file.");
     }
     
-    // Combine channels into a single mono channel for simplicity
     const pcmData = new Int16Array(decoded.channel1.length);
     for (let i = 0; i < decoded.channel1.length; i++) {
         pcmData[i] = (decoded.channel1[i] + decoded.channel2[i]) / 2;
@@ -210,7 +246,6 @@ async function generateWaveformData(mp3Buffer: Buffer): Promise<number[]> {
       }
       
       const average = sum / blockSize;
-      // Normalize to a 0-100 scale. 32767 is the max value for 16-bit audio.
       const normalized = Math.min(100, Math.floor((average / 32767) * 100));
       waveform.push(normalized);
     }
@@ -218,7 +253,6 @@ async function generateWaveformData(mp3Buffer: Buffer): Promise<number[]> {
     return waveform;
   } catch (error) {
     console.error('Error generating waveform:', error);
-    // Return a random waveform as a fallback
     return Array.from({ length: 200 }, () => Math.floor(Math.random() * 50) + 5);
   }
 }
@@ -244,7 +278,6 @@ export async function processAndStoreTrack({
             expires: '03-09-2491', // Far future expiration
         });
 
-        // Download the file to a buffer to generate waveform
         const [audioBuffer] = await file.download();
         const waveform = await generateWaveformData(audioBuffer);
         
@@ -265,7 +298,6 @@ export async function processAndStoreTrack({
         return trackDocRef.id;
     } catch (error) {
         console.error('Error processing track:', error);
-        // If something goes wrong, try to delete the orphaned file.
         await file.delete().catch(err => console.error("Failed to delete orphaned file:", err));
         throw new Error('Failed to process and store track.');
     }

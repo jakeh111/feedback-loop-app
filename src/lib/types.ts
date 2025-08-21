@@ -3,8 +3,16 @@
 import type { Timestamp } from 'firebase/firestore';
 import { z } from 'zod';
 
-export type Comment = {
+export type SubComment = {
   id: string;
+  author: string;
+  text: string;
+  avatarUrl: string;
+  createdAt: Date | Timestamp;
+};
+
+export type Comment = {
+  id:string;
   author: string;
   text: string;
   timestamp: number;
@@ -14,6 +22,7 @@ export type Comment = {
   youtubeTimestamp?: number;
   createdAt: Date | Timestamp;
   completed?: boolean;
+  subComments?: SubComment[];
 };
 
 export type Track = {

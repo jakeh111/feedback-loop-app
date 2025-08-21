@@ -1,26 +1,31 @@
 
 "use client";
 
-import type { Comment } from "@/lib/types";
+import type { Comment, SubComment } from "@/lib/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "./ui/button";
-import { Clock, GitCommitHorizontal, Youtube } from "lucide-react";
+import { Clock, GitCommitHorizontal, Youtube, MessageSquareReply, Send } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Checkbox } from "./ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
-
+import { useState } from "react";
+import { Textarea } from "./ui/textarea";
 
 interface CommentListProps {
   comments: Comment[];
   onSeekTo: (time: number) => void;
   lastViewedAt?: Date;
   onToggleComplete?: (commentId: string, currentStatus: boolean) => void;
+  onAddReply?: (commentId: string, replyText: string) => void;
+  isOwner: boolean;
 }
 
-export function CommentList({ comments, onSeekTo, lastViewedAt, onToggleComplete }: CommentListProps) {
+export function CommentList({ comments, onSeekTo, lastViewedAt, onToggleComplete, onAddReply, isOwner }: CommentListProps) {
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
     
   const formatTime = (time: number) => {
     if (isNaN(time)) return '0:00';
@@ -32,7 +37,6 @@ export function CommentList({ comments, onSeekTo, lastViewedAt, onToggleComplete
   const handleYoutubeLink = (url: string, timestamp?: number) => {
     let finalUrl = url;
     if (timestamp && timestamp > 0) {
-        // Basic check to see if we should use ?t or &t
         if (finalUrl.includes('?')) {
             finalUrl += `&t=${timestamp}s`;
         } else {
@@ -40,6 +44,14 @@ export function CommentList({ comments, onSeekTo, lastViewedAt, onToggleComplete
         }
     }
     window.open(finalUrl, '_blank');
+  }
+
+  const handleReplySubmit = (commentId: string) => {
+    if (replyText.trim() && onAddReply) {
+      onAddReply(commentId, replyText);
+      setReplyText("");
+      setReplyingTo(null);
+    }
   }
 
   if (comments.length === 0) {
@@ -60,7 +72,7 @@ export function CommentList({ comments, onSeekTo, lastViewedAt, onToggleComplete
         const isNew = lastViewedTime > 0 && commentTime > lastViewedTime;
         
         return (
-            <Card key={comment.id} className={cn("overflow-hidden drop-shadow-custom-md transition-all duration-300", 
+            <Card key={comment.id} className={cn("drop-shadow-custom-md transition-all duration-300", 
                 isNew && "bg-primary/5 border-primary/20",
                 comment.completed && "opacity-60 bg-muted/30"
             )}>
@@ -106,8 +118,55 @@ export function CommentList({ comments, onSeekTo, lastViewedAt, onToggleComplete
                     </Button>
                 </div>
               </CardHeader>
-              <CardContent className="p-4 pl-14">
+              <CardContent className="p-4 pl-14 space-y-4">
                 <p className={cn(comment.completed && "line-through text-muted-foreground")}>{comment.text}</p>
+                
+                {comment.subComments && comment.subComments.length > 0 && (
+                  <div className="space-y-4 pt-4 border-t border-dashed">
+                    {comment.subComments.map(reply => (
+                      <div key={reply.id} className="flex items-start gap-3">
+                         <Avatar className="w-8 h-8">
+                          <AvatarImage src={reply.avatarUrl} alt={reply.author} />
+                          <AvatarFallback>{reply.author.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-grow">
+                          <p className="font-semibold text-sm">{reply.author}</p>
+                          <p className="text-xs text-muted-foreground">
+                             {format(new Date(reply.createdAt as Date), "MMM d, yyyy 'at' h:mm a")}
+                          </p>
+                          <p className="mt-1">{reply.text}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {isOwner && (
+                  <div className="pt-2">
+                    {replyingTo === comment.id ? (
+                      <div className="space-y-2">
+                        <Textarea 
+                          value={replyText}
+                          onChange={e => setReplyText(e.target.value)}
+                          placeholder="Write a reply..."
+                          rows={2}
+                          autoFocus
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => setReplyingTo(null)}>Cancel</Button>
+                          <Button size="sm" onClick={() => handleReplySubmit(comment.id)} disabled={!replyText.trim()}>
+                            <Send className="mr-2 h-4 w-4" /> Reply
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button variant="ghost" size="sm" onClick={() => setReplyingTo(comment.id)}>
+                        <MessageSquareReply className="mr-2 h-4 w-4" />
+                        Reply
+                      </Button>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
         )
