@@ -42,6 +42,9 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     event.preventDefault();
     const user = auth.currentUser;
 
+    // Diagnostic log to verify auth status
+    console.log('Current user at time of upload:', auth.currentUser);
+
     if (!user) {
       toast({ variant: "destructive", title: "Not Authenticated", description: "You must be logged in to upload a track." });
       return;
@@ -55,7 +58,6 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     setIsProcessing(true);
     setStatusText("Uploading file...");
     
-    // Corrected Path: Upload to a user-specific directory
     const tempStoragePath = `${user.uid}/temp/${Date.now()}-${selectedFile.name}`;
     const storageRef = ref(storage, tempStoragePath);
     const uploadTask = uploadBytesResumable(storageRef, selectedFile);

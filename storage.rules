@@ -1,12 +1,14 @@
-
 rules_version = '2';
-
 service firebase.storage {
   match /b/{bucket}/o {
-    // This rule allows an authenticated user to read and write files
-    // within a folder named after their own user ID.
-    match /{userId}/{allPaths=**} {
+    // Allow users to read and write to their own temp folder.
+    match /{userId}/temp/{allPaths=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow public read access to the final tracks.
+    match /{userId}/tracks/{allPaths=**} {
+        allow read;
     }
   }
 }
