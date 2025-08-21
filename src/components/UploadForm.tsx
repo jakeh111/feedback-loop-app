@@ -56,7 +56,7 @@ export function UploadForm({ onUploadComplete, onUploadBlocked }: UploadFormProp
     }
   };
 
-  const convertWavToMp3 = async (wavFile: File): Promise<{mp3File: File, waveform: number[]}> => {
+  const convertWavToMp3 = async (wavFile: File): Promise<File> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       
@@ -66,8 +66,6 @@ export function UploadForm({ onUploadComplete, onUploadBlocked }: UploadFormProp
           
           const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
           const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-          
-          const waveform = generateWaveform(audioBuffer);
 
           let samples: Float32Array;
           if (audioBuffer.numberOfChannels === 2) {
@@ -109,7 +107,7 @@ export function UploadForm({ onUploadComplete, onUploadBlocked }: UploadFormProp
           const mp3FileName = wavFile.name.replace(/\.[^/.]+$/, "") + ".mp3";
           const mp3File = new File([mp3Blob], mp3FileName, { type: 'audio/mpeg' });
           
-          resolve({mp3File, waveform});
+          resolve(mp3File);
           
         } catch (error) {
           console.error("Detailed conversion error:", error);
@@ -124,19 +122,6 @@ export function UploadForm({ onUploadComplete, onUploadBlocked }: UploadFormProp
       
       reader.readAsArrayBuffer(wavFile);
     });
-  };
-
-  const getMp3Waveform = async (mp3File: File): Promise<number[]> => {
-      const arrayBuffer = await mp3File.arrayBuffer();
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      return generateWaveform(audioBuffer);
-  }
-
-  const generateWaveform = (audioBuffer: AudioBuffer, targetPoints: number = 100): number[] => {
-    // Waveform generation is now handled by wavesurfer.js on the client.
-    // We can return an empty array here, as it's no longer stored in Firestore.
-    return [];
   };
 
 
@@ -162,8 +147,7 @@ export function UploadForm({ onUploadComplete, onUploadBlocked }: UploadFormProp
     if (isProUser && (selectedFile.type === 'audio/wav' || selectedFile.type === 'audio/wave')) {
         setStatusText("Converting WAV to MP3...");
         try {
-            const result = await convertWavToMp3(selectedFile);
-            fileToUpload = result.mp3File;
+            fileToUpload = await convertWavToMp3(selectedFile);
         } catch (error) {
             toast({ variant: "destructive", title: "Conversion Failed", description: `Could not convert WAV to MP3. ${error instanceof Error ? error.message : ''}` });
             setIsProcessing(false);
