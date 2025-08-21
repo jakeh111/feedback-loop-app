@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
@@ -14,7 +15,7 @@ import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { collection, query, orderBy, onSnapshot, Timestamp, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { firestore, auth } from '@/lib/firebase';
-import { addComment, renameTrack } from '@/app/actions';
+import { addComment, renameTrack, toggleCommentCompleted } from '@/app/actions';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 
 const sampleComments: Comment[] = [
@@ -25,6 +26,7 @@ const sampleComments: Comment[] = [
     timestamp: 15,
     avatarUrl: 'https://placehold.co/40x40.png?text=A',
     createdAt: new Date(),
+    completed: false,
   },
   {
     id: 'comment-2',
@@ -34,8 +36,9 @@ const sampleComments: Comment[] = [
     endTimestamp: 45,
     avatarUrl: 'https://placehold.co/40x40.png?text=B',
     createdAt: new Date(),
-     youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    youtubeTimestamp: 43
+    youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    youtubeTimestamp: 43,
+    completed: true,
   },
 ];
 
@@ -153,6 +156,7 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
         youtubeUrl,
         youtubeTimestamp,
         createdAt: new Date(),
+        completed: false,
       };
       setComments(prev => [...prev, newComment]);
       toast({ title: "Sample Comment Added", description: "This comment is only visible in this session." });
@@ -189,6 +193,29 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
       });
     }
   };
+
+  const handleToggleComplete = async (commentId: string, currentStatus: boolean) => {
+    if (!isOwner || !user) return;
+    
+    // Optimistically update UI
+    setComments(prev => 
+        prev.map(c => c.id === commentId ? { ...c, completed: !currentStatus } : c)
+    );
+
+    try {
+        await toggleCommentCompleted(track.id, commentId, !currentStatus, user.uid);
+    } catch (error) {
+        // Revert UI on failure
+        setComments(prev => 
+            prev.map(c => c.id === commentId ? { ...c, completed: currentStatus } : c)
+        );
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Could not update comment status. Please try again.'
+        });
+    }
+  }
 
   const handleSeekTo = useCallback((time: number) => {
     if (audioPlayerRef.current) {
@@ -326,6 +353,7 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
                   comments={comments} 
                   onSeekTo={handleSeekTo}
                   lastViewedAt={isOwner ? track.lastViewedAt : undefined}
+                  onToggleComplete={isOwner ? handleToggleComplete : undefined}
                 />
             )}
         </div>

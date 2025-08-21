@@ -1,3 +1,4 @@
+
 'use server';
 
 import {
@@ -53,6 +54,7 @@ export async function addComment(
       transaction.set(newCommentRef, {
         ...commentData,
         createdAt: FieldValue.serverTimestamp(),
+        completed: false, // Default to not completed
       });
 
       // Increment the comment count and update last commented timestamp
@@ -69,6 +71,33 @@ export async function addComment(
     throw error;
   }
 }
+
+
+export async function toggleCommentCompleted(trackId: string, commentId: string, completed: boolean, userId: string) {
+    if (!trackId || !commentId || !userId) {
+        throw new Error("Track ID, Comment ID, and User ID are required.");
+    }
+    
+    const trackRef = firestore.collection('tracks').doc(trackId);
+    const commentRef = trackRef.collection('comments').doc(commentId);
+
+    try {
+        const trackDoc = await trackRef.get();
+        if (!trackDoc.exists || trackDoc.data()?.userId !== userId) {
+            throw new Error("You are not authorized to modify this comment.");
+        }
+        
+        await commentRef.update({ completed: completed });
+
+    } catch(error) {
+        console.error("Error toggling comment completion:", error);
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw error;
+    }
+}
+
 
 export async function deleteTrack(trackId: string): Promise<void> {
   if (!trackId) {

@@ -13,6 +13,7 @@ export type Comment = {
   youtubeUrl?: string;
   youtubeTimestamp?: number;
   createdAt: Date | Timestamp;
+  completed?: boolean;
 };
 
 export type Track = {

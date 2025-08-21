@@ -9,14 +9,18 @@ import { Clock, GitCommitHorizontal, Youtube } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { Checkbox } from "./ui/checkbox";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+
 
 interface CommentListProps {
   comments: Comment[];
   onSeekTo: (time: number) => void;
   lastViewedAt?: Date;
+  onToggleComplete?: (commentId: string, currentStatus: boolean) => void;
 }
 
-export function CommentList({ comments, onSeekTo, lastViewedAt }: CommentListProps) {
+export function CommentList({ comments, onSeekTo, lastViewedAt, onToggleComplete }: CommentListProps) {
     
   const formatTime = (time: number) => {
     if (isNaN(time)) return '0:00';
@@ -56,8 +60,28 @@ export function CommentList({ comments, onSeekTo, lastViewedAt }: CommentListPro
         const isNew = lastViewedTime > 0 && commentTime > lastViewedTime;
         
         return (
-            <Card key={comment.id} className={cn("overflow-hidden drop-shadow-custom-md transition-colors", isNew && "bg-primary/5 border-primary/20")}>
-              <CardHeader className="flex flex-row items-center gap-4 p-4 bg-muted/50">
+            <Card key={comment.id} className={cn("overflow-hidden drop-shadow-custom-md transition-all duration-300", 
+                isNew && "bg-primary/5 border-primary/20",
+                comment.completed && "opacity-60 bg-muted/30"
+            )}>
+              <CardHeader className="flex flex-row items-start gap-4 p-4 bg-muted/50">
+                {onToggleComplete && (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Checkbox
+                                    checked={comment.completed}
+                                    onCheckedChange={() => onToggleComplete(comment.id, !!comment.completed)}
+                                    aria-label="Mark as complete"
+                                    className="mt-1"
+                                />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Mark as completed</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )}
                 <Avatar>
                   <AvatarImage src={comment.avatarUrl} alt={comment.author} />
                   <AvatarFallback>{comment.author.charAt(0)}</AvatarFallback>
@@ -82,8 +106,8 @@ export function CommentList({ comments, onSeekTo, lastViewedAt }: CommentListPro
                     </Button>
                 </div>
               </CardHeader>
-              <CardContent className="p-4">
-                <p>{comment.text}</p>
+              <CardContent className="p-4 pl-14">
+                <p className={cn(comment.completed && "line-through text-muted-foreground")}>{comment.text}</p>
               </CardContent>
             </Card>
         )
