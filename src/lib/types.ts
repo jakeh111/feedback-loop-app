@@ -9,6 +9,7 @@ export type SubComment = {
   text: string;
   avatarUrl: string;
   createdAt: Date | Timestamp;
+  userId: string;
 };
 
 export type Comment = {
@@ -23,6 +24,7 @@ export type Comment = {
   createdAt: Date | Timestamp;
   completed?: boolean;
   subComments?: SubComment[];
+  userId: string;
 };
 
 export type Track = {

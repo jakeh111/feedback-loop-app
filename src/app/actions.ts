@@ -32,6 +32,7 @@ export async function addComment(
     avatarUrl: string;
     youtubeUrl?: string;
     youtubeTimestamp?: number;
+    userId: string;
   }
 ) {
   if (!trackId) {
@@ -84,15 +85,9 @@ export async function addReplyToComment(
     throw new Error('Track ID and Comment ID are required.');
   }
   
-  const trackRef = firestore.collection('tracks').doc(trackId);
-  const commentRef = trackRef.collection('comments').doc(commentId);
+  const commentRef = firestore.collection('tracks').doc(trackId).collection('comments').doc(commentId);
 
   try {
-    const trackDoc = await trackRef.get();
-    if (!trackDoc.exists || trackDoc.data()?.userId !== replyData.userId) {
-      throw new Error("You are not authorized to reply to this comment.");
-    }
-    
     const newReply = {
       id: new Date().getTime().toString(), // simple unique id
       ...replyData,
@@ -301,4 +296,76 @@ export async function processAndStoreTrack({
         await file.delete().catch(err => console.error("Failed to delete orphaned file:", err));
         throw new Error('Failed to process and store track.');
     }
+}
+
+export async function deleteComment(trackId: string, commentId: string, userId: string) {
+  if (!trackId || !commentId || !userId) {
+    throw new Error('Track ID, Comment ID, and User ID are required.');
+  }
+
+  const trackRef = firestore.collection('tracks').doc(trackId);
+  const commentRef = trackRef.collection('comments').doc(commentId);
+
+  try {
+    await firestore.runTransaction(async (transaction) => {
+      const commentDoc = await transaction.get(commentRef);
+      if (!commentDoc.exists) {
+        throw new Error('Comment not found.');
+      }
+      
+      const commentData = commentDoc.data();
+      if (commentData?.userId !== userId) {
+        throw new Error('You are not authorized to delete this comment.');
+      }
+
+      transaction.delete(commentRef);
+      transaction.update(trackRef, { 
+        commentCount: FieldValue.increment(-1)
+      });
+    });
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw error;
+  }
+}
+
+export async function deleteReply(trackId: string, commentId: string, replyId: string, userId: string) {
+  if (!trackId || !commentId || !replyId || !userId) {
+    throw new Error('Track ID, Comment ID, Reply ID, and User ID are required.');
+  }
+
+  const commentRef = firestore.collection('tracks').doc(trackId).collection('comments').doc(commentId);
+
+  try {
+    await firestore.runTransaction(async (transaction) => {
+      const commentDoc = await transaction.get(commentRef);
+      if (!commentDoc.exists) {
+        throw new Error('Comment not found.');
+      }
+
+      const commentData = commentDoc.data();
+      const replyToDelete = commentData?.subComments?.find((r: any) => r.id === replyId);
+
+      if (!replyToDelete) {
+        throw new Error('Reply not found.');
+      }
+
+      if (replyToDelete.userId !== userId) {
+        throw new Error('You are not authorized to delete this reply.');
+      }
+
+      transaction.update(commentRef, {
+        subComments: FieldValue.arrayRemove([replyToDelete]),
+      });
+    });
+  } catch (error) {
+    console.error('Error deleting reply:', error);
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw error;
+  }
 }

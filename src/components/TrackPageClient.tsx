@@ -9,13 +9,13 @@ import { AddCommentForm } from '@/components/AddCommentForm';
 import { SummarizeButton } from '@/components/SummarizeButton';
 import { GuestNameDialog } from '@/components/GuestNameDialog';
 import { AdBanner } from '@/components/AdBanner';
-import { Share2, Loader2, Pencil, MessageSquare } from 'lucide-react';
+import { Share2, Loader2, Pencil, MessageSquare, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { collection, query, orderBy, onSnapshot, Timestamp, doc, setDoc, serverTimestamp, runTransaction } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, Timestamp, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { firestore, auth } from '@/lib/firebase';
-import { addComment, renameTrack, toggleCommentCompleted, addReplyToComment } from '@/app/actions';
+import { addComment, renameTrack, toggleCommentCompleted, addReplyToComment, deleteComment, deleteReply } from '@/app/actions';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 
 const sampleComments: Comment[] = [
@@ -27,6 +27,7 @@ const sampleComments: Comment[] = [
     avatarUrl: 'https://placehold.co/40x40.png?text=A',
     createdAt: new Date(),
     completed: false,
+    userId: 'sample-user-1',
   },
   {
     id: 'comment-2',
@@ -39,6 +40,7 @@ const sampleComments: Comment[] = [
     youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     youtubeTimestamp: 43,
     completed: true,
+    userId: 'sample-user-2',
   },
 ];
 
@@ -126,15 +128,20 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
         if (guestName) {
           setAuthorName(guestName);
         } else {
-          if (auth.app.name) { 
-             setTimeout(() => setIsGuestPromptOpen(true), 100);
-          }
+          // A guest will have a randomly generated UID. We can use this to persist their comments for a session.
+          auth.signInAnonymously().then(cred => {
+            setUser(cred.user);
+            setTimeout(() => setIsGuestPromptOpen(true), 100);
+          }).catch(err => {
+             console.error("Anonymous auth failed:", err);
+             toast({ variant: 'destructive', title: 'Session Error', description: 'Could not create a guest session.'});
+          })
         }
       }
     });
 
     return () => unsubscribe();
-  }, [track.id]);
+  }, [track.id, toast]);
   
   const handleNameSubmit = (name: string) => {
     sessionStorage.setItem(`guestName-${track.id}`, name);
@@ -143,6 +150,11 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
   };
 
   const handleAddComment = async (text: string, startTime: number, endTime?: number, youtubeUrl?: string, youtubeTimestamp?: number) => {
+    if (!user) {
+        toast({ variant: "destructive", title: "Error", description: "No user session found." });
+        return;
+    }
+
     if (track.id === 'sample') {
       const newComment: Comment = {
         id: `comment-${Date.now()}`,
@@ -155,6 +167,7 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
         youtubeTimestamp,
         createdAt: new Date(),
         completed: false,
+        userId: user.uid,
       };
       setComments(prev => [...prev, newComment]);
       toast({ title: "Sample Comment Added", description: "This comment is only visible in this session." });
@@ -175,7 +188,8 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
       text,
       timestamp: startTime,
       endTimestamp: endTime,
-      avatarUrl: user?.photoURL || `https://placehold.co/40x40.png?text=${authorName.charAt(0).toUpperCase()}`,
+      avatarUrl: user.isAnonymous ? `https://placehold.co/40x40.png?text=${authorName.charAt(0).toUpperCase()}` : user.photoURL || `https://placehold.co/40x40.png?text=${authorName.charAt(0).toUpperCase()}`,
+      userId: user.uid,
       youtubeUrl,
       youtubeTimestamp
     };
@@ -193,8 +207,8 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
   };
 
   const handleAddReply = async (commentId: string, replyText: string) => {
-    if (!user || !isOwner) {
-      toast({ variant: 'destructive', title: 'Error', description: 'You must be the track owner to reply.' });
+    if (!user) {
+      toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to reply.' });
       return;
     }
 
@@ -296,6 +310,26 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!user) return;
+    try {
+      await deleteComment(track.id, commentId, user.uid);
+      toast({ title: 'Comment Deleted' });
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Error', description: `Could not delete comment. ${error instanceof Error ? error.message : ''}` });
+    }
+  }
+
+  const handleDeleteReply = async (commentId: string, replyId: string) => {
+     if (!user) return;
+     try {
+       await deleteReply(track.id, commentId, replyId, user.uid);
+       toast({ title: 'Reply Deleted' });
+     } catch (error) {
+       toast({ variant: 'destructive', title: 'Error', description: `Could not delete reply. ${error instanceof Error ? error.message : ''}` });
+     }
+  }
+
   
   const isCommentingEnabled = !!authorName;
 
@@ -377,12 +411,15 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
                   onToggleComplete={isOwner ? handleToggleComplete : undefined}
                   onAddReply={isOwner ? handleAddReply : undefined}
                   isOwner={isOwner}
+                  currentUserId={user?.uid}
+                  onDeleteComment={handleDeleteComment}
+                  onDeleteReply={handleDeleteReply}
                 />
             )}
         </div>
         <div className="flex flex-col gap-8">
             <div>
-                <h2 className="text-2xl font-bold font-headline mb-4">Leave Feedback {authorName && <span className="text-sm text-muted-foreground font-normal">as {authorName}</span>}</h2>
+                <h2 className="text-2xl font-bold font-headline mb-4">Leave Feedback {authorName && !user?.isAnonymous && <span className="text-sm text-muted-foreground font-normal">as {authorName}</span>}</h2>
                 <AddCommentForm onAddComment={handleAddComment} audioPlayerRef={audioPlayerRef} isCommentingEnabled={isCommentingEnabled} selectedTime={selectedTime} />
             </div>
              {!isProUser && (

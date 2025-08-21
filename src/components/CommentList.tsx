@@ -5,7 +5,7 @@ import type { Comment, SubComment } from "@/lib/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "./ui/button";
-import { Clock, GitCommitHorizontal, Youtube, MessageSquareReply, Send } from "lucide-react";
+import { Clock, GitCommitHorizontal, Youtube, MessageSquareReply, Send, Trash2 } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -13,6 +13,17 @@ import { Checkbox } from "./ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { useState } from "react";
 import { Textarea } from "./ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface CommentListProps {
   comments: Comment[];
@@ -21,9 +32,22 @@ interface CommentListProps {
   onToggleComplete?: (commentId: string, currentStatus: boolean) => void;
   onAddReply?: (commentId: string, replyText: string) => void;
   isOwner: boolean;
+  currentUserId?: string | null;
+  onDeleteComment: (commentId: string) => void;
+  onDeleteReply: (commentId: string, replyId: string) => void;
 }
 
-export function CommentList({ comments, onSeekTo, lastViewedAt, onToggleComplete, onAddReply, isOwner }: CommentListProps) {
+export function CommentList({ 
+    comments, 
+    onSeekTo, 
+    lastViewedAt, 
+    onToggleComplete, 
+    onAddReply, 
+    isOwner,
+    currentUserId,
+    onDeleteComment,
+    onDeleteReply
+}: CommentListProps) {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
     
@@ -70,14 +94,15 @@ export function CommentList({ comments, onSeekTo, lastViewedAt, onToggleComplete
       {[...comments].sort((a,b) => a.timestamp - b.timestamp).map((comment) => {
         const commentTime = (comment.createdAt as Date).getTime();
         const isNew = lastViewedTime > 0 && commentTime > lastViewedTime;
-        
+        const canDeleteComment = currentUserId === comment.userId;
+
         return (
-            <Card key={comment.id} className={cn("drop-shadow-custom-md transition-all duration-300", 
+            <Card key={comment.id} className={cn("drop-shadow-custom-md transition-all duration-300 overflow-visible", 
                 isNew && "bg-primary/5 border-primary/20",
                 comment.completed && "opacity-60 bg-muted/30"
             )}>
               <CardHeader className="flex flex-row items-start gap-4 p-4 bg-muted/50">
-                {onToggleComplete && (
+                {isOwner && onToggleComplete && (
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -99,7 +124,30 @@ export function CommentList({ comments, onSeekTo, lastViewedAt, onToggleComplete
                   <AvatarFallback>{comment.author.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-grow">
-                  <p className="font-semibold">{comment.author}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold">{comment.author}</p>
+                    {canDeleteComment && (
+                       <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Comment?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently delete your comment. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => onDeleteComment(comment.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {format(new Date(comment.createdAt as Date), "MMM d, yyyy 'at' h:mm a")}
                   </p>
@@ -123,25 +171,51 @@ export function CommentList({ comments, onSeekTo, lastViewedAt, onToggleComplete
                 
                 {comment.subComments && comment.subComments.length > 0 && (
                   <div className="space-y-4 pt-4 border-t border-dashed">
-                    {comment.subComments.map(reply => (
-                      <div key={reply.id} className="flex items-start gap-3">
-                         <Avatar className="w-8 h-8">
-                          <AvatarImage src={reply.avatarUrl} alt={reply.author} />
-                          <AvatarFallback>{reply.author.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-grow">
-                          <p className="font-semibold text-sm">{reply.author}</p>
-                          <p className="text-xs text-muted-foreground">
-                             {format(new Date(reply.createdAt as Date), "MMM d, yyyy 'at' h:mm a")}
-                          </p>
-                          <p className="mt-1">{reply.text}</p>
-                        </div>
-                      </div>
-                    ))}
+                    {comment.subComments.map(reply => {
+                       const canDeleteReply = currentUserId === reply.userId;
+                       return (
+                          <div key={reply.id} className="flex items-start gap-3">
+                             <Avatar className="w-8 h-8">
+                              <AvatarImage src={reply.avatarUrl} alt={reply.author} />
+                              <AvatarFallback>{reply.author.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-grow">
+                               <div className="flex items-center gap-2">
+                                  <p className="font-semibold text-sm">{reply.author}</p>
+                                  {canDeleteReply && (
+                                     <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-destructive">
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Delete Reply?</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            This will permanently delete your reply. This action cannot be undone.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => onDeleteReply(comment.id, reply.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  )}
+                               </div>
+                              <p className="text-xs text-muted-foreground">
+                                 {format(new Date(reply.createdAt as Date), "MMM d, yyyy 'at' h:mm a")}
+                              </p>
+                              <p className="mt-1">{reply.text}</p>
+                            </div>
+                          </div>
+                       )
+                    })}
                   </div>
                 )}
                 
-                {isOwner && (
+                {isOwner && onAddReply && (
                   <div className="pt-2">
                     {replyingTo === comment.id ? (
                       <div className="space-y-2">
