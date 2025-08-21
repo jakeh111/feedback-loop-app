@@ -6,6 +6,15 @@ declare module '@breezystack/lamejs' {
     flush(): Int8Array;
   }
   
+  export class Mp3Decoder {
+    constructor(options?: any);
+    decode(buffer: Buffer): {
+        channel1: Int16Array;
+        channel2: Int16Array;
+    } | undefined;
+    decodeFrame(buffer: Buffer): any;
+  }
+  
   export class WavHeader {
     static readHeader(dataView: DataView): {
         channels: number;
