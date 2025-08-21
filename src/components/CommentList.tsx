@@ -8,7 +8,7 @@ import { Button } from "./ui/button";
 import { Clock, GitCommitHorizontal, Youtube } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
-import type { Timestamp } from "firebase/firestore";
+import { format } from "date-fns";
 
 interface CommentListProps {
   comments: Comment[];
@@ -64,6 +64,9 @@ export function CommentList({ comments, onSeekTo, lastViewedAt }: CommentListPro
                 </Avatar>
                 <div className="flex-grow">
                   <p className="font-semibold">{comment.author}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {format(new Date(comment.createdAt as Date), "MMM d, yyyy 'at' h:mm a")}
+                  </p>
                 </div>
                 <div className="flex items-center gap-1">
                     {isNew && <Badge variant="default" className="text-xs px-1.5 py-0.5 pointer-events-none">New</Badge>}
