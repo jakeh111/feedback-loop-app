@@ -8,9 +8,7 @@ import {
 } from '@/ai/flows/summarize-feedback';
 import { firestore, storage } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import path from 'path';
-import ffmpeg from 'fluent-ffmpeg';
-import { Readable } from 'stream';
+import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 
 export async function getSummary(
   input: SummarizeFeedbackInput
@@ -157,32 +155,25 @@ async function generateWaveformData(audioBuffer: Buffer): Promise<number[]> {
   return Promise.resolve(randomWaveform);
 }
 
-
 async function convertToMp3(inputBuffer: Buffer): Promise<Buffer> {
-    return new Promise((resolve, reject) => {
-        const outputStream = new (require('stream').PassThrough)();
-        const chunks: any[] = [];
+  const ffmpeg = createFFmpeg({ log: true });
+  if (!ffmpeg.isLoaded()) {
+    await ffmpeg.load();
+  }
+  const inputFileName = 'input.wav';
+  const outputFileName = 'output.mp3';
+  ffmpeg.FS('writeFile', inputFileName, await fetchFile(inputBuffer));
+  
+  // Convert WAV to MP3
+  await ffmpeg.run('-i', inputFileName, '-acodec', 'libmp3lame', '-b:a', '192k', outputFileName);
+  
+  const data = ffmpeg.FS('readFile', outputFileName);
 
-        outputStream.on('data', (chunk) => {
-            chunks.push(chunk);
-        });
-        outputStream.on('end', () => {
-            resolve(Buffer.concat(chunks));
-        });
-        outputStream.on('error', reject);
-        
-        const inputStream = new Readable();
-        inputStream.push(inputBuffer);
-        inputStream.push(null);
-
-        ffmpeg(inputStream)
-            .toFormat('mp3')
-            .on('error', (err) => {
-                console.error('An error occurred: ' + err.message);
-                reject(err);
-            })
-            .pipe(outputStream, { end: true });
-    });
+  // Cleanup FFmpeg file system
+  ffmpeg.FS('unlink', inputFileName);
+  ffmpeg.FS('unlink', outputFileName);
+  
+  return Buffer.from(data.buffer);
 }
 
 
@@ -191,39 +182,44 @@ export async function processAndStoreTrack({
   originalFilename,
   userId,
   artistName,
+  contentType,
 }: {
   storagePath: string;
   originalFilename: string;
   userId: string;
   artistName: string;
+  contentType: string;
 }): Promise<string> {
     const bucket = storage.bucket();
     const tempFile = bucket.file(storagePath);
-    let finalFile;
-    let finalStoragePath = storagePath;
     
     try {
-        const [tempFileBuffer] = await tempFile.download();
-        let audioBuffer = tempFileBuffer;
-        let finalFilename = originalFilename;
-        
-        // If it's a wav file, convert it to mp3
-        if (path.extname(originalFilename).toLowerCase() === '.wav') {
+        const [fileBuffer] = await tempFile.download();
+
+        let processedBuffer: Buffer;
+        let finalContentType: string;
+        let finalStoragePath: string;
+
+        if (contentType === 'audio/wav' || contentType === 'audio/wave') {
             console.log("Converting WAV to MP3...");
-            finalFilename = originalFilename.replace(/\.wav$/i, '.mp3');
-            finalStoragePath = `tracks/${userId}/${Date.now()}-${finalFilename}`;
-            audioBuffer = await convertToMp3(tempFileBuffer);
+            processedBuffer = await convertToMp3(fileBuffer);
+            finalContentType = 'audio/mpeg';
+            finalStoragePath = storagePath.replace(/\.[^/.]+$/, '.mp3');
+        } else {
+            processedBuffer = fileBuffer;
+            finalContentType = contentType;
+            finalStoragePath = storagePath;
         }
-        
-        // Upload the final (possibly converted) file
-        finalFile = bucket.file(finalStoragePath);
-        await finalFile.save(audioBuffer, {
-            metadata: { contentType: 'audio/mpeg' },
+
+        // Upload the processed file
+        const finalFile = bucket.file(finalStoragePath);
+        await finalFile.save(processedBuffer, {
+            metadata: { contentType: finalContentType },
         });
 
-        // Delete the temp file if conversion happened
+        // If we converted the file, delete the original temporary file
         if (finalStoragePath !== storagePath) {
-           await tempFile.delete();
+            await tempFile.delete();
         }
 
         const [downloadURL] = await finalFile.getSignedUrl({
@@ -231,10 +227,10 @@ export async function processAndStoreTrack({
             expires: '03-09-2491', // Far future expiration
         });
         
-        const waveform = await generateWaveformData(audioBuffer);
+        const waveform = await generateWaveformData(processedBuffer);
 
         console.log("Creating Firestore document...");
-        const trackTitle = finalFilename.replace(/\.[^/.]+$/, "");
+        const trackTitle = originalFilename.replace(/\.[^/.]+$/, "");
         const trackDocRef = await firestore.collection('tracks').add({
             title: trackTitle,
             artist: artistName,
@@ -249,9 +245,11 @@ export async function processAndStoreTrack({
         return trackDocRef.id;
     } catch (error) {
         console.error('Error processing track:', error);
-        // If something goes wrong, try to delete any orphaned files.
-        if (tempFile) await tempFile.delete().catch(err => console.error("Failed to delete temp file:", err));
-        if (finalFile && finalStoragePath !== storagePath) await finalFile.delete().catch(err => console.error("Failed to delete final file:", err));
+        // If something goes wrong, try to delete the orphaned file(s).
+        await tempFile.delete().catch(err => console.error("Failed to delete temp file:", err));
+        if (storagePath.includes('.wav')) {
+             await bucket.file(storagePath.replace(/\.wav$/i, '.mp3')).delete().catch(err => console.error("Failed to delete orphaned mp3 file:", err));
+        }
         throw new Error('Failed to process and store track.');
     }
 }

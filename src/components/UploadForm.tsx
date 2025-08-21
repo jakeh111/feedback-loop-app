@@ -42,7 +42,6 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     event.preventDefault();
     const user = auth.currentUser;
 
-    // Diagnostic log to verify auth status
     console.log('Current user at time of upload:', auth.currentUser);
 
     if (!user) {
@@ -58,8 +57,8 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     setIsProcessing(true);
     setStatusText("Uploading file...");
     
-    // Upload to a temporary location first. The server will move it.
-    const tempStoragePath = `tracks/${user.uid}/temp/${Date.now()}-${selectedFile.name}`;
+    // The temporary storage path for the track
+    const tempStoragePath = `${user.uid}/temp/${Date.now()}-${selectedFile.name}`;
     const storageRef = ref(storage, tempStoragePath);
     const uploadTask = uploadBytesResumable(storageRef, selectedFile);
 
@@ -73,17 +72,18 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
         setIsProcessing(false);
         setUploadProgress(0);
         setStatusText("");
-        toast({ variant: "destructive", title: "Upload Failed", description: `An error occurred while uploading: ${error.code} - ${error.message}` });
+        toast({ variant: "destructive", title: "Upload Failed", description: `An error occurred while uploading: ${error.message}` });
       },
       async () => {
         // Upload complete, now call the server action to create the DB record.
         try {
-            setStatusText("Finalizing...");
+            setStatusText("Finalizing & converting...");
             const trackId = await processAndStoreTrack({
                 storagePath: tempStoragePath,
                 originalFilename: selectedFile.name,
                 userId: user.uid,
                 artistName: user.displayName || 'Unknown Artist',
+                contentType: selectedFile.type,
             });
             
             toast({ title: "Upload Successful", description: "Your track is ready and saved to your dashboard." });
@@ -124,7 +124,7 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
               <Loader2 className="w-4 h-4 animate-spin"/>
               {statusText}
             </p>
-            {(statusText === 'Uploading file...') && <Progress value={uploadProgress} />}
+            {(statusText.startsWith('Uploading')) && <Progress value={uploadProgress} />}
         </div>
       )}
 
