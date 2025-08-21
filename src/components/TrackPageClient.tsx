@@ -289,7 +289,7 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-full max-w-4xl mb-2 px-4 z-10 transition-all duration-300 animate-in fade-in slide-in-from-bottom-2">
                 <div className="bg-popover text-popover-foreground rounded-lg p-3 shadow-lg border text-center">
                     <p className="font-semibold text-sm">{activeComment.author}</p>
-                    <p className="text-xs text-muted-foreground italic">"{truncateText(activeComment.text, 100)}"</p>
+                    <p className="text-sm text-muted-foreground italic">"{truncateText(activeComment.text, 100)}"</p>
                 </div>
             </div>
         )}

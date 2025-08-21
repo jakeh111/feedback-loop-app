@@ -58,8 +58,8 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
       let activeComment: Comment | null = null;
       for (const comment of comments) {
         const start = comment.timestamp;
-        // For single comments, give a 2-second window. For ranges, use the range.
-        const end = comment.endTimestamp ?? (start + 2);
+        // For single comments, give a 4-second window. For ranges, use the range.
+        const end = comment.endTimestamp ?? (start + 4);
         if (time >= start && time <= end) {
           activeComment = comment;
           break; 
