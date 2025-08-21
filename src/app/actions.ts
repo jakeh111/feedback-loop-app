@@ -146,39 +146,28 @@ export async function renameTrack(
   }
 }
 
-async function generateWaveformData(audioBuffer: Buffer): Promise<number[]> {
-  // This is a placeholder for server-side waveform generation.
-  // In a real app, you would use a library like 'node-audiowaveform'
-  // which requires native dependencies. For now, we'll create a random one.
-  const randomWaveform = Array.from({ length: 100 }, () => Math.floor(Math.random() * 100));
-  return Promise.resolve(randomWaveform);
-}
-
-
 export async function processAndStoreTrack({
   storagePath,
   originalFilename,
   userId,
   artistName,
+  waveformData,
 }: {
   storagePath: string;
   originalFilename: string;
   userId: string;
   artistName: string;
+  waveformData: number[];
 }): Promise<string> {
     const bucket = storage.bucket();
     const file = bucket.file(storagePath);
     
     try {
-        const [fileBuffer] = await file.download();
-
         const [downloadURL] = await file.getSignedUrl({
             action: 'read',
             expires: '03-09-2491', // Far future expiration
         });
         
-        const waveform = await generateWaveformData(fileBuffer);
-
         console.log("Creating Firestore document...");
         const trackTitle = originalFilename.replace(/\.[^/.]+$/, "");
         const trackDocRef = await firestore.collection('tracks').add({
@@ -186,7 +175,7 @@ export async function processAndStoreTrack({
             artist: artistName,
             audioUrl: downloadURL,
             storagePath: storagePath,
-            waveform: waveform,
+            waveform: waveformData,
             userId: userId,
             createdAt: FieldValue.serverTimestamp(),
             commentCount: 0,
