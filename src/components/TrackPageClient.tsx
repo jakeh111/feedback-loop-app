@@ -278,7 +278,7 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
         </div>
       </div>
 
-      <AudioPlayer key={track.id} ref={audioPlayerRef} track={track} onTimeUpdate={handleTimeUpdate} onDurationChange={setTrackDuration} />
+      <AudioPlayer key={track.id} ref={audioPlayerRef} track={track} comments={comments} onTimeUpdate={handleTimeUpdate} onDurationChange={setTrackDuration} />
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
@@ -308,5 +308,3 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
     </div>
   );
 }
-
-    

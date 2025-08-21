@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import type { Track } from '@/lib/types';
+import type { Track, Comment } from '@/lib/types';
 import { Button } from './ui/button';
 import { Play, Pause, Volume2, VolumeX, Rewind, FastForward } from 'lucide-react';
 import { Slider } from './ui/slider';
@@ -11,6 +11,7 @@ import { WaveformDisplay } from './WaveformDisplay';
 
 interface AudioPlayerProps {
   track: Track;
+  comments: Comment[];
   onTimeUpdate: (time: number) => void;
   onDurationChange: (duration: number) => void;
 }
@@ -20,7 +21,7 @@ export interface AudioPlayerRef {
   audioEl: HTMLAudioElement | null;
 }
 
-export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track, onTimeUpdate, onDurationChange }, ref) => {
+export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track, comments, onTimeUpdate, onDurationChange }, ref) => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -132,7 +133,13 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
   return (
     <div className="bg-card p-4 rounded-lg border drop-shadow-custom-md">
       <audio ref={audioRef} src={track.audioUrl} preload="metadata" />
-      <WaveformDisplay waveformData={track.waveform || []} progress={progress} onWaveformClick={handleWaveformClick} />
+      <WaveformDisplay 
+        waveformData={track.waveform || []} 
+        progress={progress} 
+        onWaveformClick={handleWaveformClick}
+        comments={comments}
+        duration={duration}
+      />
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm font-mono text-muted-foreground w-28">
           {formatTime(currentTime)} / {formatTime(duration)}
