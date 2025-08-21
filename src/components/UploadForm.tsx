@@ -44,11 +44,17 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
         const reader = new FileReader();
         reader.onload = (event) => {
             try {
+                // Initialize lamejs components from the imported module
+                const { WavHeader, Mp3Encoder } = lamejs;
+
                 const wavBuffer = event.target?.result as ArrayBuffer;
-                const wav = lamejs.WavHeader.readHeader(new DataView(wavBuffer));
+                const wav = WavHeader.readHeader(new DataView(wavBuffer));
+                if (!wav) {
+                  throw new Error("Could not read WAV header.");
+                }
                 const samples = new Int16Array(wavBuffer, wav.dataOffset, wav.dataLen / 2);
                 
-                const mp3Encoder = new lamejs.Mp3Encoder(wav.channels, wav.sampleRate, 128);
+                const mp3Encoder = new Mp3Encoder(wav.channels, wav.sampleRate, 128);
                 const mp3Data = [];
 
                 const sampleBlockSize = 1152; // Encoder internal sample block size
