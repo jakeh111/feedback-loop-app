@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -6,47 +5,10 @@ import { UploadCloud, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { storage, firestore, auth } from '@/lib/firebase';
+import { storage, auth } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Progress } from './ui/progress';
-
-const generateWaveformData = async (file: File): Promise<number[]> => {
-    return new Promise((resolve, reject) => {
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const reader = new FileReader();
-
-        reader.onload = (e) => {
-            if (!e.target?.result) {
-                return reject(new Error("Failed to read file"));
-            }
-            audioContext.decodeAudioData(e.target.result as ArrayBuffer, (buffer) => {
-                const rawData = buffer.getChannelData(0);
-                const samples = 100; // Number of waveform points
-                const blockSize = Math.floor(rawData.length / samples);
-                const filteredData = [];
-                for (let i = 0; i < samples; i++) {
-                    const blockStart = blockSize * i;
-                    let sum = 0;
-                    for (let j = 0; j < blockSize; j++) {
-                        sum += Math.abs(rawData[blockStart + j]);
-                    }
-                    filteredData.push(sum / blockSize);
-                }
-                
-                const multiplier = Math.pow(Math.max(...filteredData), -1);
-                const normalizedData = filteredData.map(n => Math.round(n * multiplier * 100));
-                resolve(normalizedData);
-            }).catch(reject);
-        };
-
-        reader.onerror = (error) => {
-            reject(error);
-        };
-        
-        reader.readAsArrayBuffer(file);
-    });
-};
+import { processAndStoreTrack } from '@/app/actions';
 
 interface UploadFormProps {
   onUploadComplete: (trackId: string) => void;
@@ -91,67 +53,46 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     }
     
     setIsProcessing(true);
+    setStatusText("Uploading file...");
     
-    try {
-      setStatusText("Generating waveform...");
-      const waveform = await generateWaveformData(selectedFile);
-      
-      let fileToUpload: File | Blob = selectedFile;
-      
-      setStatusText("Uploading file...");
-      const storageRef = ref(storage, `tracks/${user.uid}/${Date.now()}-${fileToUpload.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
+    const tempStoragePath = `temp/${user.uid}/${Date.now()}-${selectedFile.name}`;
+    const storageRef = ref(storage, tempStoragePath);
+    const uploadTask = uploadBytesResumable(storageRef, selectedFile);
 
-      uploadTask.on('state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(progress);
-        },
-        (error) => {
-          console.error("Upload error:", error);
-          setIsProcessing(false);
-          setUploadProgress(0);
-          setStatusText("");
-          toast({ variant: "destructive", title: "Upload Failed", description: "An error occurred while uploading your track. Please try again." });
-        },
-        async () => {
-          try {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            const finalStoragePath = uploadTask.snapshot.ref.fullPath;
-            const trackTitle = selectedFile.name.replace(/\.[^/.]+$/, "");
-
-            const trackDocRef = await addDoc(collection(firestore, 'tracks'), {
-              title: trackTitle,
-              artist: user.displayName || 'Unknown Artist',
-              audioUrl: downloadURL,
-              storagePath: finalStoragePath,
-              waveform: waveform,
-              userId: user.uid,
-              createdAt: serverTimestamp(),
-              commentCount: 0,
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      },
+      (error) => {
+        console.error("Upload error:", error);
+        setIsProcessing(false);
+        setUploadProgress(0);
+        setStatusText("");
+        toast({ variant: "destructive", title: "Upload Failed", description: "An error occurred while uploading your track. Please try again." });
+      },
+      async () => {
+        try {
+            setStatusText("Processing on server...");
+            const trackId = await processAndStoreTrack({
+                tempStoragePath,
+                originalFilename: selectedFile.name,
+                userId: user.uid,
+                artistName: user.displayName || 'Unknown Artist',
             });
-
+            
             toast({ title: "Upload Successful", description: "Your track is ready and saved to your dashboard." });
-            onUploadComplete(trackDocRef.id);
-          } catch (error) {
-            console.error("Error creating Firestore document:", error);
-            toast({ variant: "destructive", title: "Error Saving Track", description: `Your file was uploaded, but we couldn't save it.` });
-          } finally {
+            onUploadComplete(trackId);
+
+        } catch (error) {
+            console.error("Error processing track on server:", error);
+            toast({ variant: "destructive", title: "Processing Failed", description: `The server could not process your track. ${error instanceof Error ? error.message : ''}` });
+        } finally {
             setIsProcessing(false);
             setStatusText("");
-          }
         }
-      );
-    } catch (error) {
-        console.error("Processing error:", error);
-        setIsProcessing(false);
-        setStatusText("");
-        toast({
-            variant: "destructive",
-            title: "Could Not Process Audio",
-            description: `There was an error processing the audio file. ${error instanceof Error ? error.message : ''}`,
-        });
-    }
+      }
+    );
   };
 
   return (
