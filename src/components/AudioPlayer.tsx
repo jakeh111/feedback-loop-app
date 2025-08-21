@@ -151,7 +151,7 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
     <div className="bg-card p-4 rounded-lg border drop-shadow-custom-md">
       <audio ref={audioRef} src={track.audioUrl} preload="metadata" />
       <WaveformDisplay 
-        waveformData={track.waveform || []} 
+        waveformData={track.waveform ?? []}
         progress={progress} 
         onWaveformClick={handleWaveformClick}
         comments={comments}
