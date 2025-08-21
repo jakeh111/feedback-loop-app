@@ -59,12 +59,12 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
                 for (let i = 0; i < samples.length; i += sampleBlockSize) {
                     const sampleChunk = samples.subarray(i, i + sampleBlockSize);
                     const mp3buf = mp3Encoder.encodeBuffer(sampleChunk);
-                    if (mp3buf.length > 0) {
+                    if (mp3buf && mp3buf.length > 0) {
                         mp3Data.push(mp3buf);
                     }
                 }
                 const mp3buf = mp3Encoder.flush();
-                if (mp3buf.length > 0) {
+                if (mp3buf && mp3buf.length > 0) {
                     mp3Data.push(mp3buf);
                 }
 
