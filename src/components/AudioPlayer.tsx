@@ -30,6 +30,12 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
 
+  // Debug lines
+  console.log('Full track object in AudioPlayer:', track);
+  if (track) {
+    console.log('Waveform data from track object:', track.waveform);
+  }
+
   const formatTime = (time: number) => {
     if (isNaN(time) || !isFinite(time)) return '0:00';
     const minutes = Math.floor(time / 60);
