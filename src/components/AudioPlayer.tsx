@@ -32,9 +32,8 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
   const [progress, setProgress] = useState(0);
 
   // Debug lines
-  console.log('Track in AudioPlayer:', track);
+  console.log('Full track object:', track);
   console.log('Waveform data:', track.waveform);
-  console.log('Waveform length:', track.waveform?.length);
 
 
   const formatTime = (time: number) => {
