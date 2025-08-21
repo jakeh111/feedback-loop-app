@@ -84,7 +84,7 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
     } else {
         setIsLoadingComments(true);
         const commentsRef = collection(firestore, 'tracks', track.id, 'comments');
-        const q = query(commentsRef, orderBy('createdAt', 'asc'));
+        const q = query(commentsRef, orderBy('timestamp', 'asc'));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
           const fetchedComments = snapshot.docs.map(doc => {

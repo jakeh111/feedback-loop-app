@@ -51,7 +51,7 @@ export function CommentList({ comments, onSeekTo, lastViewedAt }: CommentListPro
 
   return (
     <div className="space-y-4">
-      {[...comments].sort((a,b) => (a.createdAt as Date).getTime() - (b.createdAt as Date).getTime()).map((comment) => {
+      {[...comments].sort((a,b) => a.timestamp - b.timestamp).map((comment) => {
         const commentTime = (comment.createdAt as Date).getTime();
         const isNew = lastViewedTime > 0 && commentTime > lastViewedTime;
         
