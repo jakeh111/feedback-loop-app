@@ -3,7 +3,7 @@
 import { TrackPageClient } from "@/components/TrackPageClient";
 import type { Track } from "@/lib/types";
 import type { Metadata, ResolvingMetadata } from 'next'
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, Timestamp } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { notFound } from 'next/navigation';
 
@@ -32,6 +32,7 @@ const getTrackData = async (id: string): Promise<Track | null> => {
     }
 
     const data = trackSnap.data();
+    const lastViewedAt = (data.lastViewedAt as Timestamp)?.toDate();
 
     return {
       id: trackSnap.id,
@@ -40,6 +41,7 @@ const getTrackData = async (id: string): Promise<Track | null> => {
       audioUrl: data.audioUrl,
       userId: data.userId,
       waveform: data.waveform || [],
+      lastViewedAt: lastViewedAt,
     };
   } catch (error) {
     console.error("Error fetching track data:", error);

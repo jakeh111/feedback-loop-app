@@ -22,6 +22,7 @@ export type Track = {
   audioUrl: string;
   userId?: string;
   waveform?: number[];
+  lastViewedAt?: Date | Timestamp;
 };
 
 export const ProcessAudioInputSchema = z.object({

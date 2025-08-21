@@ -322,7 +322,11 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
                   <p className="mt-4">Loading comments...</p>
               </div>
             ) : (
-                <CommentList comments={comments} onSeekTo={handleSeekTo} />
+                <CommentList 
+                  comments={comments} 
+                  onSeekTo={handleSeekTo}
+                  lastViewedAt={isOwner ? track.lastViewedAt : undefined}
+                />
             )}
         </div>
         <div className="flex flex-col gap-8">
