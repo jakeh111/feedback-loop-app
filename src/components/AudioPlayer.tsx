@@ -112,7 +112,8 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
       subs.forEach(unsub => unsub());
       ws.destroy();
     };
-  }, [track.audioUrl, onTimeUpdate, addCommentRegions]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [track.audioUrl, onTimeUpdate]);
   
   useEffect(() => {
     addCommentRegions();
