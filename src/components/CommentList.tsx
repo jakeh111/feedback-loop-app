@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Comment } from "@/lib/types";
@@ -46,7 +47,7 @@ export function CommentList({ comments, onSeekTo, lastViewedAt }: CommentListPro
     )
   }
   
-  const lastViewedTime = lastViewedAt ? (lastViewedAt as Timestamp).toDate().getTime() : 0;
+  const lastViewedTime = lastViewedAt ? (lastViewedAt as Date).getTime() : 0;
 
   return (
     <div className="space-y-4">
