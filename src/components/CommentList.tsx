@@ -182,33 +182,37 @@ export function CommentList({
                               <AvatarFallback>{reply.author.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div className="flex-grow">
-                               <div className="flex items-center gap-2">
-                                  <p className="font-semibold text-sm">{reply.author}</p>
-                                  {canDeleteReply && (
-                                     <AlertDialog>
-                                      <AlertDialogTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-destructive">
-                                          <Trash2 className="h-3 w-3" />
-                                        </Button>
-                                      </AlertDialogTrigger>
-                                      <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                          <AlertDialogTitle>Delete Reply?</AlertDialogTitle>
-                                          <AlertDialogDescription>
-                                            This will permanently delete your reply. This action cannot be undone.
-                                          </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                          <AlertDialogAction onClick={() => onDeleteReply(comment.id, reply.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                      </AlertDialogContent>
-                                    </AlertDialog>
-                                  )}
+                               <div className="flex justify-between items-start">
+                                  <div>
+                                      <div className="flex items-center gap-2">
+                                        <p className="font-semibold text-sm">{reply.author}</p>
+                                        {canDeleteReply && (
+                                           <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                              <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-destructive">
+                                                <Trash2 className="h-3 w-3" />
+                                              </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                              <AlertDialogHeader>
+                                                <AlertDialogTitle>Delete Reply?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                  This will permanently delete your reply. This action cannot be undone.
+                                                </AlertDialogDescription>
+                                              </AlertDialogHeader>
+                                              <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => onDeleteReply(comment.id, reply.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                              </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                          </AlertDialog>
+                                        )}
+                                      </div>
+                                    <p className="text-xs text-muted-foreground">
+                                       {reply.createdAt ? format(new Date(reply.createdAt as Date), "MMM d, yyyy 'at' h:mm a") : 'Just now'}
+                                    </p>
+                                  </div>
                                </div>
-                              <p className="text-xs text-muted-foreground">
-                                 {reply.createdAt ? format(new Date(reply.createdAt as Date), "MMM d, yyyy 'at' h:mm a") : 'Just now'}
-                              </p>
                               <p className="mt-1">{reply.text}</p>
                             </div>
                           </div>
