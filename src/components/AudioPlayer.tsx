@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
@@ -41,6 +42,11 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
   useEffect(() => {
     if (!waveformRef.current) return;
 
+    // Destroy previous instance if it exists
+    if (wavesurferRef.current) {
+        wavesurferRef.current.destroy();
+    }
+
     // Create a new instance of RegionsPlugin
     regionsRef.current = RegionsPlugin.create();
 
@@ -71,15 +77,15 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
       }),
       ws.on('ready', (d) => {
         setDuration(d);
+        if (wavesurferRef.current) {
+            wavesurferRef.current.setVolume(isMuted ? 0 : volume);
+        }
       }),
     ];
 
     return () => {
       subs.forEach(unsub => unsub());
-      if (wavesurferRef.current) {
-        wavesurferRef.current.destroy();
-        wavesurferRef.current = null;
-      }
+      ws.destroy();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track.audioUrl]);
@@ -87,15 +93,15 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
 
   // Add comment regions when comments or wavesurfer instance are ready
   useEffect(() => {
-    if (!regionsRef.current || !wavesurferRef.current) return;
-    
     const ws = wavesurferRef.current;
+    const regions = regionsRef.current;
+    if (!ws || !regions) return;
     
     const addRegions = () => {
-        regionsRef.current?.clearRegions();
+        regions.clearRegions();
         comments.forEach(comment => {
-          if (comment.endTimestamp) {
-            regionsRef.current?.addRegion({
+          if (comment.endTimestamp && comment.endTimestamp > comment.timestamp) {
+            regions.addRegion({
               start: comment.timestamp,
               end: comment.endTimestamp,
               content: '',
@@ -114,12 +120,12 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
         return () => readySub();
     }
 
-  }, [comments, wavesurferRef, regionsRef]);
+  }, [comments]);
 
 
   useImperativeHandle(ref, () => ({
     seekTo(time: number) {
-      if (wavesurferRef.current) {
+      if (wavesurferRef.current && wavesurferRef.current.getDuration() > 0) {
         wavesurferRef.current.seekTo(time / wavesurferRef.current.getDuration());
         wavesurferRef.current.play();
       }
