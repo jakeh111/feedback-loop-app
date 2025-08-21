@@ -2,20 +2,15 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Allow public read access to final tracks
+    
+    // Allow public read access to all processed tracks
     match /tracks/{userId}/{allPaths=**} {
       allow read;
     }
 
-    // Allow authenticated users to write to their own tracks folder
-    // (This is used by the server action after processing)
-    match /tracks/{userId}/{allPaths=**} {
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Allow authenticated users to write to their own temporary folder
-    // (This is used by the client for initial uploads)
-    match /{userId}/temp/{allPaths=**} {
+    // Allow authenticated users to write to their own tracks folder.
+    // This rule allows the client to upload directly to the final destination.
+    match /tracks/{userId}/{fileName} {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
   }

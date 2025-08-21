@@ -16,7 +16,7 @@ const serviceAccount = {
 const hasServiceAccount =
   serviceAccount.projectId &&
   serviceAccount.clientEmail &&
-  serviceAccount.privateKey;
+  service.privateKey;
 
 if (admin.apps.length === 0) {
   if (hasServiceAccount) {

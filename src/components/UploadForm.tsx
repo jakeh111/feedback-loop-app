@@ -58,8 +58,9 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     setIsProcessing(true);
     setStatusText("Uploading file...");
     
-    const tempStoragePath = `${user.uid}/temp/${Date.now()}-${selectedFile.name}`;
-    const storageRef = ref(storage, tempStoragePath);
+    // Upload directly to the final destination
+    const finalStoragePath = `tracks/${user.uid}/${Date.now()}-${selectedFile.name}`;
+    const storageRef = ref(storage, finalStoragePath);
     const uploadTask = uploadBytesResumable(storageRef, selectedFile);
 
     uploadTask.on('state_changed',
@@ -72,14 +73,14 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
         setIsProcessing(false);
         setUploadProgress(0);
         setStatusText("");
-        toast({ variant: "destructive", title: "Upload Failed", description: `An error occurred while uploading: ${error.message}` });
+        toast({ variant: "destructive", title: "Upload Failed", description: `An error occurred while uploading: ${error.code} - ${error.message}` });
       },
       async () => {
-        // Upload complete, now call the server action.
+        // Upload complete, now call the server action to create the DB record.
         try {
-            setStatusText("Processing on server...");
+            setStatusText("Finalizing...");
             const trackId = await processAndStoreTrack({
-                tempStoragePath,
+                storagePath: finalStoragePath,
                 originalFilename: selectedFile.name,
                 userId: user.uid,
                 artistName: user.displayName || 'Unknown Artist',
