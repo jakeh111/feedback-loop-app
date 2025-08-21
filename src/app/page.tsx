@@ -119,27 +119,24 @@ export default function Home() {
             <h2 className="text-3xl font-bold tracking-tighter font-headline mb-4">How It Works</h2>
             <div className="grid md:grid-cols-3 gap-8 text-left">
               <Card className="drop-shadow-custom-md">
-                <CardHeader>
+                <CardContent className="pt-6 text-center flex flex-col items-center">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-12 w-12 mb-4 text-primary"><path d="M12 12a5 5 0 1 0-10 0 5 5 0 0 0 10 0Z" /><path d="M12 12a5 5 0 1 0 10 0 5 5 0 0 0-10 0Z" /><path d="M2 12h20" /></svg>
                   <CardTitle>1. Upload Your Audio</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>Drag and drop your MP3 file. Pro users can upload WAV files for automatic conversion.</p>
+                  <p className="mt-2">Drag and drop your MP3 file. Pro users can upload WAV files for automatic conversion.</p>
                 </CardContent>
               </Card>
               <Card className="drop-shadow-custom-md">
-                <CardHeader>
+                <CardContent className="pt-6 text-center flex flex-col items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-12 w-12 mb-4 text-primary"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
                   <CardTitle>2. Share the Link</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>Grab the unique link and send it to your clients or team. No sign-up required for them to leave comments.</p>
+                  <p className="mt-2">Grab the unique link and send it to your clients or team. No sign-up required for them to leave comments.</p>
                 </CardContent>
               </Card>
               <Card className="drop-shadow-custom-md">
-                <CardHeader>
+                <CardContent className="pt-6 text-center flex flex-col items-center">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-12 w-12 mb-4 text-primary"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-4-4 4 4 0 0 1 4-4 10 10 0 0 0-10-2Z" /><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" /></svg>
                   <CardTitle>3. Get Precise Feedback</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>Collaborators can add comments to a specific timestamp, highlight a time range, or even reference a YouTube video.</p>
+                  <p className="mt-2">Collaborators can add comments to a specific timestamp, highlight a time range, or even reference a YouTube video.</p>
                 </CardContent>
               </Card>
             </div>
