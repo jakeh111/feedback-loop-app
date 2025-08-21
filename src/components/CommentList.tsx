@@ -97,7 +97,7 @@ export function CommentList({
         const canDeleteComment = currentUserId === comment.userId;
 
         return (
-            <Card key={comment.id} className={cn("drop-shadow-custom-md transition-all duration-300 overflow-visible", 
+            <Card key={comment.id} className={cn("drop-shadow-custom-md transition-all duration-300", 
                 isNew && "bg-primary/5 border-primary/20",
                 comment.completed && "opacity-60 bg-muted/30"
             )}>
@@ -124,46 +124,48 @@ export function CommentList({
                   <AvatarFallback>{comment.author.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-grow">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold">{comment.author}</p>
-                    {canDeleteComment && (
-                       <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Comment?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will permanently delete your comment. This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => onDeleteComment(comment.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                    )}
+                  <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold">{comment.author}</p>
+                        {canDeleteComment && (
+                           <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Comment?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will permanently delete your comment. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => onDeleteComment(comment.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                          {isNew && <Badge variant="default" className="text-xs px-1.5 py-0.5 pointer-events-none">New</Badge>}
+                          {comment.youtubeUrl && (
+                              <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-500" onClick={() => handleYoutubeLink(comment.youtubeUrl!, comment.youtubeTimestamp)}>
+                                  <Youtube className="h-5 w-5" />
+                              </Button>
+                          )}
+                          <Button variant="ghost" size="sm" onClick={() => onSeekTo(comment.timestamp)} className="text-accent hover:text-accent font-mono">
+                              {comment.endTimestamp ? <GitCommitHorizontal className="mr-2 h-4 w-4" /> : <Clock className="mr-2 h-4 w-4" />}
+                              {formatTime(comment.timestamp)}
+                              {comment.endTimestamp && ` - ${formatTime(comment.endTimestamp)}`}
+                          </Button>
+                      </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {comment.createdAt ? format(new Date(comment.createdAt as Date), "MMM d, yyyy 'at' h:mm a") : 'Just now'}
                   </p>
-                </div>
-                <div className="flex items-center gap-1">
-                    {isNew && <Badge variant="default" className="text-xs px-1.5 py-0.5 pointer-events-none">New</Badge>}
-                    {comment.youtubeUrl && (
-                        <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-500" onClick={() => handleYoutubeLink(comment.youtubeUrl!, comment.youtubeTimestamp)}>
-                            <Youtube className="h-5 w-5" />
-                        </Button>
-                    )}
-                    <Button variant="ghost" size="sm" onClick={() => onSeekTo(comment.timestamp)} className="text-accent hover:text-accent font-mono">
-                        {comment.endTimestamp ? <GitCommitHorizontal className="mr-2 h-4 w-4" /> : <Clock className="mr-2 h-4 w-4" />}
-                        {formatTime(comment.timestamp)}
-                        {comment.endTimestamp && ` - ${formatTime(comment.endTimestamp)}`}
-                    </Button>
                 </div>
               </CardHeader>
               <CardContent className="p-4 pl-14 space-y-4">
