@@ -27,6 +27,7 @@ import { deleteTrack } from '@/app/actions';
 import { differenceInDays, addDays } from 'date-fns';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
+import { AdBanner } from './AdBanner';
 
 const TRACK_LIFETIME_DAYS = 30;
 
@@ -51,6 +52,8 @@ export function DashboardClient() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [trackToDelete, setTrackToDelete] = useState<DashboardTrack | null>(null);
   const { toast } = useToast();
+
+  const isProUser = false;
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
@@ -164,8 +167,8 @@ export function DashboardClient() {
         </div>
 
         {user && (
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
-           <Card className="drop-shadow-custom-md">
+          <div className="grid md:grid-cols-3 gap-6 mb-6">
+           <Card className="drop-shadow-custom-md md:col-span-2">
               <CardHeader>
                 <CardTitle>My Account</CardTitle>
                 <CardDescription>View your account details and manage your subscription.</CardDescription>
@@ -195,32 +198,54 @@ export function DashboardClient() {
                  </div>
               </CardContent>
             </Card>
-            <Card className="drop-shadow-custom-md bg-gradient-to-br from-primary/10 to-background">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Zap className="text-primary"/>
-                        Upgrade to Pro
-                    </CardTitle>
-                    <CardDescription>Unlock powerful features to enhance your feedback workflow.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <ul className="space-y-3 text-sm">
-                        <li className="flex items-start gap-3">
-                            <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
-                            <span><span className="font-semibold">Permanent Track Storage:</span> Never lose a track or comment again. All your uploads are stored forever.</span>
-                        </li>
-                         <li className="flex items-start gap-3">
-                            <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
-                            <span><span className="font-semibold">Unlimited Uploads:</span> No limits on the number of tracks you can upload and manage.</span>
-                        </li>
-                         <li className="flex items-start gap-3">
-                            <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
-                           <span><span className="font-semibold">Advanced AI Analysis:</span> Get deeper insights with comment categorization and tonal analysis.</span>
-                        </li>
-                    </ul>
-                    <Button className="w-full" disabled>Upgrade Now (Coming Soon)</Button>
-                </CardContent>
-            </Card>
+            <div className="space-y-6">
+                 {isProUser ? (
+                     <Card className="drop-shadow-custom-md bg-gradient-to-br from-primary/10 to-background">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Zap className="text-primary"/>
+                                Pro Member
+                            </CardTitle>
+                            <CardDescription>You have access to all Pro features. Thank you for your support!</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                           <Button className="w-full" disabled>Manage Subscription</Button>
+                        </CardContent>
+                    </Card>
+                 ) : (
+                    <Card className="drop-shadow-custom-md bg-gradient-to-br from-primary/10 to-background">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Zap className="text-primary"/>
+                                Upgrade to Pro
+                            </CardTitle>
+                            <CardDescription>Unlock powerful features to enhance your feedback workflow.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <ul className="space-y-3 text-sm">
+                                <li className="flex items-start gap-3">
+                                    <CheckCircle className="text-primary w-5 h-5 mt-0.5 flex-shrink-0" />
+                                    <span><span className="font-semibold">Ad-Free Experience:</span> Focus on your feedback without interruptions.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <CheckCircle className="text-primary w-5 h-5 mt-0.5 flex-shrink-0" />
+                                    <span><span className="font-semibold">Permanent Track Storage:</span> Never lose a track or comment again.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <CheckCircle className="text-primary w-5 h-5 mt-0.5 flex-shrink-0" />
+                                    <span><span className="font-semibold">Advanced AI Analysis:</span> Get deeper insights with comment categorization and tonal analysis.</span>
+                                </li>
+                            </ul>
+                            <Button className="w-full" disabled>Upgrade Now (Coming Soon)</Button>
+                        </CardContent>
+                    </Card>
+                 )}
+                 {!isProUser && (
+                     <div className="hidden md:block">
+                        <AdBanner />
+                     </div>
+                 )}
+            </div>
           </div>
         )}
 
