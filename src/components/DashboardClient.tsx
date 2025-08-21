@@ -157,7 +157,7 @@ export function DashboardClient() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
           {user && (
-            <UploadDialog onUploadComplete={() => {}}>
+            <UploadDialog>
               <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Upload New Track
@@ -214,7 +214,7 @@ export function DashboardClient() {
                 <ListMusic className="mx-auto h-12 w-12 text-muted-foreground" />
                 <h3 className="mt-4 text-lg font-semibold">No tracks uploaded</h3>
                 <p className="mt-1 text-sm">Upload your first track to get started.</p>
-                <UploadDialog onUploadComplete={() => {}}>
+                <UploadDialog>
                     <Button className="mt-4">
                       <PlusCircle className="mr-2 h-4 w-4" />
                       Upload Track

@@ -24,10 +24,10 @@ export function UploadDialog({ children, onUploadComplete }: UploadDialogProps) 
 
   const handleUploadComplete = (trackId: string) => {
     setIsOpen(false);
+    // Always redirect to the track page.
+    router.push(`/track/${trackId}`);
     if (onUploadComplete) {
       onUploadComplete(trackId);
-    } else {
-      router.push(`/track/${trackId}`);
     }
   };
 
