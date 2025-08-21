@@ -81,7 +81,7 @@ export function WaveformDisplay({ waveformData, progress, comments, duration, on
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <div 
-                                className="absolute top-0 h-full w-px cursor-pointer"
+                                className="absolute top-0 h-full w-px cursor-pointer group"
                                 style={{ left: `${left}%` }}
                                 onClick={(e) => { e.stopPropagation(); onWaveformClick(left / 100); }}
                             >
