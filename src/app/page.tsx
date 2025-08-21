@@ -103,6 +103,10 @@ export default function Home() {
                         </li>
                          <li className="flex items-start gap-3">
                             <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
+                           <span><span className="font-semibold">Ad-Free Experience:</span> Focus on the feedback without any interruptions.</span>
+                        </li>
+                         <li className="flex items-start gap-3">
+                            <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
                            <span><span className="font-semibold">Permanent Track Storage:</span> Never lose a track or comment again.</span>
                         </li>
                     </ul>

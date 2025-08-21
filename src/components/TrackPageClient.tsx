@@ -9,6 +9,7 @@ import { CommentList } from '@/components/CommentList';
 import { AddCommentForm } from '@/components/AddCommentForm';
 import { SummarizeButton } from '@/components/SummarizeButton';
 import { GuestNameDialog } from '@/components/GuestNameDialog';
+import { AdBanner } from '@/components/AdBanner';
 import { Share2, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -218,9 +219,17 @@ export function TrackPageClient({ track }: { track: Track }) {
                 <CommentList comments={comments} onSeekTo={handleSeekTo} />
             )}
         </div>
-        <div>
-            <h2 className="text-2xl font-bold font-headline mb-4">Leave Feedback {authorName && <span className="text-sm text-muted-foreground font-normal">as {authorName}</span>}</h2>
-            <AddCommentForm onAddComment={handleAddComment} audioPlayerRef={audioPlayerRef} isCommentingEnabled={isCommentingEnabled} selectedTime={selectedTime} />
+        <div className="flex flex-col gap-8">
+            <div>
+                <h2 className="text-2xl font-bold font-headline mb-4">Leave Feedback {authorName && <span className="text-sm text-muted-foreground font-normal">as {authorName}</span>}</h2>
+                <AddCommentForm onAddComment={handleAddComment} audioPlayerRef={audioPlayerRef} isCommentingEnabled={isCommentingEnabled} selectedTime={selectedTime} />
+            </div>
+             {!isProUser && (
+                <div>
+                    <h2 className="text-xs font-headline mb-4 text-muted-foreground text-center">SPONSORED</h2>
+                    <AdBanner />
+                </div>
+            )}
         </div>
       </div>
     </div>
