@@ -38,41 +38,12 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  useImperativeHandle(ref, () => ({
-    seekTo(time: number) {
-      if (wavesurferRef.current) {
-        wavesurferRef.current.seekTo(time / wavesurferRef.current.getDuration());
-        if (!wavesurferRef.current.isPlaying()) {
-            wavesurferRef.current.play();
-        }
-      }
-    },
-    wavesurfer: wavesurferRef.current,
-  }));
-  
-  const addCommentRegions = useCallback(() => {
-    if (!regionsRef.current || !wavesurferRef.current) return;
-    
-    // Clear existing regions before adding new ones
-    regionsRef.current.clearRegions();
-    
-    comments.forEach(comment => {
-      if (comment.endTimestamp) {
-        regionsRef.current.addRegion({
-          start: comment.timestamp,
-          end: comment.endTimestamp,
-          content: '',
-          color: 'hsla(var(--accent) / 0.2)',
-          drag: false,
-          resize: false,
-        });
-      }
-    });
-  }, [comments]);
-
-
+  // Initialize wavesurfer
   useEffect(() => {
     if (!waveformRef.current) return;
+
+    // Create a new instance of RegionsPlugin
+    regionsRef.current = RegionsPlugin.create();
 
     const ws = WaveSurfer.create({
       container: waveformRef.current,
@@ -82,14 +53,15 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
       barWidth: 3,
       barRadius: 3,
       barGap: 2,
-      height: 112, // Corresponds to h-28
+      height: 112,
       url: track.audioUrl,
       normalize: true,
+      plugins: [
+        regionsRef.current,
+      ],
     });
     
     wavesurferRef.current = ws;
-    regionsRef.current = ws.registerPlugin(RegionsPlugin.create());
-
 
     const subs = [
       ws.on('play', () => setIsPlaying(true)),
@@ -100,25 +72,62 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
       }),
       ws.on('ready', (d) => {
         setDuration(d);
-        addCommentRegions();
-      }),
-       ws.on('decode', (d) => {
-        setDuration(d);
-        addCommentRegions();
       }),
     ];
 
     return () => {
       subs.forEach(unsub => unsub());
-      ws.destroy();
+      if (wavesurferRef.current) {
+        wavesurferRef.current.destroy();
+        wavesurferRef.current = null;
+      }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [track.audioUrl, onTimeUpdate]);
-  
-  useEffect(() => {
-    addCommentRegions();
-  }, [comments, addCommentRegions]);
+  }, [track.audioUrl]);
 
+
+  // Add comment regions when comments or wavesurfer instance are ready
+  useEffect(() => {
+    if (!regionsRef.current || !wavesurferRef.current) return;
+    
+    const ws = wavesurferRef.current;
+    
+    const addRegions = () => {
+        regionsRef.current?.clearRegions();
+        comments.forEach(comment => {
+          if (comment.endTimestamp) {
+            regionsRef.current?.addRegion({
+              start: comment.timestamp,
+              end: comment.endTimestamp,
+              content: '',
+              color: 'hsla(var(--accent) / 0.2)',
+              drag: false,
+              resize: false,
+            });
+          }
+        });
+    }
+
+    if (ws.isReady) {
+        addRegions();
+    } else {
+        const readySub = ws.on('ready', addRegions);
+        return () => readySub();
+    }
+
+  }, [comments, wavesurferRef, regionsRef]);
+
+
+  useImperativeHandle(ref, () => ({
+    seekTo(time: number) {
+      if (wavesurferRef.current) {
+        wavesurferRef.current.seekTo(time / wavesurferRef.current.getDuration());
+        wavesurferRef.current.play();
+      }
+    },
+    wavesurfer: wavesurferRef.current,
+  }));
+  
   useEffect(() => {
      if (wavesurferRef.current) {
          wavesurferRef.current.setVolume(isMuted ? 0 : volume);
