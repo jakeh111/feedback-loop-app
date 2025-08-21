@@ -237,7 +237,7 @@ export async function processAndStoreTrack({
 
         // Download the file to a buffer to generate waveform
         const [audioBuffer] = await file.download();
-        const waveformData = await generateWaveformData(audioBuffer);
+        const waveform = await generateWaveformData(audioBuffer);
         
         console.log("Creating Firestore document...");
         const trackTitle = originalFilename.replace(/\.[^/.]+$/, "");
@@ -249,7 +249,7 @@ export async function processAndStoreTrack({
             userId: userId,
             createdAt: FieldValue.serverTimestamp(),
             commentCount: 0,
-            waveformData: waveformData,
+            waveform: waveform,
         });
 
         return trackDocRef.id;
@@ -260,5 +260,3 @@ export async function processAndStoreTrack({
         throw new Error('Failed to process and store track.');
     }
 }
-
-    

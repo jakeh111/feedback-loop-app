@@ -21,7 +21,7 @@ export type Track = {
   artist: string;
   audioUrl: string;
   userId?: string;
-  waveformData?: number[];
+  waveform?: number[];
 };
 
 export const ProcessAudioInputSchema = z.object({
@@ -39,5 +39,3 @@ export const ProcessAudioOutputSchema = z.object({
     .describe('The processed audio file, returned as a base64 data URI.'),
 });
 export type ProcessAudioOutput = z.infer<typeof ProcessAudioOutputSchema>;
-
-    

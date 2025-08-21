@@ -15,7 +15,7 @@ const getSampleTrack = (): Track => {
     artist: 'Sample Artist',
     audioUrl: 'https://storage.googleapis.com/studioprod-exports-prod/supported_output_formats/12-second-of-silence.mp3', // A silent mp3 file for placeholder
     userId: 'sample-user',
-    waveformData: waveformData,
+    waveform: waveformData,
   };
 };
 
@@ -39,7 +39,7 @@ const getTrackData = async (id: string): Promise<Track | null> => {
       artist: data.artist || "Unknown Artist",
       audioUrl: data.audioUrl,
       userId: data.userId,
-      waveformData: data.waveformData || [],
+      waveform: data.waveform || [],
     };
   } catch (error) {
     console.error("Error fetching track data:", error);
@@ -79,5 +79,3 @@ export default async function TrackPage({ params }: { params: { id:string } }) {
 
   return <TrackPageClient track={track} />;
 }
-
-    

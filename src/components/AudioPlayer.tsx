@@ -126,7 +126,7 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
   return (
     <div className="bg-card p-4 rounded-lg border drop-shadow-custom-md">
       <audio ref={audioRef} src={track.audioUrl} preload="metadata" />
-      <WaveformDisplay waveformData={track.waveformData || []} progress={progress} onWaveformClick={handleWaveformClick} />
+      <WaveformDisplay waveformData={track.waveform || []} progress={progress} onWaveformClick={handleWaveformClick} />
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm font-mono text-muted-foreground w-28">
           {formatTime(currentTime)} / {formatTime(duration)}
