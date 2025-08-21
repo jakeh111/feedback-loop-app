@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -31,7 +30,7 @@ export function WaveformDisplay({ waveformData, progress, comments, duration, on
   return (
     <div className="relative">
       <div 
-        className="w-full h-28 bg-muted/20 rounded-lg flex items-center justify-center gap-px p-2 cursor-pointer" 
+        className="w-full h-28 bg-muted/20 rounded-lg flex items-center justify-center gap-[2px] p-2 cursor-pointer" 
         onClick={handleWaveformContainerClick}
       >
         {waveformData.map((bar, index) => {
