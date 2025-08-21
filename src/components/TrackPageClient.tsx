@@ -64,7 +64,7 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const isProUser = false;
-  const isOwner = user?.uid === track.userId;
+  const isOwner = user ? user.uid === track.userId : false;
 
   useEffect(() => {
     if (isOwner && track.id !== 'sample') {
@@ -120,22 +120,28 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      if (currentUser) {
+      if (currentUser && !currentUser.isAnonymous) {
         setAuthorName(currentUser.displayName || "Authenticated User");
         setIsGuestPromptOpen(false); // Close prompt if user logs in
       } else {
         const guestName = sessionStorage.getItem(`guestName-${track.id}`);
         if (guestName) {
           setAuthorName(guestName);
+          if (!currentUser) {
+             auth.signInAnonymously().catch(err => console.error("Anonymous auth failed:", err));
+          }
         } else {
-          // A guest will have a randomly generated UID. We can use this to persist their comments for a session.
-          auth.signInAnonymously().then(cred => {
-            setUser(cred.user);
-            setTimeout(() => setIsGuestPromptOpen(true), 100);
-          }).catch(err => {
-             console.error("Anonymous auth failed:", err);
-             toast({ variant: 'destructive', title: 'Session Error', description: 'Could not create a guest session.'});
-          })
+           if (!currentUser) {
+                auth.signInAnonymously().then(cred => {
+                    setUser(cred.user);
+                    setTimeout(() => setIsGuestPromptOpen(true), 100);
+                }).catch(err => {
+                    console.error("Anonymous auth failed:", err);
+                    toast({ variant: 'destructive', title: 'Session Error', description: 'Could not create a guest session.'});
+                })
+           } else {
+                setIsGuestPromptOpen(true);
+           }
         }
       }
     });
@@ -188,7 +194,7 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
       text,
       timestamp: startTime,
       endTimestamp: endTime,
-      avatarUrl: user.isAnonymous ? `https://placehold.co/40x40.png?text=${authorName.charAt(0).toUpperCase()}` : user.photoURL || `https://placehold.co/40x40.png?text=${authorName.charAt(0).toUpperCase()}`,
+      avatarUrl: user.isAnonymous ? `https://placehold.co/40x40.png?text=${authorName.charAt(0).toUpperCase()}` : user.photoURL || `https://placehold.co/40x40.png?text=${(user.displayName || authorName).charAt(0).toUpperCase()}`,
       userId: user.uid,
       youtubeUrl,
       youtubeTimestamp
@@ -207,7 +213,7 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
   };
 
   const handleAddReply = async (commentId: string, replyText: string) => {
-    if (!user) {
+    if (!user || user.isAnonymous) {
       toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to reply.' });
       return;
     }
@@ -409,7 +415,7 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
                   onSeekTo={handleSeekTo}
                   lastViewedAt={isOwner ? track.lastViewedAt : undefined}
                   onToggleComplete={isOwner ? handleToggleComplete : undefined}
-                  onAddReply={isOwner ? handleAddReply : undefined}
+                  onAddReply={user && !user.isAnonymous ? handleAddReply : undefined}
                   isOwner={isOwner}
                   currentUserId={user?.uid}
                   onDeleteComment={handleDeleteComment}

@@ -92,7 +92,7 @@ export function CommentList({
   return (
     <div className="space-y-4">
       {[...comments].sort((a,b) => a.timestamp - b.timestamp).map((comment) => {
-        const commentTime = (comment.createdAt as Date).getTime();
+        const commentTime = comment.createdAt ? (comment.createdAt as Date).getTime() : 0;
         const isNew = lastViewedTime > 0 && commentTime > lastViewedTime;
         const canDeleteComment = currentUserId === comment.userId;
 
@@ -149,7 +149,7 @@ export function CommentList({
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {format(new Date(comment.createdAt as Date), "MMM d, yyyy 'at' h:mm a")}
+                    {comment.createdAt ? format(new Date(comment.createdAt as Date), "MMM d, yyyy 'at' h:mm a") : 'Just now'}
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
@@ -205,7 +205,7 @@ export function CommentList({
                                   )}
                                </div>
                               <p className="text-xs text-muted-foreground">
-                                 {format(new Date(reply.createdAt as Date), "MMM d, yyyy 'at' h:mm a")}
+                                 {reply.createdAt ? format(new Date(reply.createdAt as Date), "MMM d, yyyy 'at' h:mm a") : 'Just now'}
                               </p>
                               <p className="mt-1">{reply.text}</p>
                             </div>
@@ -215,7 +215,7 @@ export function CommentList({
                   </div>
                 )}
                 
-                {isOwner && onAddReply && (
+                {onAddReply && (
                   <div className="pt-2">
                     {replyingTo === comment.id ? (
                       <div className="space-y-2">
