@@ -13,7 +13,6 @@ const getSampleTrack = (): Track => {
     title: 'Sample Track - My Masterpiece',
     artist: 'Sample Artist',
     audioUrl: 'https://storage.googleapis.com/studioprod-exports-prod/supported_output_formats/12-second-of-silence.mp3', // A silent mp3 file for placeholder
-    waveform: Array.from({ length: 100 }, (_, i) => Math.round(Math.sin(i * Math.PI / 25) * 40 + 50)),
     userId: 'sample-user',
   };
 };
@@ -32,29 +31,11 @@ const getTrackData = async (id: string): Promise<Track | null> => {
 
     const data = trackSnap.data();
 
-    // In a real app, you might generate or store a real waveform.
-    // For now, we'll keep the pseudo-random one for visual purposes.
-    const seedrandom = (seed: string) => {
-      let seedVal = 0;
-      for(let i = 0; i < seed.length; i++) {
-          seedVal += seed.charCodeAt(i);
-      }
-      const random = () => {
-          const x = Math.sin(seedVal++) * 10000;
-          return x - Math.floor(x);
-      };
-      return random;
-    }
-    const random = seedrandom(id);
-    const randomWaveform = Array.from({ length: 100 }, () => Math.round(random() * 100));
-
-
     return {
       id: trackSnap.id,
       title: data.title || "Untitled Track",
       artist: data.artist || "Unknown Artist",
       audioUrl: data.audioUrl,
-      waveform: data.waveform && data.waveform.length > 0 ? data.waveform : randomWaveform,
       userId: data.userId,
     };
   } catch (error) {

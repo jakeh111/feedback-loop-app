@@ -20,7 +20,6 @@ export type Track = {
   title: string;
   artist: string;
   audioUrl: string;
-  waveform: number[];
   userId?: string;
 };
 

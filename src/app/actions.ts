@@ -150,14 +150,12 @@ export async function processAndStoreTrack({
   storagePath,
   originalFilename,
   userId,
-  artistName,
-  waveformData,
+  artistName
 }: {
   storagePath: string;
   originalFilename: string;
   userId: string;
   artistName: string;
-  waveformData: number[];
 }): Promise<string> {
     const bucket = storage.bucket();
     const file = bucket.file(storagePath);
@@ -175,7 +173,6 @@ export async function processAndStoreTrack({
             artist: artistName,
             audioUrl: downloadURL,
             storagePath: storagePath,
-            waveform: waveformData,
             userId: userId,
             createdAt: FieldValue.serverTimestamp(),
             commentCount: 0,

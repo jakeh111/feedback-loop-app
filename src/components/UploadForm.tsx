@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from 'react';
@@ -56,22 +55,6 @@ export function UploadForm({ onUploadComplete, onUploadBlocked }: UploadFormProp
       }
     }
   };
-
-  const generateWaveform = (audioBuffer: AudioBuffer, targetPoints: number = 100): number[] => {
-      const rawData = audioBuffer.getChannelData(0);
-      const samples = Math.floor(rawData.length / targetPoints);
-      const waveform: number[] = [];
-      for (let i = 0; i < targetPoints; i++) {
-          const start = i * samples;
-          let max = 0;
-          for (let j = 0; j < samples; j++) {
-              max = Math.max(max, Math.abs(rawData[start + j]));
-          }
-          waveform.push(Math.round(max * 100)); // Scale to 0-100
-      }
-      return waveform;
-  };
-
 
   const convertWavToMp3 = async (wavFile: File): Promise<{mp3File: File, waveform: number[]}> => {
     return new Promise((resolve, reject) => {
@@ -150,6 +133,13 @@ export function UploadForm({ onUploadComplete, onUploadBlocked }: UploadFormProp
       return generateWaveform(audioBuffer);
   }
 
+  const generateWaveform = (audioBuffer: AudioBuffer, targetPoints: number = 100): number[] => {
+    // Waveform generation is now handled by wavesurfer.js on the client.
+    // We can return an empty array here, as it's no longer stored in Firestore.
+    return [];
+  };
+
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const user = auth.currentUser;
@@ -167,7 +157,6 @@ export function UploadForm({ onUploadComplete, onUploadBlocked }: UploadFormProp
     setIsProcessing(true);
     
     let fileToUpload = selectedFile;
-    let waveformData: number[] = [];
     
     // Handle WAV conversion
     if (isProUser && (selectedFile.type === 'audio/wav' || selectedFile.type === 'audio/wave')) {
@@ -175,7 +164,6 @@ export function UploadForm({ onUploadComplete, onUploadBlocked }: UploadFormProp
         try {
             const result = await convertWavToMp3(selectedFile);
             fileToUpload = result.mp3File;
-            waveformData = result.waveform;
         } catch (error) {
             toast({ variant: "destructive", title: "Conversion Failed", description: `Could not convert WAV to MP3. ${error instanceof Error ? error.message : ''}` });
             setIsProcessing(false);
@@ -184,20 +172,6 @@ export function UploadForm({ onUploadComplete, onUploadBlocked }: UploadFormProp
         }
     }
     
-    // Handle MP3 waveform generation
-    if (fileToUpload.type === 'audio/mpeg') {
-        setStatusText("Analyzing waveform...");
-        try {
-            waveformData = await getMp3Waveform(fileToUpload);
-        } catch (error) {
-            toast({ variant: "destructive", title: "Analysis Failed", description: `Could not analyze audio file. ${error instanceof Error ? error.message : ''}` });
-            setIsProcessing(false);
-            setStatusText("");
-            return;
-        }
-    }
-
-
     setStatusText("Uploading file...");
     
     const finalStoragePath = `tracks/${user.uid}/${Date.now()}-${fileToUpload.name}`;
@@ -223,8 +197,7 @@ export function UploadForm({ onUploadComplete, onUploadBlocked }: UploadFormProp
                 storagePath: finalStoragePath,
                 originalFilename: fileToUpload.name,
                 userId: user.uid,
-                artistName: user.displayName || 'Unknown Artist',
-                waveformData: waveformData,
+                artistName: user.displayName || 'Unknown Artist'
             });
             
             toast({ title: "Upload Successful", description: "Your track is ready and saved to your dashboard." });
