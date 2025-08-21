@@ -69,9 +69,10 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
         setIsProcessing(false);
         setUploadProgress(0);
         setStatusText("");
-        toast({ variant: "destructive", title: "Upload Failed", description: "An error occurred while uploading your track. Please try again." });
+        toast({ variant: "destructive", title: "Upload Failed", description: `An error occurred while uploading: ${error.message}` });
       },
       async () => {
+        // Upload complete, now call the server action.
         try {
             setStatusText("Processing on server...");
             const trackId = await processAndStoreTrack({
@@ -89,6 +90,7 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
             toast({ variant: "destructive", title: "Processing Failed", description: `The server could not process your track. ${error instanceof Error ? error.message : ''}` });
         } finally {
             setIsProcessing(false);
+            setUploadProgress(0);
             setStatusText("");
         }
       }
