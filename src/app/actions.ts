@@ -1,4 +1,3 @@
-
 'use server';
 
 import {
@@ -56,9 +55,10 @@ export async function addComment(
         createdAt: FieldValue.serverTimestamp(),
       });
 
-      // Increment the comment count on the track
+      // Increment the comment count and update last commented timestamp
       transaction.update(trackRef, {
         commentCount: FieldValue.increment(1),
+        lastCommentedAt: FieldValue.serverTimestamp(),
       });
     });
   } catch (error) {
@@ -228,6 +228,7 @@ export async function processAndStoreTrack({
             storagePath: storagePath,
             userId: userId,
             createdAt: FieldValue.serverTimestamp(),
+            lastViewedAt: FieldValue.serverTimestamp(),
             commentCount: 0,
             waveform: waveform,
         });

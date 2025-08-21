@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -36,6 +34,9 @@ export type DashboardTrack = {
   title: string;
   comments: number; 
   createdAt: Date;
+  lastCommentedAt?: Date;
+  lastViewedAt?: Date;
+  hasNewComments: boolean;
 };
 
 const sampleTrack: DashboardTrack = {
@@ -43,6 +44,7 @@ const sampleTrack: DashboardTrack = {
     title: 'Sample Track - My Masterpiece',
     comments: 2,
     createdAt: addDays(new Date(), -15), // Created 15 days ago
+    hasNewComments: true,
 };
 
 export function DashboardClient() {
@@ -78,11 +80,24 @@ export function DashboardClient() {
       const unsubscribeTracks = onSnapshot(q, (querySnapshot) => {
         const userTracks: DashboardTrack[] = querySnapshot.docs.map(doc => {
           const data = doc.data();
+          const lastCommentedAt = (data.lastCommentedAt as Timestamp)?.toDate();
+          const lastViewedAt = (data.lastViewedAt as Timestamp)?.toDate();
+          
+          let hasNewComments = false;
+          if (lastCommentedAt) {
+              if (!lastViewedAt || lastCommentedAt > lastViewedAt) {
+                hasNewComments = true;
+              }
+          }
+
           return {
             id: doc.id,
             title: data.title || 'Untitled Track',
             comments: data.commentCount || 0,
             createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
+            lastCommentedAt,
+            lastViewedAt,
+            hasNewComments,
           };
         });
         setTracks(userTracks);
@@ -182,7 +197,13 @@ export function DashboardClient() {
                 {finalTracks.map((track) => {
                   const daysLeft = getDaysLeft(track.createdAt);
                   return (
-                    <div key={track.id} className="border rounded-lg p-4 flex flex-col gap-3">
+                    <div key={track.id} className="border rounded-lg p-4 flex flex-col gap-3 relative">
+                      {track.hasNewComments && (
+                         <span className="absolute top-3 right-3 flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                         </span>
+                      )}
                       <div className="flex items-start justify-between gap-4">
                         <div className="font-medium flex items-center gap-2 flex-1 min-w-0">
                            <Music className="h-5 w-5 text-muted-foreground flex-shrink-0" />
@@ -236,8 +257,14 @@ export function DashboardClient() {
                   {finalTracks.map((track) => {
                     const daysLeft = getDaysLeft(track.createdAt);
                     return (
-                      <TableRow key={track.id}>
+                      <TableRow key={track.id} className="relative">
                         <TableCell className="font-medium flex items-center gap-2">
+                            {track.hasNewComments && (
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                               </span>
+                            )}
                            <Music className="h-4 w-4 text-muted-foreground" />
                             <Link href={`/track/${track.id}`} className="cursor-pointer hover:underline">
                                 {track.title}

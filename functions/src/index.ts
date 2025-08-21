@@ -11,6 +11,8 @@ import {setGlobalOptions} from "firebase-functions";
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
+import {onDocumentCreated} from "firebase-functions/v2/firestore";
+import * as nodemailer from "nodemailer";
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
@@ -32,6 +34,91 @@ setGlobalOptions({ maxInstances: 10 });
 
 // Define the number of days after which tracks should be deleted.
 const TRACK_LIFETIME_DAYS = 30;
+
+// Configure nodemailer to use Gmail.
+// NOTE: This requires you to set up an App Password for your Gmail account
+// and configure it in your environment variables.
+// `firebase functions:config:set gmail.email="your-email@gmail.com" gmail.password="your-app-password"`
+const mailTransport = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: process.env.GMAIL_EMAIL,
+        pass: process.env.GMAIL_PASSWORD,
+    },
+});
+
+export const sendCommentNotification = onDocumentCreated("tracks/{trackId}/comments/{commentId}", async (event) => {
+    const snapshot = event.data;
+    if (!snapshot) {
+        logger.log("No data associated with the event");
+        return;
+    }
+    const commentData = snapshot.data();
+    const trackId = event.params.trackId;
+    const commentAuthor = commentData.author;
+
+    try {
+        const trackRef = firestore.collection("tracks").doc(trackId);
+        const trackDoc = await trackRef.get();
+
+        if (!trackDoc.exists) {
+            logger.error(`Track ${trackId} not found.`);
+            return;
+        }
+
+        const trackData = trackDoc.data()!;
+        const ownerId = trackData.userId;
+
+        // Don't send notification if the owner is the one commenting
+        if (commentAuthor === (await admin.auth().getUser(ownerId)).displayName) {
+             logger.info(`Comment author is the track owner. No notification sent for track ${trackId}.`);
+             return;
+        }
+
+        const userDoc = await firestore.collection("users").doc(ownerId).get();
+        const userData = userDoc.data();
+        const notificationsEnabled = userData?.notificationsEnabled ?? true;
+
+        if (!notificationsEnabled) {
+            logger.info(`User ${ownerId} has notifications disabled. No email sent.`);
+            return;
+        }
+
+        const ownerEmail = (await admin.auth().getUser(ownerId)).email;
+
+        if (!ownerEmail) {
+            logger.error(`No email found for user ${ownerId}`);
+            return;
+        }
+
+        const mailOptions = {
+            from: "\"TrackPolish\" <noreply@firebase.com>",
+            to: ownerEmail,
+            subject: `New comment on your track "${trackData.title}"`,
+            html: `
+                <p>Hey ${trackData.artist || "there"},</p>
+                <p>You have a new comment on your track, <strong>${trackData.title}</strong>.</p>
+                <p><strong>${commentAuthor}</strong> said: <em>"${commentData.text}"</em></p>
+                <p>Click <a href="https://audiomarker-nfgw.web.app/track/${trackId}">here</a> to view the comment.</p>
+                <br>
+                <p>Regards,</p>
+                <p>The TrackPolish Team</p>
+            `,
+        };
+        
+        await mailTransport.sendMail(mailOptions);
+        logger.info(`New comment notification email sent to ${ownerEmail} for track ${trackId}`);
+
+        // Update last commented timestamp
+        await trackRef.update({
+            lastCommentedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+    } catch (error) {
+        logger.error("Error sending comment notification:", error);
+    }
+});
+
 
 export const cleanupOldTracks = onSchedule("every day 00:00", async (event) => {
     logger.info("Starting scheduled track cleanup job.");

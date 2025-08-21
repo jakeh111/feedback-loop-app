@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useRouter } from "next/navigation";
@@ -6,8 +5,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { EmailAuthProvider, reauthenticateWithCredential, updateEmail, updateProfile } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, firestore } from "@/lib/firebase";
 import { FirebaseError } from "firebase/app";
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,9 +28,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Bell } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 
 const formSchema = z.object({
@@ -38,14 +40,13 @@ const formSchema = z.object({
   email: z.string().email({
     message: "Please enter a valid email address.",
   }),
-  password: z.string().min(1, {
-    message: "Password is required for verification.",
-  }),
+  password: z.string().optional(),
 });
 
 export default function ProfilePage() {
   const router = useRouter();
   const { toast } = useToast();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -64,8 +65,33 @@ export default function ProfilePage() {
             email: user.email || "",
             password: "",
         });
+
+        const userSettingsRef = doc(firestore, "users", user.uid);
+        getDoc(userSettingsRef).then(docSnap => {
+            if (docSnap.exists()) {
+                setNotificationsEnabled(docSnap.data().notificationsEnabled ?? true);
+            }
+        })
     }
   }, [user, form]);
+
+
+  const handleNotificationChange = async (enabled: boolean) => {
+    if (!user) return;
+    setNotificationsEnabled(enabled);
+    try {
+        const userSettingsRef = doc(firestore, "users", user.uid);
+        await setDoc(userSettingsRef, { notificationsEnabled: enabled }, { merge: true });
+        toast({
+            title: "Settings Updated",
+            description: `Email notifications have been ${enabled ? 'enabled' : 'disabled'}.`
+        })
+    } catch(error) {
+        console.error("Error updating notification settings:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not update notification settings.'});
+        setNotificationsEnabled(!enabled); // revert on failure
+    }
+  }
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -78,6 +104,23 @@ export default function ProfilePage() {
         return;
     }
 
+    const hasNameChanged = values.name !== user.displayName;
+    const hasEmailChanged = values.email !== user.email;
+
+    if (!hasNameChanged && !hasEmailChanged) {
+        toast({
+            title: "No Changes",
+            description: "You didn't make any changes to your profile.",
+        });
+        return;
+    }
+
+    if (!values.password) {
+        form.setError("password", { type: "manual", message: "Password is required to make changes." });
+        return;
+    }
+
+
     const credential = EmailAuthProvider.credential(user.email!, values.password);
 
     try {
@@ -85,13 +128,10 @@ export default function ProfilePage() {
         
         const updatePromises = [];
 
-        // Check if name is different and update if needed
-        if (values.name !== user.displayName) {
+        if (hasNameChanged) {
             updatePromises.push(updateProfile(user, { displayName: values.name }));
         }
-
-        // Check if email is different and update if needed
-        if (values.email !== user.email) {
+        if (hasEmailChanged) {
             updatePromises.push(updateEmail(user, values.email));
         }
 
@@ -101,19 +141,12 @@ export default function ProfilePage() {
                 title: "Profile Updated",
                 description: "Your account details have been successfully updated.",
             });
-            // Reset form with new values, clear password
             form.reset({
                 name: values.name,
                 email: values.email,
                 password: "",
             });
-        } else {
-             toast({
-                title: "No Changes",
-                description: "You didn't make any changes to your profile.",
-            });
         }
-
 
     } catch (error) {
       console.error("Profile update error:", error);
@@ -155,10 +188,10 @@ export default function ProfilePage() {
         <CardHeader>
           <CardTitle className="text-2xl">Edit Profile</CardTitle>
           <CardDescription>
-            Update your name or email address. You must provide your current password to make changes.
+            Update your account details and notification preferences.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -187,7 +220,7 @@ export default function ProfilePage() {
                   </FormItem>
                 )}
               />
-               <hr className="my-4"/>
+               <hr className="my-2"/>
               <FormField
                 control={form.control}
                 name="password"
@@ -207,6 +240,22 @@ export default function ProfilePage() {
               </Button>
             </form>
           </Form>
+
+           <div className="space-y-4">
+            <hr />
+            <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                    <Label className="text-base flex items-center gap-2"><Bell /> Notifications</Label>
+                    <p className="text-sm text-muted-foreground">Receive email notifications for new comments.</p>
+                </div>
+                <Switch
+                    checked={notificationsEnabled}
+                    onCheckedChange={handleNotificationChange}
+                    aria-readonly
+                />
+            </div>
+           </div>
+
         </CardContent>
       </Card>
     </div>

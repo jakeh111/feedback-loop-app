@@ -1,5 +1,4 @@
-
-"use client";
+'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import type { Track, Comment } from '@/lib/types';
@@ -13,7 +12,7 @@ import { Share2, Loader2, Pencil, MessageSquare } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, Timestamp, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { firestore, auth } from '@/lib/firebase';
 import { addComment, renameTrack } from '@/app/actions';
 import { onAuthStateChanged, type User } from 'firebase/auth';
@@ -61,6 +60,15 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
 
   const isProUser = false;
   const isOwner = user?.uid === track.userId;
+
+  // Mark track as viewed by owner
+  useEffect(() => {
+    if (isOwner && track.id !== 'sample') {
+      const trackRef = doc(firestore, 'tracks', track.id);
+      setDoc(trackRef, { lastViewedAt: serverTimestamp() }, { merge: true });
+    }
+  }, [isOwner, track.id]);
+
 
   useEffect(() => {
     if (isEditingTitle && titleInputRef.current) {
