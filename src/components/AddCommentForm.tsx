@@ -112,14 +112,14 @@ export function AddCommentForm({ onAddComment, audioPlayerRef, isCommentingEnabl
             </div>
           )}
           
-          <div className="flex flex-col md:flex-row justify-start items-stretch md:items-center gap-2">
+          <div className="flex flex-wrap justify-start items-center gap-2">
              <Button type="button" variant="ghost" onClick={handleToggleRangeSelection} size="sm" disabled={!isCommentingEnabled} className="justify-start">
                 <GitCommitHorizontal className="mr-2 h-4 w-4" />
-                <span className="flex-shrink-0">{isRangeSelection ? 'Comment on Timestamp' : 'Comment on Range'}</span>
+                <span>{isRangeSelection ? 'Comment on Timestamp' : 'Comment on Range'}</span>
             </Button>
             <Button type="button" variant="ghost" onClick={() => setShowYoutube(!showYoutube)} size="sm" disabled={!isCommentingEnabled} className="justify-start">
                 <Youtube className="mr-2 h-4 w-4" />
-                <span className="flex-shrink-0">{showYoutube ? 'Remove Reference' : 'Add YouTube Reference'}</span>
+                <span>{showYoutube ? 'Remove Reference' : 'Add YouTube Reference'}</span>
             </Button>
           </div>
 
