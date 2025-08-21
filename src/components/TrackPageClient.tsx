@@ -9,7 +9,7 @@ import { AddCommentForm } from '@/components/AddCommentForm';
 import { SummarizeButton } from '@/components/SummarizeButton';
 import { GuestNameDialog } from '@/components/GuestNameDialog';
 import { AdBanner } from '@/components/AdBanner';
-import { Share2, Loader2, Pencil } from 'lucide-react';
+import { Share2, Loader2, Pencil, MessageSquare } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -52,6 +52,8 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
   const [isGuestPromptOpen, setIsGuestPromptOpen] = useState(false);
   const [selectedTime, setSelectedTime] = useState(0);
   const [trackDuration, setTrackDuration] = useState(0);
+  const [activeComment, setActiveComment] = useState<Comment | null>(null);
+
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editingTitle, setEditingTitle] = useState(track.title);
@@ -241,6 +243,11 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
   
   const isCommentingEnabled = !!authorName;
 
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  }
+
   return (
     <div className="container mx-auto p-4 md:p-8">
       <GuestNameDialog isOpen={isGuestPromptOpen} onNameSubmit={handleNameSubmit} />
@@ -276,8 +283,27 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
             <SummarizeButton comments={comments} isProUser={isProUser} />
         </div>
       </div>
+        
+      <div className="relative mb-4">
+        {activeComment && (
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-full max-w-4xl mb-2 px-4 z-10 transition-all duration-300 animate-in fade-in slide-in-from-bottom-2">
+                <div className="bg-popover text-popover-foreground rounded-lg p-3 shadow-lg border text-center">
+                    <p className="font-semibold text-sm">{activeComment.author}</p>
+                    <p className="text-xs text-muted-foreground italic">"{truncateText(activeComment.text, 100)}"</p>
+                </div>
+            </div>
+        )}
+        <AudioPlayer 
+            key={track.id} 
+            ref={audioPlayerRef} 
+            track={track} 
+            comments={comments} 
+            onTimeUpdate={handleTimeUpdate} 
+            onDurationChange={setTrackDuration} 
+            onCommentActive={setActiveComment}
+        />
+      </div>
 
-      <AudioPlayer key={track.id} ref={audioPlayerRef} track={track} comments={comments} onTimeUpdate={handleTimeUpdate} onDurationChange={setTrackDuration} />
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">

@@ -14,6 +14,7 @@ interface AudioPlayerProps {
   comments: Comment[];
   onTimeUpdate: (time: number) => void;
   onDurationChange: (duration: number) => void;
+  onCommentActive: (comment: Comment | null) => void;
 }
 
 export interface AudioPlayerRef {
@@ -21,7 +22,7 @@ export interface AudioPlayerRef {
   audioEl: HTMLAudioElement | null;
 }
 
-export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track, comments, onTimeUpdate, onDurationChange }, ref) => {
+export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track, comments, onTimeUpdate, onDurationChange, onCommentActive }, ref) => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -48,9 +49,24 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
     if (!audio) return;
 
     const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-      onTimeUpdate(audio.currentTime);
-      setProgress((audio.currentTime / audio.duration) * 100);
+      const time = audio.currentTime;
+      setCurrentTime(time);
+      onTimeUpdate(time);
+      setProgress((time / audio.duration) * 100);
+
+      // Check for active comment
+      let activeComment: Comment | null = null;
+      for (const comment of comments) {
+        const start = comment.timestamp;
+        // For single comments, give a 2-second window. For ranges, use the range.
+        const end = comment.endTimestamp ?? (start + 2);
+        if (time >= start && time <= end) {
+          activeComment = comment;
+          break; 
+        }
+      }
+      onCommentActive(activeComment);
+
     };
 
     const handleDurationChange = () => {
@@ -78,14 +94,16 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
       audio.removeEventListener('ended', handlePause);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [comments]); // Add comments to dependency array
   
 
   useImperativeHandle(ref, () => ({
     seekTo(time: number) {
       if (audioRef.current) {
         audioRef.current.currentTime = time;
-        audioRef.current.play();
+        if (audioRef.current.paused) {
+          audioRef.current.play();
+        }
       }
     },
     audioEl: audioRef.current,
