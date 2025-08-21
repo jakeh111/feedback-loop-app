@@ -255,7 +255,7 @@ export function TrackPageClient({ track: initialTrack }: { track: Track }) {
                         onChange={(e) => setEditingTitle(e.target.value)}
                         onBlur={handleRenameSubmit}
                         onKeyDown={handleTitleKeyDown}
-                        className="text-3xl md:text-4xl font-bold font-headline h-auto p-0 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
+                        className="text-3xl md:text-4xl font-bold font-headline h-auto p-1 -m-1 border border-primary/50 focus-visible:ring-primary bg-transparent"
                     />
                 ) : (
                     <h1 className="text-3xl md:text-4xl font-bold font-headline">{track.title}</h1>
