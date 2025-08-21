@@ -121,11 +121,8 @@ export default function Home() {
               <Card className="drop-shadow-custom-md">
                 <CardHeader>
                     <div className="flex items-center gap-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-                            <path d="M14 16h-4a2 2 0 0 0-2 2v2H6v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2h-2v-2a2 2 0 0 0-2-2z"/>
-                            <circle cx="12" cy="11" r="1"/>
-                            <path d="M18 14h-2a4 4 0 0 0-4-4h0a4 4 0 0 0-4 4H6"/>
-                            <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="hsl(var(--primary))" stroke="hsl(var(--primary))" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                          <path d="M19.3,3H4.7C3.2,3,2,4.2,2,5.7v8.6C2,15.8,3.2,17,4.7,17h3.8c0.3,0,0.5-0.1,0.7-0.3l3.5-3.5c0.2-0.2,0.5-0.2,0.7,0l3.5,3.5c0.2,0.2,0.4,0.3,0.7,0.3h3.8c1.5,0,2.7-1.2,2.7-2.7V5.7C22,4.2,20.8,3,19.3,3z M4.7,4C5,4,5.3,4.1,5.5,4.2L5.5,4.2L5.6,4.3L5.6,4.3l0,0l0.2,0.1h12.5c0.1,0,0.2,0,0.3-0.1l0.2-0.1h0l0,0l0.1-0.1h0C19,4.1,19.1,4,19.3,4c1,0,1.7,0.8,1.7,1.7v8.6c0,1-0.8,1.7-1.7,1.7h-3.8c-0.4,0-0.8-0.2-1.1-0.5L12,12.4l-2.4,2.4c-0.3,0.3-0.7,0.5-1.1,0.5H4.7c-1,0-1.7-0.8-1.7-1.7V5.7C3,4.8,3.8,4,4.7,4z M5.3,5.6c-0.1-0.1-0.2-0.1-0.3-0.2C4.8,5.3,4.8,5.4,4.7,5.6H5.3z M18.7,5.6h0.6c0-0.1-0.1-0.3-0.2-0.4C19,5.2,18.9,5.4,18.7,5.6z M12,11.3c0.4,0,0.7-0.3,0.7-0.7c0-0.4-0.3-0.7-0.7-0.7c-0.4,0-0.7,0.3-0.7,0.7C11.3,11,11.6,11.3,12,11.3z M6,14c-1.1,0-2-0.9-2-2v-1h16v1c0,1.1-0.9,2-2,2h-2.1l-1.4-1.4c-0.8-0.8-2-0.8-2.8,0L10.1,14H6z M18,7H6v1h12V7z"/>
                         </svg>
                         <CardTitle>1. Upload Your Audio</CardTitle>
                     </div>
