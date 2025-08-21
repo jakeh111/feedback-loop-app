@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -220,6 +221,7 @@ export function DashboardClient() {
                         <Link href={`/track/${track.id}`} className="flex items-center gap-2 hover:underline text-muted-foreground">
                             <MessageSquare className="h-4 w-4" />
                             {track.comments} Comments
+                            {track.hasNewComments && <Badge className="text-xs px-1.5 py-0.5">New!</Badge>}
                         </Link>
                         <Badge variant={daysLeft < 7 ? "destructive" : "secondary"}>
                             <Clock className="mr-2 h-4 w-4" />
@@ -274,6 +276,7 @@ export function DashboardClient() {
                           <Link href={`/track/${track.id}`} className="flex items-center gap-2 hover:underline">
                             <MessageSquare className="h-4 w-4 text-muted-foreground" />
                             {track.comments}
+                            {track.hasNewComments && <Badge className="text-xs ml-2 px-1.5 py-0.5">New!</Badge>}
                           </Link>
                         </TableCell>
                          <TableCell>
