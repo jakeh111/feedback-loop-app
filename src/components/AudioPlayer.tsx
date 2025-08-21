@@ -156,5 +156,3 @@ export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track
 });
 
 AudioPlayer.displayName = 'AudioPlayer';
-
-    
