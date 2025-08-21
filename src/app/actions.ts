@@ -198,29 +198,48 @@ export async function processAndStoreTrack({
   artistName: string;
 }): Promise<string> {
     const bucket = storage.bucket();
-    const file = bucket.file(storagePath);
+    const tempFile = bucket.file(storagePath);
+    let finalFile;
+    let finalStoragePath = storagePath;
     
     try {
-        // The file is already at its final destination.
-        // We just need to get its download URL and create the DB record.
-        const [downloadURL] = await file.getSignedUrl({
+        const [tempFileBuffer] = await tempFile.download();
+        let audioBuffer = tempFileBuffer;
+        let finalFilename = originalFilename;
+        
+        // If it's a wav file, convert it to mp3
+        if (path.extname(originalFilename).toLowerCase() === '.wav') {
+            console.log("Converting WAV to MP3...");
+            finalFilename = originalFilename.replace(/\.wav$/i, '.mp3');
+            finalStoragePath = `tracks/${userId}/${Date.now()}-${finalFilename}`;
+            audioBuffer = await convertToMp3(tempFileBuffer);
+        }
+        
+        // Upload the final (possibly converted) file
+        finalFile = bucket.file(finalStoragePath);
+        await finalFile.save(audioBuffer, {
+            metadata: { contentType: 'audio/mpeg' },
+        });
+
+        // Delete the temp file if conversion happened
+        if (finalStoragePath !== storagePath) {
+           await tempFile.delete();
+        }
+
+        const [downloadURL] = await finalFile.getSignedUrl({
             action: 'read',
             expires: '03-09-2491', // Far future expiration
         });
         
-        // We can still generate a waveform, but we might need to download the file first
-        // For simplicity now, we'll use a random one.
-        const [fileBuffer] = await file.download();
-        const waveform = await generateWaveformData(fileBuffer);
-
+        const waveform = await generateWaveformData(audioBuffer);
 
         console.log("Creating Firestore document...");
-        const trackTitle = originalFilename.replace(/\.[^/.]+$/, "");
+        const trackTitle = finalFilename.replace(/\.[^/.]+$/, "");
         const trackDocRef = await firestore.collection('tracks').add({
             title: trackTitle,
             artist: artistName,
             audioUrl: downloadURL,
-            storagePath: storagePath,
+            storagePath: finalStoragePath,
             waveform: waveform,
             userId: userId,
             createdAt: FieldValue.serverTimestamp(),
@@ -230,8 +249,9 @@ export async function processAndStoreTrack({
         return trackDocRef.id;
     } catch (error) {
         console.error('Error processing track:', error);
-        // If something goes wrong, try to delete the orphaned file from storage.
-        await file.delete().catch(err => console.error("Failed to delete orphaned file:", err));
+        // If something goes wrong, try to delete any orphaned files.
+        if (tempFile) await tempFile.delete().catch(err => console.error("Failed to delete temp file:", err));
+        if (finalFile && finalStoragePath !== storagePath) await finalFile.delete().catch(err => console.error("Failed to delete final file:", err));
         throw new Error('Failed to process and store track.');
     }
 }

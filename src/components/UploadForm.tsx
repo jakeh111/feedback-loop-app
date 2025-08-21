@@ -58,9 +58,9 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     setIsProcessing(true);
     setStatusText("Uploading file...");
     
-    // Upload directly to the final destination
-    const finalStoragePath = `tracks/${user.uid}/${Date.now()}-${selectedFile.name}`;
-    const storageRef = ref(storage, finalStoragePath);
+    // Upload to a temporary location first. The server will move it.
+    const tempStoragePath = `tracks/${user.uid}/temp/${Date.now()}-${selectedFile.name}`;
+    const storageRef = ref(storage, tempStoragePath);
     const uploadTask = uploadBytesResumable(storageRef, selectedFile);
 
     uploadTask.on('state_changed',
@@ -80,7 +80,7 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
         try {
             setStatusText("Finalizing...");
             const trackId = await processAndStoreTrack({
-                storagePath: finalStoragePath,
+                storagePath: tempStoragePath,
                 originalFilename: selectedFile.name,
                 userId: user.uid,
                 artistName: user.displayName || 'Unknown Artist',
