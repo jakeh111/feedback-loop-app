@@ -37,7 +37,7 @@ export function Footer() {
                           <Tooltip>
                             <TooltipTrigger asChild>
                                <Button asChild variant="ghost" size="icon">
-                                  <a href="#" aria-label="Instagram" className="group">
+                                  <a href="https://www.instagram.com/sidedoormedia/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="group">
                                       <Instagram className="transition-transform group-hover:rotate-12" />
                                   </a>
                               </Button>
