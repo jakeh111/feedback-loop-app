@@ -1,3 +1,4 @@
+
 'use server';
 
 import {
@@ -6,7 +7,7 @@ import {
   SummarizeFeedbackOutput,
 } from '@/ai/flows/summarize-feedback';
 import { firestore, storage } from '@/lib/firebase-admin';
-import { FieldValue, doc, updateDoc } from 'firebase-admin/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
 import path from 'path';
 import ffmpeg from 'fluent-ffmpeg';
 import { Readable } from 'stream';
@@ -133,10 +134,10 @@ export async function renameTrack(
     throw new Error('New title cannot be empty.');
   }
 
-  const trackDocRef = doc(firestore, 'tracks', trackId);
+  const trackDocRef = firestore.collection('tracks').doc(trackId);
 
   try {
-    await updateDoc(trackDocRef, {
+    await trackDocRef.update({
       title: newTitle.trim(),
     });
   } catch (error) {
@@ -218,7 +219,6 @@ export async function processAndStoreTrack({
         const waveform = await generateWaveformData(audioBuffer);
 
         console.log("Uploading final file...");
-        // Corrected Path: Upload to a user-specific tracks directory
         const permanentStoragePath = `${userId}/tracks/${Date.now()}-${finalFilename}`;
         const permanentFile = bucket.file(permanentStoragePath);
         

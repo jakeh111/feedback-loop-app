@@ -1,11 +1,12 @@
+
 rules_version = '2';
+
 service firebase.storage {
   match /b/{bucket}/o {
-    // Grant access to a user's own folder.
-    // The client-side upload will have request.auth populated.
-    // The server-side Admin SDK will have request.auth == null.
+    // This rule allows an authenticated user to read and write files
+    // within a folder named after their own user ID.
     match /{userId}/{allPaths=**} {
-      allow read, write: if (request.auth != null && request.auth.uid == userId) || request.auth == null;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
