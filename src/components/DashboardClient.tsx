@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusCircle, Music, MessageSquare, ListMusic, Loader2, Trash2, Clock, User as UserIcon, CreditCard, Zap, CheckCircle } from "lucide-react";
+import { PlusCircle, Music, MessageSquare, ListMusic, Loader2, Trash2, Clock, User as UserIcon, CreditCard, Zap, CheckCircle, AlertTriangle } from "lucide-react";
 import { UploadDialog } from "@/components/UploadDialog";
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth, firestore } from '@/lib/firebase';
@@ -22,7 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
-import { deleteTrack } from '@/app/actions';
+import { deleteTrack, deleteAllUserData } from '@/app/actions';
 import { differenceInDays, addDays } from 'date-fns';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
@@ -55,6 +55,8 @@ export function DashboardClient() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [trackToDelete, setTrackToDelete] = useState<DashboardTrack | null>(null);
   const { toast } = useToast();
+  const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
 
   const isProUser = false;
 
@@ -151,6 +153,31 @@ export function DashboardClient() {
       setTrackToDelete(null);
     }
   };
+
+  const handleDeleteAllData = async () => {
+    if (!user) return;
+    setIsDeletingAll(true);
+    try {
+        await deleteAllUserData(user.uid);
+        toast({
+            title: "All Data Deleted",
+            description: "All your tracks, comments, and files have been removed."
+        });
+        // The onSnapshot listener will automatically clear the UI.
+    } catch(error) {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+        console.error("Failed to delete all user data:", error);
+        toast({
+            variant: "destructive",
+            title: "Deletion Failed",
+            description: `Could not delete all data. ${errorMessage}`,
+        });
+    } finally {
+        setIsDeletingAll(false);
+        setIsDeleteAllDialogOpen(false);
+    }
+  }
+
 
   const openDeleteDialog = (track: DashboardTrack) => {
     setTrackToDelete(track);
@@ -329,6 +356,10 @@ export function DashboardClient() {
                     </div>
                     <Button variant="outline" disabled>Manage Billing</Button>
                  </div>
+                 <Button variant="destructive" onClick={() => setIsDeleteAllDialogOpen(true)}>
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    Delete All My Data
+                 </Button>
               </CardContent>
             </Card>
              {isProUser ? (
@@ -392,6 +423,24 @@ export function DashboardClient() {
             <AlertDialogAction onClick={handleDeleteTrack} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+       <AlertDialog open={isDeleteAllDialogOpen} onOpenChange={setIsDeleteAllDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete All Your Data?</AlertDialogTitle>
+            <AlertDialogDescription>
+                This action is irreversible. It will permanently delete ALL of your tracks, comments, and uploaded files from TrackPolish. Are you sure you want to proceed?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingAll}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAllData} disabled={isDeletingAll} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {isDeletingAll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AlertTriangle className="mr-2 h-4 w-4" />}
+              Yes, Delete Everything
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
