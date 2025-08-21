@@ -10,12 +10,13 @@ import { AddCommentForm } from '@/components/AddCommentForm';
 import { SummarizeButton } from '@/components/SummarizeButton';
 import { GuestNameDialog } from '@/components/GuestNameDialog';
 import { AdBanner } from '@/components/AdBanner';
-import { Share2, Loader2 } from 'lucide-react';
+import { Share2, Loader2, Pencil } from 'lucide-react';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
 import { firestore, auth } from '@/lib/firebase';
-import { addComment } from '@/app/actions';
+import { addComment, renameTrack } from '@/app/actions';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 
 const sampleComments: Comment[] = [
@@ -41,7 +42,8 @@ const sampleComments: Comment[] = [
 ];
 
 
-export function TrackPageClient({ track }: { track: Track }) {
+export function TrackPageClient({ track: initialTrack }: { track: Track }) {
+  const [track, setTrack] = useState(initialTrack);
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(true);
   const audioPlayerRef = useRef<AudioPlayerRef>(null);
@@ -51,8 +53,20 @@ export function TrackPageClient({ track }: { track: Track }) {
   const [isGuestPromptOpen, setIsGuestPromptOpen] = useState(false);
   const [selectedTime, setSelectedTime] = useState(0);
 
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(track.title);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+
   // TODO: Replace this with a real check from your database or auth claims
   const isProUser = false;
+  const isOwner = user?.uid === track.userId;
+
+  useEffect(() => {
+    if (isEditingTitle && titleInputRef.current) {
+        titleInputRef.current.focus();
+        titleInputRef.current.select();
+    }
+  }, [isEditingTitle]);
 
   useEffect(() => {
     if (track.id === 'sample') {
@@ -185,6 +199,46 @@ export function TrackPageClient({ track }: { track: Track }) {
       description: "You can now share this feedback page.",
     });
   };
+
+  const handleRenameSubmit = async () => {
+    if (!isOwner || !isEditingTitle) return;
+
+    const newTitle = editingTitle.trim();
+    if (newTitle === '' || newTitle === track.title) {
+        setIsEditingTitle(false);
+        setEditingTitle(track.title); // Revert if empty or unchanged
+        return;
+    }
+
+    try {
+      await renameTrack(track.id, newTitle);
+      setTrack(prev => ({ ...prev, title: newTitle }));
+      toast({
+        title: "Track Renamed",
+        description: `Successfully renamed track to "${newTitle}".`,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      toast({
+        variant: "destructive",
+        title: "Rename Failed",
+        description: `Could not rename the track. ${errorMessage}`,
+      });
+      setEditingTitle(track.title); // Revert UI on failure
+    } finally {
+      setIsEditingTitle(false);
+    }
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleRenameSubmit();
+    } else if (e.key === 'Escape') {
+      setIsEditingTitle(false);
+      setEditingTitle(track.title);
+    }
+  };
+
   
   const isCommentingEnabled = !!authorName;
 
@@ -194,8 +248,27 @@ export function TrackPageClient({ track }: { track: Track }) {
 
       <div className="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold font-headline">{track.title}</h1>
-          <p className="text-lg text-muted-foreground">{track.artist}</p>
+            <div className="flex items-center gap-2">
+                {isEditingTitle ? (
+                    <Input
+                        ref={titleInputRef}
+                        value={editingTitle}
+                        onChange={(e) => setEditingTitle(e.target.value)}
+                        onBlur={handleRenameSubmit}
+                        onKeyDown={handleTitleKeyDown}
+                        className="text-3xl md:text-4xl font-bold font-headline h-auto p-0 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    />
+                ) : (
+                    <h1 className="text-3xl md:text-4xl font-bold font-headline">{track.title}</h1>
+                )}
+                
+                {isOwner && !isEditingTitle && track.id !== 'sample' && (
+                    <Button variant="ghost" size="icon" onClick={() => setIsEditingTitle(true)} className="flex-shrink-0">
+                        <Pencil className="h-5 w-5" />
+                    </Button>
+                )}
+            </div>
+            <p className="text-lg text-muted-foreground">{track.artist}</p>
         </div>
         <div className="flex gap-2">
             <Button variant="outline" onClick={handleShare}>

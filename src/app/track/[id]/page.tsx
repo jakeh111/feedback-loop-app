@@ -1,4 +1,5 @@
 
+
 import { TrackPageClient } from "@/components/TrackPageClient";
 import type { Track } from "@/lib/types";
 import type { Metadata, ResolvingMetadata } from 'next'
@@ -13,6 +14,7 @@ const getSampleTrack = (): Track => {
     artist: 'Sample Artist',
     audioUrl: 'https://storage.googleapis.com/studioprod-exports-prod/supported_output_formats/12-second-of-silence.mp3', // A silent mp3 file for placeholder
     waveform: Array.from({ length: 100 }, (_, i) => Math.round(Math.sin(i * Math.PI / 25) * 40 + 50)),
+    userId: 'sample-user',
   };
 };
 
@@ -53,6 +55,7 @@ const getTrackData = async (id: string): Promise<Track | null> => {
       artist: data.artist || "Unknown Artist",
       audioUrl: data.audioUrl,
       waveform: data.waveform && data.waveform.length > 0 ? data.waveform : randomWaveform,
+      userId: data.userId,
     };
   } catch (error) {
     console.error("Error fetching track data:", error);

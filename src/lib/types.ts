@@ -21,6 +21,7 @@ export type Track = {
   artist: string;
   audioUrl: string;
   waveform: number[];
+  userId?: string;
 };
 
 export const ProcessAudioInputSchema = z.object({
