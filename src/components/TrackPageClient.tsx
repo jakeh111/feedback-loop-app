@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from 'react';
@@ -48,6 +49,9 @@ export function TrackPageClient({ track }: { track: Track }) {
   const [authorName, setAuthorName] = useState("");
   const [isGuestPromptOpen, setIsGuestPromptOpen] = useState(false);
   const [selectedTime, setSelectedTime] = useState(0);
+
+  // TODO: Replace this with a real check from your database or auth claims
+  const isProUser = false;
 
   useEffect(() => {
     if (track.id === 'sample') {
@@ -196,7 +200,7 @@ export function TrackPageClient({ track }: { track: Track }) {
             <Button variant="outline" onClick={handleShare}>
               <Share2 className="mr-2 h-4 w-4" /> Share
             </Button>
-            <SummarizeButton comments={comments} />
+            <SummarizeButton comments={comments} isProUser={isProUser} />
         </div>
       </div>
 

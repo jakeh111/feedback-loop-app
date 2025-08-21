@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -14,7 +15,7 @@ import { useRouter } from "next/navigation";
 
 interface UploadDialogProps {
   children: React.ReactNode;
-  onUploadComplete?: () => void;
+  onUploadComplete?: (trackId?: string) => void;
 }
 
 export function UploadDialog({ children, onUploadComplete }: UploadDialogProps) {
@@ -24,11 +25,18 @@ export function UploadDialog({ children, onUploadComplete }: UploadDialogProps) 
   const handleUploadComplete = (trackId: string) => {
     setIsOpen(false);
     if (onUploadComplete) {
-      onUploadComplete();
+      onUploadComplete(trackId);
     } else {
       router.push(`/track/${trackId}`);
     }
   };
+
+  const handleUploadBlocked = () => {
+    setIsOpen(false);
+    if(onUploadComplete) {
+        onUploadComplete();
+    }
+  }
   
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -37,11 +45,11 @@ export function UploadDialog({ children, onUploadComplete }: UploadDialogProps) 
         <DialogHeader>
           <DialogTitle>Upload Track</DialogTitle>
           <DialogDescription>
-            Select an MP3 or WAV file to start a new feedback session.
+            Select an MP3 file to start a new feedback session. Pro users can upload WAV files.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <UploadForm onUploadComplete={handleUploadComplete} />
+          <UploadForm onUploadComplete={handleUploadComplete} onUploadBlocked={handleUploadBlocked} />
         </div>
       </DialogContent>
     </Dialog>

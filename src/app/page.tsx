@@ -62,11 +62,11 @@ export default function Home() {
                 </li>
                 <li className="flex items-center gap-3">
                   <CheckCircle className="text-primary" />
-                  <span>AI-powered summaries to quickly digest feedback.</span>
+                  <span>Shareable private links for easy collaboration.</span>
                 </li>
                  <li className="flex items-center gap-3">
-                  <CheckCircle className="text-primary" />
-                  <span>Shareable private links for easy collaboration.</span>
+                  <Zap className="text-primary" />
+                  <span><span className="font-semibold text-primary">Pro:</span> AI-powered summaries to quickly digest feedback.</span>
                 </li>
               </ul>
             </CardContent>
@@ -75,7 +75,7 @@ export default function Home() {
             <Card className="h-fit drop-shadow-custom-md">
                <CardHeader>
                 <CardTitle>Get Started For Free</CardTitle>
-                <CardDescription>Upload an MP3 or WAV to create your feedback session.</CardDescription>
+                <CardDescription>Upload an MP3 to create your feedback session.</CardDescription>
               </CardHeader>
               <CardContent>
                   <UploadDialog>
@@ -95,15 +95,15 @@ export default function Home() {
                     <ul className="space-y-3 text-sm">
                         <li className="flex items-start gap-3">
                             <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
-                            <span><span className="font-semibold">Permanent Track Storage</span></span>
+                            <span><span className="font-semibold">AI-Powered Summaries:</span> Get instant summaries of all comments on your track.</span>
                         </li>
                          <li className="flex items-start gap-3">
                             <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
-                            <span><span className="font-semibold">Unlimited Uploads</span></span>
+                            <span><span className="font-semibold">WAV to MP3 Conversion:</span> Upload high-quality WAV files and we'll handle the conversion.</span>
                         </li>
                          <li className="flex items-start gap-3">
                             <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
-                           <span><span className="font-semibold">Advanced AI Analysis</span></span>
+                           <span><span className="font-semibold">Permanent Track Storage:</span> Never lose a track or comment again.</span>
                         </li>
                     </ul>
                     <Button className="w-full" disabled>Learn More (Coming Soon)</Button>
@@ -127,7 +127,7 @@ export default function Home() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                  <p>Drag and drop your MP3 or WAV file. Your private, collaborative workspace is created instantly.</p>
+                  <p>Drag and drop your MP3 file. Pro users can upload WAV files for automatic conversion.</p>
                 </CardContent>
               </Card>
               <Card className="drop-shadow-custom-md">

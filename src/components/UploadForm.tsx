@@ -1,8 +1,9 @@
 
+
 'use client';
 
 import { useState } from 'react';
-import { UploadCloud, Loader2 } from 'lucide-react';
+import { UploadCloud, Loader2, Zap } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -14,20 +15,36 @@ import * as lamejs from '@breezystack/lamejs';
 
 interface UploadFormProps {
   onUploadComplete: (trackId: string) => void;
+  onUploadBlocked: () => void;
 }
 
-export function UploadForm({ onUploadComplete }: UploadFormProps) {
+export function UploadForm({ onUploadComplete, onUploadBlocked }: UploadFormProps) {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [statusText, setStatusText] = useState("");
 
+  // TODO: Replace this with a real check from your database or auth claims
+  const isProUser = false;
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     const acceptedTypes = ['audio/mpeg', 'audio/wav', 'audio/wave'];
     if (file) {
       if (acceptedTypes.includes(file.type)) {
+        // Gate WAV uploads
+        if (!isProUser && (file.type === 'audio/wav' || file.type === 'audio/wave')) {
+            toast({
+              variant: "destructive",
+              title: "Pro Feature",
+              description: "WAV to MP3 conversion is a Pro feature. Please upgrade to upload WAV files.",
+            });
+            onUploadBlocked();
+            setSelectedFile(null);
+            event.target.value = ''; // Clear the input
+            return;
+        }
         setSelectedFile(file);
       } else {
         setSelectedFile(null);
@@ -47,23 +64,12 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
       reader.onload = async (event) => {
         try {
           const arrayBuffer = event.target?.result as ArrayBuffer;
-          console.log('WAV file size:', arrayBuffer.byteLength);
           
-          // Use Web Audio API to decode the WAV file
           const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
           const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
           
-          console.log('Decoded audio:', {
-            channels: audioBuffer.numberOfChannels,
-            sampleRate: audioBuffer.sampleRate,
-            length: audioBuffer.length,
-            duration: audioBuffer.duration
-          });
-          
-          // Get the audio data (mix to mono if stereo)
           let samples: Float32Array;
           if (audioBuffer.numberOfChannels === 2) {
-            // Mix stereo to mono
             const left = audioBuffer.getChannelData(0);
             const right = audioBuffer.getChannelData(1);
             samples = new Float32Array(audioBuffer.length);
@@ -74,55 +80,38 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
             samples = audioBuffer.getChannelData(0);
           }
           
-          // Convert to 16-bit PCM
           const pcmSamples = new Int16Array(samples.length);
           for (let i = 0; i < samples.length; i++) {
             const sample = Math.max(-1, Math.min(1, samples[i]));
             pcmSamples[i] = sample < 0 ? sample * 32768 : sample * 32767;
           }
           
-          console.log('PCM samples created:', pcmSamples.length);
-          
-          // Initialize MP3 encoder (mono, original sample rate, 128kbps)
           const mp3Encoder = new lamejs.Mp3Encoder(1, audioBuffer.sampleRate, 128);
-          const mp3Data: Uint8Array[] = [];
+          const mp3Data: Int8Array[] = [];
           
           const sampleBlockSize = 1152;
           
-          // Encode in chunks
           for (let i = 0; i < pcmSamples.length; i += sampleBlockSize) {
-            const chunk = pcmSamples.subarray(i, Math.min(i + sampleBlockSize, pcmSamples.length));
-            
-            console.log(`Encoding chunk ${Math.floor(i / sampleBlockSize) + 1}, size: ${chunk.length}`);
-            
-            // Make sure chunk is not empty and is valid
-            if (chunk && chunk.length > 0) {
-              const mp3buf = mp3Encoder.encodeBuffer(chunk);
-              if (mp3buf && mp3buf.length > 0) {
-                mp3Data.push(new Uint8Array(mp3buf));
-              }
+            const chunk = pcmSamples.subarray(i, i + sampleBlockSize);
+            const mp3buf = mp3Encoder.encodeBuffer(chunk);
+            if (mp3buf && mp3buf.length > 0) {
+              mp3Data.push(mp3buf);
             }
           }
           
-          // Flush remaining data
           const finalBuffer = mp3Encoder.flush();
           if (finalBuffer && finalBuffer.length > 0) {
-            mp3Data.push(new Uint8Array(finalBuffer));
+            mp3Data.push(finalBuffer);
           }
           
-          console.log(`Generated ${mp3Data.length} MP3 chunks`);
-          
-          // Create the final MP3 blob
           const mp3Blob = new Blob(mp3Data, { type: 'audio/mpeg' });
           const mp3FileName = wavFile.name.replace(/\.[^/.]+$/, "") + ".mp3";
           const mp3File = new File([mp3Blob], mp3FileName, { type: 'audio/mpeg' });
           
-          console.log(`Final MP3 file: ${mp3File.name}, size: ${mp3File.size} bytes`);
           resolve(mp3File);
           
         } catch (error) {
           console.error("Detailed conversion error:", error);
-          console.error("Error stack:", error instanceof Error ? error.stack : 'No stack');
           reject(error);
         }
       };
@@ -154,7 +143,7 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     
     let fileToUpload = selectedFile;
     
-    if (selectedFile.type === 'audio/wav' || selectedFile.type === 'audio/wave') {
+    if (isProUser && (selectedFile.type === 'audio/wav' || selectedFile.type === 'audio/wave')) {
         setStatusText("Converting WAV to MP3...");
         try {
             fileToUpload = await convertWavToMp3(selectedFile);
