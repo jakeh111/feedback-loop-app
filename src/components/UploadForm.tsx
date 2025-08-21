@@ -42,46 +42,97 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
 
   const convertWavToMp3 = async (wavFile: File): Promise<File> => {
     return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const wavBuffer = event.target?.result as ArrayBuffer;
-                const wav = lamejs.WavHeader.readHeader(new DataView(wavBuffer));
-                if (!wav) {
-                  throw new Error("Could not read WAV header.");
-                }
-                const samples = new Int16Array(wavBuffer, wav.dataOffset, wav.dataLen / 2);
-                
-                const mp3Encoder = new lamejs.Mp3Encoder(wav.channels, wav.sampleRate, 128);
-                const mp3Data = [];
-
-                const sampleBlockSize = 1152; // Encoder internal sample block size
-                for (let i = 0; i < samples.length; i += sampleBlockSize) {
-                    const sampleChunk = samples.subarray(i, i + sampleBlockSize);
-                    const mp3buf = mp3Encoder.encodeBuffer(sampleChunk);
-                    if (mp3buf && mp3buf.length > 0) {
-                        mp3Data.push(mp3buf);
-                    }
-                }
-                const mp3buf = mp3Encoder.flush();
-                if (mp3buf && mp3buf.length > 0) {
-                    mp3Data.push(mp3buf);
-                }
-
-                const mp3Blob = new Blob(mp3Data, { type: 'audio/mpeg' });
-                const mp3FileName = wavFile.name.replace(/\.[^/.]+$/, "") + ".mp3";
-                const mp3File = new File([mp3Blob], mp3FileName, { type: 'audio/mpeg' });
-                resolve(mp3File);
-
-            } catch(error) {
-                console.error("Error converting WAV to MP3:", error);
-                reject(error);
+      const reader = new FileReader();
+      
+      reader.onload = async (event) => {
+        try {
+          const arrayBuffer = event.target?.result as ArrayBuffer;
+          console.log('WAV file size:', arrayBuffer.byteLength);
+          
+          // Use Web Audio API to decode the WAV file
+          const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+          
+          console.log('Decoded audio:', {
+            channels: audioBuffer.numberOfChannels,
+            sampleRate: audioBuffer.sampleRate,
+            length: audioBuffer.length,
+            duration: audioBuffer.duration
+          });
+          
+          // Get the audio data (mix to mono if stereo)
+          let samples: Float32Array;
+          if (audioBuffer.numberOfChannels === 2) {
+            // Mix stereo to mono
+            const left = audioBuffer.getChannelData(0);
+            const right = audioBuffer.getChannelData(1);
+            samples = new Float32Array(audioBuffer.length);
+            for (let i = 0; i < audioBuffer.length; i++) {
+              samples[i] = (left[i] + right[i]) / 2;
             }
-        };
-        reader.onerror = (error) => {
-            reject(error);
-        };
-        reader.readAsArrayBuffer(wavFile);
+          } else {
+            samples = audioBuffer.getChannelData(0);
+          }
+          
+          // Convert to 16-bit PCM
+          const pcmSamples = new Int16Array(samples.length);
+          for (let i = 0; i < samples.length; i++) {
+            const sample = Math.max(-1, Math.min(1, samples[i]));
+            pcmSamples[i] = sample < 0 ? sample * 32768 : sample * 32767;
+          }
+          
+          console.log('PCM samples created:', pcmSamples.length);
+          
+          // Initialize MP3 encoder (mono, original sample rate, 128kbps)
+          const mp3Encoder = new lamejs.Mp3Encoder(1, audioBuffer.sampleRate, 128);
+          const mp3Data: Uint8Array[] = [];
+          
+          const sampleBlockSize = 1152;
+          
+          // Encode in chunks
+          for (let i = 0; i < pcmSamples.length; i += sampleBlockSize) {
+            const chunk = pcmSamples.subarray(i, Math.min(i + sampleBlockSize, pcmSamples.length));
+            
+            console.log(`Encoding chunk ${Math.floor(i / sampleBlockSize) + 1}, size: ${chunk.length}`);
+            
+            // Make sure chunk is not empty and is valid
+            if (chunk && chunk.length > 0) {
+              const mp3buf = mp3Encoder.encodeBuffer(chunk);
+              if (mp3buf && mp3buf.length > 0) {
+                mp3Data.push(new Uint8Array(mp3buf));
+              }
+            }
+          }
+          
+          // Flush remaining data
+          const finalBuffer = mp3Encoder.flush();
+          if (finalBuffer && finalBuffer.length > 0) {
+            mp3Data.push(new Uint8Array(finalBuffer));
+          }
+          
+          console.log(`Generated ${mp3Data.length} MP3 chunks`);
+          
+          // Create the final MP3 blob
+          const mp3Blob = new Blob(mp3Data, { type: 'audio/mpeg' });
+          const mp3FileName = wavFile.name.replace(/\.[^/.]+$/, "") + ".mp3";
+          const mp3File = new File([mp3Blob], mp3FileName, { type: 'audio/mpeg' });
+          
+          console.log(`Final MP3 file: ${mp3File.name}, size: ${mp3File.size} bytes`);
+          resolve(mp3File);
+          
+        } catch (error) {
+          console.error("Detailed conversion error:", error);
+          console.error("Error stack:", error instanceof Error ? error.stack : 'No stack');
+          reject(error);
+        }
+      };
+      
+      reader.onerror = (error) => {
+        console.error("FileReader error:", error);
+        reject(error);
+      };
+      
+      reader.readAsArrayBuffer(wavFile);
     });
   };
 
