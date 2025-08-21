@@ -10,7 +10,7 @@ import { storage, auth } from '@/lib/firebase';
 import { ref, uploadBytesResumable } from 'firebase/storage';
 import { Progress } from './ui/progress';
 import { processAndStoreTrack } from '@/app/actions';
-import * as lamejs from 'lamejs';
+import * as lamejs from '@breezystack/lamejs';
 
 interface UploadFormProps {
   onUploadComplete: (trackId: string) => void;
