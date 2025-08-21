@@ -96,7 +96,7 @@ export async function addReplyToComment(
     const newReply = {
       id: new Date().getTime().toString(), // simple unique id
       ...replyData,
-      createdAt: FieldValue.serverTimestamp(),
+      createdAt: new Date(),
     };
     
     await commentRef.update({
