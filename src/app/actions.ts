@@ -8,7 +8,6 @@ import {
 } from '@/ai/flows/summarize-feedback';
 import { firestore, storage } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 
 export async function getSummary(
   input: SummarizeFeedbackInput
@@ -155,79 +154,30 @@ async function generateWaveformData(audioBuffer: Buffer): Promise<number[]> {
   return Promise.resolve(randomWaveform);
 }
 
-async function convertToMp3(inputBuffer: Buffer): Promise<Buffer> {
-  const ffmpeg = createFFmpeg({ log: true });
-  if (!ffmpeg.isLoaded()) {
-    await ffmpeg.load();
-  }
-  const inputFileName = 'input.wav';
-  const outputFileName = 'output.mp3';
-  ffmpeg.FS('writeFile', inputFileName, await fetchFile(inputBuffer));
-  
-  // Convert WAV to MP3
-  await ffmpeg.run('-i', inputFileName, '-acodec', 'libmp3lame', '-b:a', '192k', outputFileName);
-  
-  const data = ffmpeg.FS('readFile', outputFileName);
-
-  // Cleanup FFmpeg file system
-  ffmpeg.FS('unlink', inputFileName);
-  ffmpeg.FS('unlink', outputFileName);
-  
-  return Buffer.from(data.buffer);
-}
-
 
 export async function processAndStoreTrack({
   storagePath,
   originalFilename,
   userId,
   artistName,
-  contentType,
 }: {
   storagePath: string;
   originalFilename: string;
   userId: string;
   artistName: string;
-  contentType: string;
 }): Promise<string> {
     const bucket = storage.bucket();
-    const tempFile = bucket.file(storagePath);
+    const file = bucket.file(storagePath);
     
     try {
-        const [fileBuffer] = await tempFile.download();
+        const [fileBuffer] = await file.download();
 
-        let processedBuffer: Buffer;
-        let finalContentType: string;
-        let finalStoragePath: string;
-
-        if (contentType === 'audio/wav' || contentType === 'audio/wave') {
-            console.log("Converting WAV to MP3...");
-            processedBuffer = await convertToMp3(fileBuffer);
-            finalContentType = 'audio/mpeg';
-            finalStoragePath = storagePath.replace(/\.[^/.]+$/, '.mp3');
-        } else {
-            processedBuffer = fileBuffer;
-            finalContentType = contentType;
-            finalStoragePath = storagePath;
-        }
-
-        // Upload the processed file
-        const finalFile = bucket.file(finalStoragePath);
-        await finalFile.save(processedBuffer, {
-            metadata: { contentType: finalContentType },
-        });
-
-        // If we converted the file, delete the original temporary file
-        if (finalStoragePath !== storagePath) {
-            await tempFile.delete();
-        }
-
-        const [downloadURL] = await finalFile.getSignedUrl({
+        const [downloadURL] = await file.getSignedUrl({
             action: 'read',
             expires: '03-09-2491', // Far future expiration
         });
         
-        const waveform = await generateWaveformData(processedBuffer);
+        const waveform = await generateWaveformData(fileBuffer);
 
         console.log("Creating Firestore document...");
         const trackTitle = originalFilename.replace(/\.[^/.]+$/, "");
@@ -235,7 +185,7 @@ export async function processAndStoreTrack({
             title: trackTitle,
             artist: artistName,
             audioUrl: downloadURL,
-            storagePath: finalStoragePath,
+            storagePath: storagePath,
             waveform: waveform,
             userId: userId,
             createdAt: FieldValue.serverTimestamp(),
@@ -245,11 +195,8 @@ export async function processAndStoreTrack({
         return trackDocRef.id;
     } catch (error) {
         console.error('Error processing track:', error);
-        // If something goes wrong, try to delete the orphaned file(s).
-        await tempFile.delete().catch(err => console.error("Failed to delete temp file:", err));
-        if (storagePath.includes('.wav')) {
-             await bucket.file(storagePath.replace(/\.wav$/i, '.mp3')).delete().catch(err => console.error("Failed to delete orphaned mp3 file:", err));
-        }
+        // If something goes wrong, try to delete the orphaned file.
+        await file.delete().catch(err => console.error("Failed to delete orphaned file:", err));
         throw new Error('Failed to process and store track.');
     }
 }

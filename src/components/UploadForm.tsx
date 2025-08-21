@@ -57,9 +57,8 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     setIsProcessing(true);
     setStatusText("Uploading file...");
     
-    // The temporary storage path for the track
-    const tempStoragePath = `${user.uid}/temp/${Date.now()}-${selectedFile.name}`;
-    const storageRef = ref(storage, tempStoragePath);
+    const finalStoragePath = `tracks/${user.uid}/${Date.now()}-${selectedFile.name}`;
+    const storageRef = ref(storage, finalStoragePath);
     const uploadTask = uploadBytesResumable(storageRef, selectedFile);
 
     uploadTask.on('state_changed',
@@ -77,13 +76,12 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
       async () => {
         // Upload complete, now call the server action to create the DB record.
         try {
-            setStatusText("Finalizing & converting...");
+            setStatusText("Finalizing...");
             const trackId = await processAndStoreTrack({
-                storagePath: tempStoragePath,
+                storagePath: finalStoragePath,
                 originalFilename: selectedFile.name,
                 userId: user.uid,
                 artistName: user.displayName || 'Unknown Artist',
-                contentType: selectedFile.type,
             });
             
             toast({ title: "Upload Successful", description: "Your track is ready and saved to your dashboard." });
