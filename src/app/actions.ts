@@ -7,10 +7,7 @@ import {
 } from '@/ai/flows/summarize-feedback';
 import { firestore, storage } from '@/lib/firebase-admin';
 import { FieldValue, doc, updateDoc } from 'firebase-admin/firestore';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import os from 'os';
 import path from 'path';
-import fs from 'fs/promises';
 import ffmpeg from 'fluent-ffmpeg';
 import { Readable } from 'stream';
 
@@ -221,7 +218,8 @@ export async function processAndStoreTrack({
         const waveform = await generateWaveformData(audioBuffer);
 
         console.log("Uploading final file...");
-        const permanentStoragePath = `tracks/${userId}/${Date.now()}-${finalFilename}`;
+        // Corrected Path: Upload to a user-specific tracks directory
+        const permanentStoragePath = `${userId}/tracks/${Date.now()}-${finalFilename}`;
         const permanentFile = bucket.file(permanentStoragePath);
         
         await permanentFile.save(audioBuffer, {

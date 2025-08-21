@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { storage, auth } from '@/lib/firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable } from 'firebase/storage';
 import { Progress } from './ui/progress';
 import { processAndStoreTrack } from '@/app/actions';
 
@@ -55,7 +55,8 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     setIsProcessing(true);
     setStatusText("Uploading file...");
     
-    const tempStoragePath = `temp/${user.uid}/${Date.now()}-${selectedFile.name}`;
+    // Corrected Path: Upload to a user-specific directory
+    const tempStoragePath = `${user.uid}/temp/${Date.now()}-${selectedFile.name}`;
     const storageRef = ref(storage, tempStoragePath);
     const uploadTask = uploadBytesResumable(storageRef, selectedFile);
 
