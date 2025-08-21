@@ -2,17 +2,16 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Authenticated users can write to their own subfolder in the temp directory.
-    match /temp/{userId}/{filename} {
-      allow write: if request.auth != null && request.auth.uid == userId;
+    // Users can read and write to their own top-level folder.
+    // This allows them to upload temp files and for the server
+    // to write the final processed track.
+    match /{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Authenticated users can read and delete their own tracks.
-    // The server-side function will handle deletion, which bypasses these rules.
-    // The client needs read access to play the audio.
-    match /tracks/{userId}/{filename} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow delete: if request.auth != null && request.auth.uid == userId;
+    // Tracks inside a user's folder should be publicly readable.
+    match /{userId}/tracks/{allPaths=**} {
+        allow read;
     }
   }
 }
