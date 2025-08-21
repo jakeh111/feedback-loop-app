@@ -1,4 +1,4 @@
-// lamejs.d.ts
+
 declare module 'lamejs' {
   export class Mp3Encoder {
     constructor(channels: number, sampleRate: number, bitRate: number);

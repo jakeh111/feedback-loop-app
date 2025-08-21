@@ -9,6 +9,7 @@ import { storage, auth } from '@/lib/firebase';
 import { ref, uploadBytesResumable } from 'firebase/storage';
 import { Progress } from './ui/progress';
 import { processAndStoreTrack } from '@/app/actions';
+import * as lamejs from 'lamejs';
 
 interface UploadFormProps {
   onUploadComplete: (trackId: string) => void;
@@ -38,11 +39,51 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     }
   };
 
+  const convertWavToMp3 = async (wavFile: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const wavBuffer = event.target?.result as ArrayBuffer;
+                const wav = lamejs.WavHeader.readHeader(new DataView(wavBuffer));
+                const samples = new Int16Array(wavBuffer, wav.dataOffset, wav.dataLen / 2);
+                
+                const mp3Encoder = new lamejs.Mp3Encoder(wav.channels, wav.sampleRate, 128);
+                const mp3Data = [];
+
+                const sampleBlockSize = 1152; // Encoder internal sample block size
+                for (let i = 0; i < samples.length; i += sampleBlockSize) {
+                    const sampleChunk = samples.subarray(i, i + sampleBlockSize);
+                    const mp3buf = mp3Encoder.encodeBuffer(sampleChunk);
+                    if (mp3buf.length > 0) {
+                        mp3Data.push(mp3buf);
+                    }
+                }
+                const mp3buf = mp3Encoder.flush();
+                if (mp3buf.length > 0) {
+                    mp3Data.push(mp3buf);
+                }
+
+                const mp3Blob = new Blob(mp3Data, { type: 'audio/mpeg' });
+                const mp3FileName = wavFile.name.replace(/\.[^/.]+$/, "") + ".mp3";
+                const mp3File = new File([mp3Blob], mp3FileName, { type: 'audio/mpeg' });
+                resolve(mp3File);
+
+            } catch(error) {
+                console.error("Error converting WAV to MP3:", error);
+                reject(error);
+            }
+        };
+        reader.onerror = (error) => {
+            reject(error);
+        };
+        reader.readAsArrayBuffer(wavFile);
+    });
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const user = auth.currentUser;
-
-    console.log('Current user at time of upload:', auth.currentUser);
 
     if (!user) {
       toast({ variant: "destructive", title: "Not Authenticated", description: "You must be logged in to upload a track." });
@@ -55,11 +96,26 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     }
     
     setIsProcessing(true);
+    
+    let fileToUpload = selectedFile;
+    
+    if (selectedFile.type === 'audio/wav' || selectedFile.type === 'audio/wave') {
+        setStatusText("Converting WAV to MP3...");
+        try {
+            fileToUpload = await convertWavToMp3(selectedFile);
+        } catch (error) {
+            toast({ variant: "destructive", title: "Conversion Failed", description: `Could not convert WAV to MP3. ${error instanceof Error ? error.message : ''}` });
+            setIsProcessing(false);
+            setStatusText("");
+            return;
+        }
+    }
+
     setStatusText("Uploading file...");
     
-    const finalStoragePath = `tracks/${user.uid}/${Date.now()}-${selectedFile.name}`;
+    const finalStoragePath = `tracks/${user.uid}/${Date.now()}-${fileToUpload.name}`;
     const storageRef = ref(storage, finalStoragePath);
-    const uploadTask = uploadBytesResumable(storageRef, selectedFile);
+    const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
 
     uploadTask.on('state_changed',
       (snapshot) => {
@@ -74,12 +130,11 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
         toast({ variant: "destructive", title: "Upload Failed", description: `An error occurred while uploading: ${error.message}` });
       },
       async () => {
-        // Upload complete, now call the server action to create the DB record.
         try {
             setStatusText("Finalizing...");
             const trackId = await processAndStoreTrack({
                 storagePath: finalStoragePath,
-                originalFilename: selectedFile.name,
+                originalFilename: fileToUpload.name,
                 userId: user.uid,
                 artistName: user.displayName || 'Unknown Artist',
             });
