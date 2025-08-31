@@ -15,7 +15,7 @@ export function Footer() {
                     <div>
                         <h3 className="text-lg font-headline font-bold mb-2">About TrackPolish</h3>
                         <p className="text-sm text-muted-foreground">
-                            This is a placeholder for your about section. You can describe your project, your mission, or anything else you'd like to share with your visitors.
+                            TrackPolish is a collaborative audio feedback tool designed for musicians, producers, and audio engineers. Upload your tracks, share a private link, and get precise, timestamped feedback directly on the waveform to streamline your revision process.
                         </p>
                     </div>
                     <div className="flex flex-col items-start md:items-end gap-4">

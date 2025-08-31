@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React from 'react';
@@ -10,9 +9,9 @@ import { UploadDialog } from '@/components/UploadDialog';
 import { Button } from '@/components/ui/button';
 
 const heroImages = [
-  { src: "https://firebasestorage.googleapis.com/v0/b/audiomarker.firebasestorage.app/o/claudia-ramirez-jK47-bR5VnU-unsplash.jpg?alt=media&token=ca1d6125-e267-4316-9895-b809b867772a", hint: "music production" },
-  { src: "https://firebasestorage.googleapis.com/v0/b/audiomarker.firebasestorage.app/o/filip-barna-SlIu4D_rTPo-unsplash.jpg?alt=media&token=a44a5796-5f93-4070-a210-d27ab60a1de7", hint: "audio mixing" },
-  { src: "https://firebasestorage.googleapis.com/v0/b/audiomarker.firebasestorage.app/o/josh-sorenson-LVmyjS0hxYU-unsplash.jpg?alt=media&token=2ce7bc1b-4fde-8ec0-89804d66170c", hint: "sound engineering" },
+  { src: "https://firebasestorage.googleapis.com/v0/b/audiomarker-nfgw.web.app/o/claudia-ramirez-jK47-bR5VnU-unsplash.jpg?alt=media&token=ca1d6125-e267-4316-9895-b809b867772a", hint: "music production" },
+  { src: "https://firebasestorage.googleapis.com/v0/b/audiomarker-nfgw.web.app/o/filip-barna-SlIu4D_rTPo-unsplash.jpg?alt=media&token=a44a5796-5f93-4070-a210-d27ab60a1de7", hint: "audio mixing" },
+  { src: "https://firebasestorage.googleapis.com/v0/b/audiomarker-nfgw.web.app/o/josh-sorenson-LVmyjS0hxYU-unsplash.jpg?alt=media&token=2ce7bc1b-4fde-8ec0-89804d66170c", hint: "sound engineering" },
 ];
 
 export default function Home() {
@@ -24,7 +23,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="relative h-[40vh] -mt-20 flex items-center justify-center overflow-hidden">
+      <div className="relative h-[50vh] -mt-20 flex items-center justify-center overflow-hidden">
         <Image
           src={randomImage.src}
           alt="Abstract audio visualization"
@@ -34,13 +33,21 @@ export default function Home() {
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10"></div>
-        <div className="relative z-20 text-center px-4">
+        <div className="relative z-20 text-center px-4 flex flex-col items-center">
            <h1 className="text-4xl md:text-6xl font-bold tracking-tighter font-headline text-transparent bg-clip-text bg-gradient-to-r from-primary via-white to-primary">
-              Collaborative Audio Feedback, Simplified.
+              Get Better Feedback on Your Music.
             </h1>
+            <p className="mt-4 max-w-2xl text-lg text-foreground/80">
+              The essential platform for musicians and producers to get clear, contextual feedback on their audio. Ditch the endless email threads and confusing notes.
+            </p>
+            <div className="mt-6">
+                <UploadDialog>
+                    <Button size="lg">Upload Your Track</Button>
+                </UploadDialog>
+            </div>
         </div>
       </div>
-      <div className="container mx-auto px-4 py-12 md:py-20 -mt-24 relative z-20">
+      <div className="container mx-auto px-4 py-12 md:py-20 -mt-20 md:-mt-16 relative z-20">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
           <Card className="h-full drop-shadow-custom-md lg:col-span-2">
             <CardHeader>
@@ -95,19 +102,19 @@ export default function Home() {
                     <ul className="space-y-3 text-sm">
                         <li className="flex items-start gap-3">
                             <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
-                            <span><span className="font-semibold">AI-Powered Summaries:</span> Get instant summaries of all comments on your track.</span>
+                            <span><span className="font-semibold">AI-Powered Summaries:</span> Instantly understand all feedback with a concise summary.</span>
                         </li>
                          <li className="flex items-start gap-3">
                             <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
-                            <span><span className="font-semibold">WAV to MP3 Conversion:</span> Upload high-quality WAV files and we'll handle the conversion.</span>
+                            <span><span className="font-semibold">WAV File Support:</span> Upload high-quality WAV files and we'll handle the conversion to MP3.</span>
                         </li>
                          <li className="flex items-start gap-3">
                             <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
-                           <span><span className="font-semibold">Ad-Free Experience:</span> Focus on the feedback without any interruptions.</span>
+                           <span><span className="font-semibold">Ad-Free Experience:</span> Focus on the feedback without any interruptions from advertisers.</span>
                         </li>
                          <li className="flex items-start gap-3">
                             <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
-                           <span><span className="font-semibold">Permanent Track Storage:</span> Never lose a track or comment again.</span>
+                           <span><span className="font-semibold">Permanent Track Storage:</span> Your tracks and comments are stored forever, not deleted after 30 days.</span>
                         </li>
                     </ul>
                     <Button className="w-full" disabled>Learn More (Coming Soon)</Button>
