@@ -40,11 +40,6 @@ export default function Home() {
             <p className="mt-4 max-w-2xl text-lg text-foreground/80">
               The essential platform for musicians and producers to get clear, contextual feedback on their audio. Ditch the endless email threads and confusing notes.
             </p>
-            <div className="mt-6">
-                <UploadDialog>
-                    <Button size="lg">Upload Your Track</Button>
-                </UploadDialog>
-            </div>
         </div>
       </div>
       <div className="container mx-auto px-4 py-12 md:py-20 -mt-20 md:-mt-16 relative z-20">
