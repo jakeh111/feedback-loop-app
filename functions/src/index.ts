@@ -47,7 +47,7 @@ const mailTransport = nodemailer.createTransport({
     },
 });
 
-export const sendCommentNotification = onDocumentCreated("tracks/{trackId}/comments/{commentId}", async (event) => {
+export const sendCommentNotification = onDocumentCreated({document: "tracks/{trackId}/comments/{commentId}", enforceAppCheck: true}, async (event) => {
     const snapshot = event.data;
     if (!snapshot) {
         logger.log("No data associated with the event");

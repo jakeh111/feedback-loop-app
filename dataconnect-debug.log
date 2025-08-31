@@ -1,4 +1,4 @@
-I0821 14:36:34.513339     680 load.go:37] Reloading schema and connectors...
-I0821 14:36:34.855090     680 control.go:84] [/emulator/audiomarker 6bca] UpdateResources(): done
+I0831 14:28:36.041758     633 load.go:31] Reloading schema and connectors...
+I0831 14:28:36.189249     633 control.go:94] [/emulator/audiomarker 2698] UpdateResources(): done
 Schema: sources: schema/schema.gql [793B] 
-Connector "default": sources: connector/queries.gql [1947B] connector/mutations.gql [1301B] 
+Connector "default": sources: connector/mutations.gql [1301B] connector/queries.gql [1947B] 
