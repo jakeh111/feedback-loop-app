@@ -14,18 +14,53 @@ import * as admin from "firebase-admin";
 import {onDocumentCreated} from "firebase-functions/v2/firestore";
 import * as nodemailer from "nodemailer";
 
-// Initialize Firebase Admin SDK
+// Initialize Admin SDK once. This is lightweight and can be done globally.
 admin.initializeApp();
-const firestore = admin.firestore();
-const storage = admin.storage();
+
+// --- LAZY INITIALIZATION ---
+// We define placeholders for our service instances.
+// They will be initialized only when they are first needed.
+let firestore: admin.firestore.Firestore;
+let storage: admin.storage.Storage;
+let mailTransport: nodemailer.Transporter;
+
+// Getter functions for lazy initialization.
+// These functions ensure that we only initialize each service once.
+function getFirestore() {
+    if (!firestore) {
+        firestore = admin.firestore();
+    }
+    return firestore;
+}
+
+function getStorage() {
+    if (!storage) {
+        storage = admin.storage();
+    }
+    return storage;
+}
+
+function getMailTransport() {
+    if (!mailTransport) {
+        mailTransport = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.GMAIL_EMAIL,
+                pass: process.env.GMAIL_PASSWORD,
+            },
+        });
+    }
+    return mailTransport;
+}
+// --- END LAZY INITIALIZATION ---
 
 
 // For cost control, you can set the maximum number of containers that can be
 // running at the same time. This helps mitigate the impact of unexpected
 // traffic spikes by instead downgrading performance. This limit is a
 // per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
+// \`maxInstances\` option in the function\'s options, e.g.
+// \`onRequest({ maxInstances: 5 }, (req, res) => { ... })\`.
 // NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
 // functions should each use functions.runWith({ maxInstances: 10 }) instead.
 // In the v1 API, each function can only serve one request per container, so
@@ -35,17 +70,6 @@ setGlobalOptions({ maxInstances: 10 });
 // Define the number of days after which tracks should be deleted.
 const TRACK_LIFETIME_DAYS = 30;
 
-// Configure nodemailer to use Gmail.
-// NOTE: This requires you to set up an App Password for your Gmail account
-// and configure it in your environment variables.
-// `firebase functions:config:set gmail.email="your-email@gmail.com" gmail.password="your-app-password"`
-const mailTransport = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.GMAIL_EMAIL,
-        pass: process.env.GMAIL_PASSWORD,
-    },
-});
 
 export const sendCommentNotification = onDocumentCreated({document: "tracks/{trackId}/comments/{commentId}", enforceAppCheck: true}, async (event) => {
     const snapshot = event.data;
@@ -58,7 +82,7 @@ export const sendCommentNotification = onDocumentCreated({document: "tracks/{tra
     const commentAuthor = commentData.author;
 
     try {
-        const trackRef = firestore.collection("tracks").doc(trackId);
+        const trackRef = getFirestore().collection("tracks").doc(trackId);
         const trackDoc = await trackRef.get();
 
         if (!trackDoc.exists) {
@@ -69,13 +93,14 @@ export const sendCommentNotification = onDocumentCreated({document: "tracks/{tra
         const trackData = trackDoc.data()!;
         const ownerId = trackData.userId;
 
-        // Don't send notification if the owner is the one commenting
-        if (commentAuthor === (await admin.auth().getUser(ownerId)).displayName) {
+        // Don\'t send notification if the owner is the one commenting
+        const authorUser = await admin.auth().getUser(ownerId);
+        if (commentAuthor === authorUser.displayName) {
              logger.info(`Comment author is the track owner. No notification sent for track ${trackId}.`);
              return;
         }
 
-        const userDoc = await firestore.collection("users").doc(ownerId).get();
+        const userDoc = await getFirestore().collection("users").doc(ownerId).get();
         const userData = userDoc.data();
         const notificationsEnabled = userData?.notificationsEnabled ?? true;
 
@@ -84,7 +109,7 @@ export const sendCommentNotification = onDocumentCreated({document: "tracks/{tra
             return;
         }
 
-        const ownerEmail = (await admin.auth().getUser(ownerId)).email;
+        const ownerEmail = authorUser.email;
 
         if (!ownerEmail) {
             logger.error(`No email found for user ${ownerId}`);
@@ -92,7 +117,7 @@ export const sendCommentNotification = onDocumentCreated({document: "tracks/{tra
         }
 
         const mailOptions = {
-            from: "\"TrackPolish\" <noreply@firebase.com>",
+            from: "\\"TrackPolish\\" <noreply@firebase.com>",
             to: ownerEmail,
             subject: `New comment on your track "${trackData.title}"`,
             html: `
@@ -106,7 +131,7 @@ export const sendCommentNotification = onDocumentCreated({document: "tracks/{tra
             `,
         };
         
-        await mailTransport.sendMail(mailOptions);
+        await getMailTransport().sendMail(mailOptions);
         logger.info(`New comment notification email sent to ${ownerEmail} for track ${trackId}`);
 
         // Update last commented timestamp
@@ -127,7 +152,7 @@ export const cleanupOldTracks = onSchedule("every day 00:00", async (event) => {
     cutoffDate.setDate(cutoffDate.getDate() - TRACK_LIFETIME_DAYS);
     const cutoffTimestamp = admin.firestore.Timestamp.fromDate(cutoffDate);
 
-    const oldTracksQuery = firestore.collection("tracks")
+    const oldTracksQuery = getFirestore().collection("tracks")
         .where("createdAt", "<=", cutoffTimestamp);
 
     try {
@@ -144,9 +169,9 @@ export const cleanupOldTracks = onSchedule("every day 00:00", async (event) => {
 
             // 1. Delete associated file from Storage
             if (trackData.storagePath) {
-                const file = storage.bucket().file(trackData.storagePath);
+                const file = getStorage().bucket().file(trackData.storagePath);
                 promises.push(file.delete().catch(err => {
-                    // Log error if file deletion fails, but don't block other deletions.
+                    // Log error if file deletion fails, but don\'t block other deletions.
                     // This can happen if the file was already deleted manually.
                     if (err.code !== 404) {
                        logger.error(`Failed to delete file ${trackData.storagePath} for track ${doc.id}`, err);
@@ -177,22 +202,22 @@ export const cleanupOldTracks = onSchedule("every day 00:00", async (event) => {
  * @param {FirebaseFirestore.CollectionReference} collectionRef The collection to delete.
  * @param {number} batchSize The number of documents to delete in each batch.
  */
-async function deleteCollection(collectionRef: FirebaseFirestore.CollectionReference, batchSize: number) {
-    const query = collectionRef.orderBy('__name__').limit(batchSize);
+async function deleteCollection(collectionRef: admin.firestore.CollectionReference, batchSize: number) {
+    const query = collectionRef.orderBy(\'__name__\').limit(batchSize);
 
     return new Promise((resolve, reject) => {
         deleteQueryBatch(query, resolve).catch(reject);
     });
 }
 
-async function deleteQueryBatch(query: FirebaseFirestore.Query, resolve: (value: unknown) => void) {
+async function deleteQueryBatch(query: admin.firestore.Query, resolve: (value: unknown) => void) {
     const snapshot = await query.get();
 
     if (snapshot.size === 0) {
         return resolve(0);
     }
 
-    const batch = firestore.batch();
+    const batch = getFirestore().batch();
     snapshot.docs.forEach((doc) => {
         batch.delete(doc.ref);
     });
