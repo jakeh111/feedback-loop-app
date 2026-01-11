@@ -1,5 +1,19 @@
-export type Comment = {
+
+
+import type { Timestamp } from 'firebase/firestore';
+import { z } from 'zod';
+
+export type SubComment = {
   id: string;
+  author: string;
+  text: string;
+  avatarUrl: string;
+  createdAt: Date | Timestamp;
+  userId: string;
+};
+
+export type Comment = {
+  id:string;
   author: string;
   text: string;
   timestamp: number;
@@ -7,6 +21,10 @@ export type Comment = {
   avatarUrl: string;
   youtubeUrl?: string;
   youtubeTimestamp?: number;
+  createdAt: Date | Timestamp;
+  completed?: boolean;
+  subComments?: SubComment[];
+  userId: string;
 };
 
 export type Track = {
@@ -14,6 +32,23 @@ export type Track = {
   title: string;
   artist: string;
   audioUrl: string;
-  waveform: number[];
-  comments: Comment[];
+  userId?: string;
+  waveform?: number[];
+  lastViewedAt?: Date | Timestamp;
 };
+
+export const ProcessAudioInputSchema = z.object({
+  audioDataUri: z
+    .string()
+    .describe(
+      "A base64 encoded audio file as a data URI, including a MIME type. E.g., 'data:audio/mpeg;base64, ...'"
+    ),
+});
+export type ProcessAudioInput = z.infer<typeof ProcessAudioInputSchema>;
+
+export const ProcessAudioOutputSchema = z.object({
+  processedAudioDataUri: z
+    .string()
+    .describe('The processed audio file, returned as a base64 data URI.'),
+});
+export type ProcessAudioOutput = z.infer<typeof ProcessAudioOutputSchema>;

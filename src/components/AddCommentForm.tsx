@@ -1,20 +1,24 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent } from './ui/card';
-import { Clock, Check, X, GitCommitHorizontal, Youtube, Link } from 'lucide-react';
+import { Clock, Check, X, GitCommitHorizontal, Youtube, Link, Pin } from 'lucide-react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Separator } from './ui/separator';
+import type { AudioPlayerRef } from './AudioPlayer';
 
 interface AddCommentFormProps {
   onAddComment: (text: string, startTime: number, endTime?: number, youtubeUrl?: string, youtubeTimestamp?: number) => void;
-  audioRef: React.RefObject<HTMLAudioElement>;
+  audioPlayerRef: React.RefObject<AudioPlayerRef>;
+  isCommentingEnabled: boolean;
+  selectedTime: number;
 }
 
-export function AddCommentForm({ onAddComment, audioRef }: AddCommentFormProps) {
+export function AddCommentForm({ onAddComment, audioPlayerRef, isCommentingEnabled, selectedTime }: AddCommentFormProps) {
   const [text, setText] = useState('');
   const [isRangeSelection, setIsRangeSelection] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -39,17 +43,14 @@ export function AddCommentForm({ onAddComment, audioRef }: AddCommentFormProps) 
   }
 
   const handleSetStartTime = () => {
-    if (audioRef.current) {
-      setStartTime(audioRef.current.currentTime);
+      setStartTime(selectedTime);
       setEndTime(null);
-    }
   };
 
   const handleSetEndTime = () => {
-    if (audioRef.current && startTime !== null) {
-      const currentTime = audioRef.current.currentTime;
-      if (currentTime > startTime) {
-        setEndTime(currentTime);
+    if (startTime !== null) {
+      if (selectedTime > startTime) {
+        setEndTime(selectedTime);
       }
     }
   };
@@ -76,46 +77,56 @@ export function AddCommentForm({ onAddComment, audioRef }: AddCommentFormProps) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (text.trim() && audioRef.current) {
+    if (text.trim()) {
       const finalYoutubeTimestamp = showYoutube ? parseYoutubeTime(youtubeTime) : undefined;
       const finalYoutubeUrl = showYoutube ? youtubeUrl : undefined;
 
       if (isRangeSelection && startTime !== null && endTime !== null) {
         onAddComment(text, startTime, endTime, finalYoutubeUrl, finalYoutubeTimestamp);
       } else {
-        onAddComment(text, audioRef.current.currentTime, undefined, finalYoutubeUrl, finalYoutubeTimestamp);
+        onAddComment(text, selectedTime, undefined, finalYoutubeUrl, finalYoutubeTimestamp);
       }
       resetForm();
     }
   };
 
-  const canSubmit = text.trim() && (!isRangeSelection || (startTime !== null && endTime !== null));
+  const canSubmit = text.trim() && isCommentingEnabled;
+  const placeholderText = isCommentingEnabled ? "Leave a comment..." : "Please enter your name to comment.";
 
   return (
     <Card className="drop-shadow-custom-md">
       <CardContent className="p-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           <Textarea
-            placeholder="Leave a comment..."
+            placeholder={placeholderText}
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={3}
+            disabled={!isCommentingEnabled}
           />
           
+          {!isRangeSelection && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground p-2 bg-muted/50 rounded-lg">
+                <Pin className="h-4 w-4 text-primary" />
+                <span>Commenting at {formatTime(selectedTime)}</span>
+            </div>
+          )}
+          
           <div className="flex flex-wrap justify-start items-center gap-2">
-             <Button type="button" variant="ghost" onClick={handleToggleRangeSelection} size="sm">
+             <Button type="button" variant="ghost" onClick={handleToggleRangeSelection} size="sm" disabled={!isCommentingEnabled} className="justify-start">
                 <GitCommitHorizontal className="mr-2 h-4 w-4" />
-                {isRangeSelection ? 'Comment on Timestamp' : 'Comment on Range'}
+                <span>{isRangeSelection ? 'Comment on Timestamp' : 'Comment on Range'}</span>
             </Button>
-            <Button type="button" variant="ghost" onClick={() => setShowYoutube(!showYoutube)} size="sm">
+            <Button type="button" variant="ghost" onClick={() => setShowYoutube(!showYoutube)} size="sm" disabled={!isCommentingEnabled} className="justify-start">
                 <Youtube className="mr-2 h-4 w-4" />
-                {showYoutube ? 'Remove Reference' : 'Add YouTube Reference'}
+                <span>{showYoutube ? 'Remove Reference' : 'Add YouTube Reference'}</span>
             </Button>
           </div>
 
           {isRangeSelection && (
             <div className="p-3 bg-muted/50 rounded-lg space-y-3">
               <div className="text-sm font-medium">Select Time Range:</div>
+              <div className="text-sm text-muted-foreground">Seek in the waveform and use the buttons below.</div>
               <div className="flex gap-2">
                 <Button type="button" variant="outline" onClick={handleSetStartTime} className="w-full">
                   Set Start

@@ -1,17 +1,17 @@
 
-
 "use client";
 
 import React from 'react';
 import Image from 'next/image';
-import { UploadForm } from '@/components/UploadForm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Zap, MonitorUp, Share2, MessagesSquare } from 'lucide-react';
+import { UploadDialog } from '@/components/UploadDialog';
+import { Button } from '@/components/ui/button';
 
 const heroImages = [
-  { src: "https://firebasestorage.googleapis.com/v0/b/audiomarker.firebasestorage.app/o/claudia-ramirez-jK47-bR5VnU-unsplash.jpg?alt=media&token=ca1d6125-e267-4316-9895-b809b867772a", hint: "music production" },
-  { src: "https://firebasestorage.googleapis.com/v0/b/audiomarker.firebasestorage.app/o/filip-barna-SlIu4D_rTPo-unsplash.jpg?alt=media&token=a44a5796-5f93-4070-a210-d27ab60a1de7", hint: "audio mixing" },
-  { src: "https://firebasestorage.googleapis.com/v0/b/audiomarker.firebasestorage.app/o/josh-sorenson-LVmyjS0hxYU-unsplash.jpg?alt=media&token=2ce7bc1b-4fde-8ec0-89804d66170c", hint: "sound engineering" },
+  { src: "https://firebasestorage.googleapis.com/v0/b/audiomarker-nfgw.web.app/o/claudia-ramirez-jK47-bR5VnU-unsplash.jpg?alt=media&token=ca1d6125-e267-4316-9895-b809b867772a", hint: "music production" },
+  { src: "https://firebasestorage.googleapis.com/v0/b/audiomarker-nfgw.web.app/o/filip-barna-SlIu4D_rTPo-unsplash.jpg?alt=media&token=a44a5796-5f93-4070-a210-d27ab60a1de7", hint: "audio mixing" },
+  { src: "https://firebasestorage.googleapis.com/v0/b/audiomarker-nfgw.web.app/o/josh-sorenson-LVmyjS0hxYU-unsplash.jpg?alt=media&token=2ce7bc1b-4fde-8ec0-89804d66170c", hint: "sound engineering" },
 ];
 
 export default function Home() {
@@ -23,7 +23,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="relative h-[40vh] -mt-20 flex items-center justify-center overflow-hidden">
+      <div className="relative h-[50vh] -mt-20 flex items-center justify-center overflow-hidden">
         <Image
           src={randomImage.src}
           alt="Abstract audio visualization"
@@ -33,22 +33,25 @@ export default function Home() {
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10"></div>
-        <div className="relative z-20 text-center px-4">
+        <div className="relative z-20 text-center px-4 flex flex-col items-center">
            <h1 className="text-4xl md:text-6xl font-bold tracking-tighter font-headline text-transparent bg-clip-text bg-gradient-to-r from-primary via-white to-primary">
-              Collaborative Audio Feedback, Simplified.
+              Get Better Feedback on Your Music.
             </h1>
+            <p className="mt-4 max-w-2xl text-lg text-foreground/80">
+              The essential platform for musicians and producers to get clear, contextual feedback on their audio. Ditch the endless email threads and confusing notes.
+            </p>
         </div>
       </div>
-      <div className="container mx-auto px-4 py-12 md:py-20 -mt-24 relative z-20">
-        <div className="grid md:grid-cols-2 gap-12 items-start">
-          <Card className="h-full drop-shadow-custom-md">
+      <div className="container mx-auto px-4 py-12 md:py-20 -mt-20 md:-mt-16 relative z-20">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+          <Card className="h-full drop-shadow-custom-md lg:col-span-2">
             <CardHeader>
               <CardTitle>Precise, Collaborative Feedback</CardTitle>
               <CardDescription>One central place for contextual audio feedback.</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-lg text-muted-foreground">
-                Stop juggling email chains and confusing notes. FeedbackLoop provides one central place for precise, contextual feedback on your audio files. Upload your mix, share a private link, and get frame-accurate comments directly on the waveform.
+                Stop juggling email chains and confusing notes. TrackPolish provides one central place for precise, contextual feedback on your audio files. Upload your mix, share a private link, and get frame-accurate comments directly on the waveform.
               </p>
               <ul className="space-y-3 mt-6">
                 <li className="flex items-center gap-3">
@@ -61,50 +64,81 @@ export default function Home() {
                 </li>
                 <li className="flex items-center gap-3">
                   <CheckCircle className="text-primary" />
-                  <span>AI-powered summaries to quickly digest feedback.</span>
+                  <span>Shareable private links for easy collaboration.</span>
                 </li>
                  <li className="flex items-center gap-3">
-                  <CheckCircle className="text-primary" />
-                  <span>Shareable private links for easy collaboration.</span>
+                  <Zap className="text-primary" />
+                  <span><span className="font-semibold text-primary">Pro:</span> AI-powered summaries to quickly digest feedback.</span>
                 </li>
               </ul>
             </CardContent>
           </Card>
-          <Card className="h-fit drop-shadow-custom-md">
-            <CardHeader>
-              <CardTitle>Get Started</CardTitle>
-              <CardDescription>Upload an MP3 or WAV to create your feedback session.</CardDescription>
-            </CardHeader>
-            <CardContent className="px-6 pb-6">
-              <UploadForm />
-            </CardContent>
-          </Card>
+          <div className="space-y-8">
+            <Card className="h-fit drop-shadow-custom-md">
+               <CardHeader>
+                <CardTitle>Get Started For Free</CardTitle>
+                <CardDescription>Upload an MP3 to create your feedback session.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                  <UploadDialog>
+                      <Button className="w-full">Upload Your First Track</Button>
+                  </UploadDialog>
+              </CardContent>
+            </Card>
+             <Card className="drop-shadow-custom-md bg-gradient-to-br from-primary/10 to-background">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Zap className="text-primary"/>
+                        Go Pro
+                    </CardTitle>
+                    <CardDescription>Unlock powerful features to enhance your workflow.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <ul className="space-y-3 text-sm">
+                        <li className="flex items-start gap-3">
+                            <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
+                            <span><span className="font-semibold">AI-Powered Summaries:</span> Instantly understand all feedback with a concise summary.</span>
+                        </li>
+                         <li className="flex items-start gap-3">
+                            <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
+                            <span><span className="font-semibold">WAV File Support:</span> Upload high-quality WAV files and we'll handle the conversion to MP3.</span>
+                        </li>
+                         <li className="flex items-start gap-3">
+                            <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
+                           <span><span className="font-semibold">Ad-Free Experience:</span> Focus on the feedback without any interruptions from advertisers.</span>
+                        </li>
+                         <li className="flex items-start gap-3">
+                            <CheckCircle className="text-primary w-5 h-5 mt-0.5" />
+                           <span><span className="font-semibold">Permanent Track Storage:</span> Your tracks and comments are stored forever, not deleted after 30 days.</span>
+                        </li>
+                    </ul>
+                    <Button className="w-full" disabled>Learn More (Coming Soon)</Button>
+                </CardContent>
+            </Card>
+          </div>
         </div>
          <div className="mt-20 text-center">
             <h2 className="text-3xl font-bold tracking-tighter font-headline mb-4">How It Works</h2>
             <div className="grid md:grid-cols-3 gap-8 text-left">
               <Card className="drop-shadow-custom-md">
-                <CardHeader>
+                <CardContent className="pt-6 text-center flex flex-col items-center">
+                  <MonitorUp className="w-12 h-12 mb-4 text-primary" />
                   <CardTitle>1. Upload Your Audio</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>Drag and drop your MP3 or WAV file. Your private, collaborative workspace is created instantly.</p>
+                  <p className="mt-2">Drag and drop your MP3 file. Pro users can upload WAV files for automatic conversion.</p>
                 </CardContent>
               </Card>
               <Card className="drop-shadow-custom-md">
-                <CardHeader>
+                <CardContent className="pt-6 text-center flex flex-col items-center">
+                  <Share2 className="w-12 h-12 mb-4 text-primary" />
                   <CardTitle>2. Share the Link</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>Grab the unique link and send it to your clients or team. No sign-up required for them to leave comments.</p>
+                  <p className="mt-2">Grab the unique link and send it to your clients or team. No sign-up required for them to leave comments.</p>
                 </CardContent>
               </Card>
               <Card className="drop-shadow-custom-md">
-                <CardHeader>
+                <CardContent className="pt-6 text-center flex flex-col items-center">
+                  <MessagesSquare className="w-12 h-12 mb-4 text-primary" />
                   <CardTitle>3. Get Precise Feedback</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>Collaborators can add comments to a specific timestamp, highlight a time range, or even reference a YouTube video.</p>
+                  <p className="mt-2">Collaborators can add comments to a specific timestamp, highlight a time range, or even reference a YouTube video.</p>
                 </CardContent>
               </Card>
             </div>

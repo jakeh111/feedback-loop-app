@@ -2,56 +2,201 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { UploadCloud } from 'lucide-react';
+import { UploadCloud, Loader2, Zap } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { storage, auth } from '@/lib/firebase';
+import { ref, uploadBytesResumable } from 'firebase/storage';
+import { Progress } from './ui/progress';
+import { processAndStoreTrack } from '@/app/actions';
+import * as lamejs from '@breezystack/lamejs';
 
-export function UploadForm() {
-  const router = useRouter();
+interface UploadFormProps {
+  onUploadComplete: (trackId: string) => void;
+  onUploadBlocked: () => void;
+}
+
+export function UploadForm({ onUploadComplete, onUploadBlocked }: UploadFormProps) {
   const { toast } = useToast();
-  const [isUploading, setIsUploading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [statusText, setStatusText] = useState("");
+
+  // TODO: Replace this with a real check from your database or auth claims
+  const isProUser = false;
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     const acceptedTypes = ['audio/mpeg', 'audio/wav', 'audio/wave'];
-    if (file && acceptedTypes.includes(file.type)) {
-      setSelectedFile(file);
-    } else {
-      setSelectedFile(null);
-      toast({
-        variant: "destructive",
-        title: "Invalid File Type",
-        description: "Please select an MP3 or WAV file.",
-      });
+    if (file) {
+      if (acceptedTypes.includes(file.type)) {
+        // Gate WAV uploads
+        if (!isProUser && (file.type === 'audio/wav' || file.type === 'audio/wave')) {
+            toast({
+              variant: "destructive",
+              title: "Pro Feature",
+              description: "WAV to MP3 conversion is a Pro feature. Please upgrade to upload WAV files.",
+            });
+            onUploadBlocked();
+            setSelectedFile(null);
+            event.target.value = ''; // Clear the input
+            return;
+        }
+        setSelectedFile(file);
+      } else {
+        setSelectedFile(null);
+        toast({
+          variant: "destructive",
+          title: "Invalid File Type",
+          description: "Please select an MP3 or WAV file.",
+        });
+      }
     }
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const convertWavToMp3 = async (wavFile: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = async (event) => {
+        try {
+          const arrayBuffer = event.target?.result as ArrayBuffer;
+          
+          const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+          let samples: Float32Array;
+          if (audioBuffer.numberOfChannels === 2) {
+            const left = audioBuffer.getChannelData(0);
+            const right = audioBuffer.getChannelData(1);
+            samples = new Float32Array(audioBuffer.length);
+            for (let i = 0; i < audioBuffer.length; i++) {
+              samples[i] = (left[i] + right[i]) / 2;
+            }
+          } else {
+            samples = audioBuffer.getChannelData(0);
+          }
+          
+          const pcmSamples = new Int16Array(samples.length);
+          for (let i = 0; i < samples.length; i++) {
+            const sample = Math.max(-1, Math.min(1, samples[i]));
+            pcmSamples[i] = sample < 0 ? sample * 32768 : sample * 32767;
+          }
+          
+          const mp3Encoder = new lamejs.Mp3Encoder(1, audioBuffer.sampleRate, 128);
+          const mp3Data: Int8Array[] = [];
+          
+          const sampleBlockSize = 1152;
+          
+          for (let i = 0; i < pcmSamples.length; i += sampleBlockSize) {
+            const chunk = pcmSamples.subarray(i, i + sampleBlockSize);
+            const mp3buf = mp3Encoder.encodeBuffer(chunk);
+            if (mp3buf && mp3buf.length > 0) {
+              mp3Data.push(mp3buf);
+            }
+          }
+          
+          const finalBuffer = mp3Encoder.flush();
+          if (finalBuffer && finalBuffer.length > 0) {
+            mp3Data.push(finalBuffer);
+          }
+          
+          const mp3Blob = new Blob(mp3Data, { type: 'audio/mpeg' });
+          const mp3FileName = wavFile.name.replace(/\.[^/.]+$/, "") + ".mp3";
+          const mp3File = new File([mp3Blob], mp3FileName, { type: 'audio/mpeg' });
+          
+          resolve(mp3File);
+          
+        } catch (error) {
+          console.error("Detailed conversion error:", error);
+          reject(error);
+        }
+      };
+      
+      reader.onerror = (error) => {
+        console.error("FileReader error:", error);
+        reject(error);
+      };
+      
+      reader.readAsArrayBuffer(wavFile);
+    });
+  };
+
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const user = auth.currentUser;
+
+    if (!user) {
+      toast({ variant: "destructive", title: "Not Authenticated", description: "You must be logged in to upload a track." });
+      return;
+    }
+
     if (!selectedFile) {
-       toast({
-        variant: "destructive",
-        title: "No file selected",
-        description: "Please select an MP3 or WAV file to upload.",
-      });
+       toast({ variant: "destructive", title: "No file selected", description: "Please select a file to upload." });
       return;
     }
     
-    setIsUploading(true);
+    setIsProcessing(true);
     
-    // Simulate upload process
-    setTimeout(() => {
-      // In a real app, this ID would come from the database after storing the track.
-      const trackId = Math.random().toString(36).substring(2, 15);
-      toast({
-        title: "Upload Successful",
-        description: "Your track is being processed and will be available shortly.",
-      });
-      router.push(`/track/${trackId}`);
-    }, 1500);
+    let fileToUpload = selectedFile;
+    
+    // Handle WAV conversion
+    if (isProUser && (selectedFile.type === 'audio/wav' || selectedFile.type === 'audio/wave')) {
+        setStatusText("Converting WAV to MP3...");
+        try {
+            fileToUpload = await convertWavToMp3(selectedFile);
+        } catch (error) {
+            toast({ variant: "destructive", title: "Conversion Failed", description: `Could not convert WAV to MP3. ${error instanceof Error ? error.message : ''}` });
+            setIsProcessing(false);
+            setStatusText("");
+            return;
+        }
+    }
+    
+    setStatusText("Uploading file...");
+    
+    const finalStoragePath = `tracks/${user.uid}/${Date.now()}-${fileToUpload.name}`;
+    const storageRef = ref(storage, finalStoragePath);
+    const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
+
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      },
+      (error) => {
+        console.error("Upload error:", error);
+        setIsProcessing(false);
+        setUploadProgress(0);
+        setStatusText("");
+        toast({ variant: "destructive", title: "Upload Failed", description: `An error occurred while uploading: ${error.message}` });
+      },
+      async () => {
+        try {
+            setStatusText("Finalizing...");
+            const trackId = await processAndStoreTrack({
+                storagePath: finalStoragePath,
+                originalFilename: fileToUpload.name,
+                userId: user.uid,
+                artistName: user.displayName || 'Unknown Artist'
+            });
+            
+            toast({ title: "Upload Successful", description: "Your track is ready and saved to your dashboard." });
+            onUploadComplete(trackId);
+
+        } catch (error) {
+            console.error("Error processing track on server:", error);
+            toast({ variant: "destructive", title: "Processing Failed", description: `The server could not process your track. ${error instanceof Error ? error.message : ''}` });
+        } finally {
+            setIsProcessing(false);
+            setUploadProgress(0);
+            setStatusText("");
+        }
+      }
+    );
   };
 
   return (
@@ -63,16 +208,26 @@ export function UploadForm() {
                 <p className="mb-2 text-sm text-muted-foreground">
                   <span className="font-semibold">Click to upload</span> or drag and drop
                 </p>
-                <p className="text-xs text-muted-foreground">MP3 or WAV (MAX. 80MB)</p>
+                <p className="text-xs text-muted-foreground">MP3 or WAV</p>
             </div>
-            <Input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} accept=".mp3,.wav,audio/mpeg,audio/wav,audio/wave" />
+            <Input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} accept=".mp3,.wav,audio/mpeg,audio/wave" disabled={isProcessing} />
         </label>
       </div>
 
-      {selectedFile && <p className="text-sm text-center text-muted-foreground">Selected: {selectedFile.name}</p>}
+      {selectedFile && !isProcessing && <p className="text-sm text-center text-muted-foreground">Selected: {selectedFile.name}</p>}
 
-      <Button type="submit" className="w-full" disabled={isUploading || !selectedFile}>
-        {isUploading ? 'Uploading...' : 'Upload Track'}
+      {isProcessing && (
+        <div className="space-y-2">
+            <p className="text-sm text-center text-muted-foreground flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin"/>
+              {statusText}
+            </p>
+            {(statusText.startsWith('Uploading')) && <Progress value={uploadProgress} />}
+        </div>
+      )}
+
+      <Button type="submit" className="w-full" disabled={isProcessing || !selectedFile}>
+        {isProcessing ? 'Processing...' : 'Create Session'}
       </Button>
     </form>
   );

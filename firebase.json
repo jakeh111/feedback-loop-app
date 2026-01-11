@@ -1,0 +1,86 @@
+{
+  "emulators": {
+    "auth": {
+      "port": 9025,
+      "host": "127.0.0.1"
+    },
+    "functions": {
+      "port": 5001,
+      "host": "127.0.0.1"
+    },
+    "firestore": {
+      "port": 8090,
+      "host": "127.0.0.1",
+      "rules": "firestore.rules"
+    },
+    "database": {
+      "port": 9020,
+      "host": "127.0.0.1"
+    },
+    "hosting": {
+      "port": 5000,
+      "host": "127.0.0.1"
+    },
+    "pubsub": {
+      "port": 8085,
+      "host": "127.0.0.1"
+    },
+    "storage": {
+      "port": 9198,
+      "host": "127.0.0.1",
+      "rules": "storage.rules"
+    },
+    "dataconnect": {
+      "port": 9398,
+      "host": "127.0.0.1",
+      "dataDir": "dataconnect/.dataconnect/pgliteData"
+    },
+    "ui": {
+      "enabled": true,
+      "host": "127.0.0.1"
+    },
+    "singleProjectMode": true,
+    "apphosting": {
+      "port": 5002,
+      "rootDirectory": "./",
+      "startCommand": "npm run dev"
+    },
+    "tasks": {
+      "port": 9499
+    }
+  },
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "functions": {
+    "source": "functions",
+    "codebase": "default",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "*.local"
+    ],
+    "predeploy": [
+      "npm --prefix \"$RESOURCE_DIR\" run lint",
+      "npm --prefix \"$RESOURCE_DIR\" run build"
+    ]
+  },
+  "dataconnect": {
+    "source": "dataconnect"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
+}

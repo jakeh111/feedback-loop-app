@@ -1,39 +1,52 @@
+
+
 import { TrackPageClient } from "@/components/TrackPageClient";
 import type { Track } from "@/lib/types";
 import type { Metadata, ResolvingMetadata } from 'next'
+import { doc, getDoc, Timestamp } from "firebase/firestore";
+import { firestore } from "@/lib/firebase";
+import { notFound } from 'next/navigation';
 
-// In a real app, you would fetch this data from a database based on the `params.id`.
-// For this example, we'll use mock data.
-const getTrackData = async (id: string): Promise<Track> => {
-  // Generate a consistent pseudo-random waveform based on the track ID
-  const seedrandom = (seed: string) => {
-    let seedVal = 0;
-    for(let i = 0; i < seed.length; i++) {
-        seedVal += seed.charCodeAt(i);
-    }
-    const random = () => {
-        const x = Math.sin(seedVal++) * 10000;
-        return x - Math.floor(x);
-    };
-    return random;
-  }
-  const random = seedrandom(id);
-  const waveform = Array.from({ length: 100 }, () => Math.round(random() * 100));
-
+const getSampleTrack = (): Track => {
+  const waveformData = Array.from({ length: 200 }, () => Math.floor(Math.random() * 75) + 5);
   return {
-    id,
-    title: "Quantum Leap",
-    artist: "SynthWave Surfer",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    waveform,
-    comments: [
-        { id: "1", author: "ProducerPro", text: "The main synth riff is great, but the kick drum feels a bit weak throughout this section. It could use more low-end punch.", timestamp: 5, endTimestamp: 20, avatarUrl: "https://placehold.co/40x40.png?text=P" },
-        { id: "2", author: "MixMasterMike", text: "The transition here is a little abrupt. Maybe a filter sweep or a reverse cymbal would smooth it out.", timestamp: 28, avatarUrl: "https://placehold.co/40x40.png?text=M" },
-        { id: "3", author: "VocalVibes", text: "The harmony vocals from here to the end of the phrase are slightly off-key. They need a little pitch correction.", timestamp: 45, endTimestamp: 52, avatarUrl: "https://placehold.co/40x40.png?text=V" },
-        { id: "4", author: "BassHead", text: "The bassline is fantastic in this part! Really driving the track forward.", timestamp: 60, avatarUrl: "https://placehold.co/40x40.png?text=B" },
-        { id: "5", author: "ProducerPro", text: "Considering the whole section, the snare could use a bit more reverb to give it more space in the mix.", timestamp: 60, endTimestamp: 80, avatarUrl: "https://placehold.co/40x40.png?text=P" }
-      ],
+    id: 'sample',
+    title: 'Sample Track - My Masterpiece',
+    artist: 'Sample Artist',
+    audioUrl: 'https://storage.googleapis.com/studioprod-exports-prod/supported_output_formats/12-second-of-silence.mp3', // A silent mp3 file for placeholder
+    userId: 'sample-user',
+    waveform: waveformData,
   };
+};
+
+const getTrackData = async (id: string): Promise<Track | null> => {
+  if (id === 'sample') {
+    return getSampleTrack();
+  }
+  try {
+    const trackDocRef = doc(firestore, 'tracks', id);
+    const trackSnap = await getDoc(trackDocRef);
+
+    if (!trackSnap.exists()) {
+      return null;
+    }
+
+    const data = trackSnap.data();
+    const lastViewedAt = (data.lastViewedAt as Timestamp)?.toDate();
+
+    return {
+      id: trackSnap.id,
+      title: data.title || "Untitled Track",
+      artist: data.artist || "Unknown Artist",
+      audioUrl: data.audioUrl,
+      userId: data.userId,
+      waveform: data.waveform || [],
+      lastViewedAt: lastViewedAt,
+    };
+  } catch (error) {
+    console.error("Error fetching track data:", error);
+    return null;
+  }
 };
 
 type Props = {
@@ -45,7 +58,13 @@ export async function generateMetadata(
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   const track = await getTrackData(params.id)
- 
+  
+  if (!track) {
+    return {
+      title: 'Track Not Found'
+    }
+  }
+
   return {
     title: `${track.title} by ${track.artist}`,
     description: `Listen to and give feedback on ${track.title} by ${track.artist}.`,
@@ -53,8 +72,12 @@ export async function generateMetadata(
 }
 
 
-export default async function TrackPage({ params }: { params: { id: string } }) {
+export default async function TrackPage({ params }: { params: { id:string } }) {
   const track = await getTrackData(params.id);
+
+  if (!track) {
+    notFound();
+  }
 
   return <TrackPageClient track={track} />;
 }

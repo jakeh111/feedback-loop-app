@@ -1,114 +1,161 @@
+
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
-import type { Track } from '@/lib/types';
-import { Waveform } from './Waveform';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import type { Track, Comment } from '@/lib/types';
 import { Button } from './ui/button';
 import { Play, Pause, Volume2, VolumeX, Rewind, FastForward } from 'lucide-react';
 import { Slider } from './ui/slider';
+import { WaveformDisplay } from './WaveformDisplay';
+
 
 interface AudioPlayerProps {
   track: Track;
-  onSeek: (time: number) => void;
+  comments: Comment[];
+  onTimeUpdate: (time: number) => void;
+  onDurationChange: (duration: number) => void;
+  onCommentActive: (comment: Comment | null) => void;
 }
 
-export const AudioPlayer = forwardRef<HTMLAudioElement, AudioPlayerProps>(({ track, onSeek }, ref) => {
-  const internalAudioRef = useRef<HTMLAudioElement>(null);
-  useImperativeHandle(ref, () => internalAudioRef.current!, []);
-  
+export interface AudioPlayerRef {
+  seekTo: (time: number) => void;
+  audioEl: HTMLAudioElement | null;
+}
+
+export const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(({ track, comments, onTimeUpdate, onDurationChange, onCommentActive }, ref) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.75);
   const [isMuted, setIsMuted] = useState(false);
+  const [progress, setProgress] = useState(0);
 
-  useEffect(() => {
-    const audio = internalAudioRef.current;
-    if (!audio) return;
-    
-    const setAudioData = () => {
-      setDuration(audio.duration);
-      setCurrentTime(audio.currentTime);
-    }
+  // Debug lines
+  console.log('Full track object:', track);
+  console.log('Waveform data:', track.waveform);
 
-    const setAudioTime = () => setCurrentTime(audio.currentTime);
-
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
-
-    audio.addEventListener('loadeddata', setAudioData);
-    audio.addEventListener('timeupdate', setAudioTime);
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('pause', handlePause);
-
-    audio.volume = isMuted ? 0 : volume;
-
-    return () => {
-      audio.removeEventListener('loadeddata', setAudioData);
-      audio.removeEventListener('timeupdate', setAudioTime);
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
-    }
-  }, [volume, isMuted]);
-
-  const togglePlayPause = () => {
-    const audio = internalAudioRef.current;
-    if (audio) {
-      if (isPlaying) {
-        audio.pause();
-      } else {
-        audio.play();
-      }
-    }
-  };
-
-  const handleSeek = (time: number) => {
-    if (internalAudioRef.current) {
-        internalAudioRef.current.currentTime = time;
-        setCurrentTime(time);
-        onSeek(time);
-    }
-  };
-  
-  const handleVolumeChange = (value: number[]) => {
-    const newVolume = value[0];
-    setVolume(newVolume);
-    setIsMuted(newVolume === 0);
-    if(internalAudioRef.current) {
-      internalAudioRef.current.volume = newVolume;
-    }
-  };
-
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-    if(internalAudioRef.current) {
-      internalAudioRef.current.volume = !isMuted ? 0 : volume;
-    }
-  }
 
   const formatTime = (time: number) => {
+    if (isNaN(time) || !isFinite(time)) return '0:00';
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const seek = (amount: number) => {
-    if (internalAudioRef.current) {
-        const newTime = internalAudioRef.current.currentTime + amount;
-        handleSeek(Math.max(0, Math.min(duration, newTime)));
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleTimeUpdate = () => {
+      const time = audio.currentTime;
+      setCurrentTime(time);
+      onTimeUpdate(time);
+      setProgress((time / audio.duration) * 100);
+
+      // Check for active comment
+      let activeComment: Comment | null = null;
+      for (const comment of comments) {
+        const start = comment.timestamp;
+        // For single comments, give a 6-second window. For ranges, use the range.
+        const end = comment.endTimestamp ?? (start + 6);
+        if (time >= start && time <= end) {
+          activeComment = comment;
+          break; 
+        }
+      }
+      onCommentActive(activeComment);
+
+    };
+
+    const handleDurationChange = () => {
+        if (isFinite(audio.duration)) {
+            setDuration(audio.duration);
+            onDurationChange(audio.duration);
+        }
+    };
+
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('durationchange', handleDurationChange);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('ended', handlePause);
+
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('durationchange', handleDurationChange);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handlePause);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comments]); // Add comments to dependency array
+  
+
+  useImperativeHandle(ref, () => ({
+    seekTo(time: number) {
+      if (audioRef.current) {
+        audioRef.current.currentTime = time;
+        if (audioRef.current.paused) {
+          audioRef.current.play();
+        }
+      }
+    },
+    audioEl: audioRef.current,
+  }));
+  
+  useEffect(() => {
+     if (audioRef.current) {
+         audioRef.current.volume = isMuted ? 0 : volume;
+     }
+  }, [volume, isMuted])
+
+  const togglePlayPause = () => {
+    if (audioRef.current) {
+        if (audioRef.current.paused) {
+            audioRef.current.play();
+        } else {
+            audioRef.current.pause();
+        }
     }
+  };
+
+  const handleVolumeChange = (value: number[]) => {
+    const newVolume = value[0];
+    setVolume(newVolume);
+    setIsMuted(newVolume === 0);
+  };
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+  }
+
+  const seek = (amount: number) => {
+    if (audioRef.current) {
+       audioRef.current.currentTime += amount;
+    }
+  }
+
+  const handleWaveformClick = (newProgress: number) => {
+     if (audioRef.current && isFinite(duration)) {
+        audioRef.current.currentTime = duration * newProgress;
+     }
   }
 
   return (
     <div className="bg-card p-4 rounded-lg border drop-shadow-custom-md">
-      <audio ref={internalAudioRef} src={track.audioUrl} preload="metadata" />
-      <Waveform
-        data={track.waveform}
-        currentTime={currentTime}
+      <audio ref={audioRef} src={track.audioUrl} preload="metadata" />
+      <WaveformDisplay 
+        waveformData={track.waveform ?? []}
+        progress={progress} 
+        onWaveformClick={handleWaveformClick}
+        comments={comments}
         duration={duration}
-        onSeek={handleSeek}
-        isPlaying={isPlaying}
-        comments={track.comments}
       />
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm font-mono text-muted-foreground w-28">
